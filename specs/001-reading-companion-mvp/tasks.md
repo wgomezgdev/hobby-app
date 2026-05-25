@@ -51,7 +51,7 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Implement Drift (local) repositories for all four entities
 - [ ] Implement Supabase (remote) repositories for all four entities
 - [ ] Implement `CompositeRepository` — local-first write, queues remote ops
-- [ ] Implement `ConnectivityService` using `connectivity_plus`
+- [ ] Wire `connectivity_plus` stream directly into `SyncService` (no wrapper class)
 - [ ] Implement `SyncService` — flushes queue on connectivity restore + app foreground
 - [ ] Implement exponential back-off retry (max 5 attempts)
 - [ ] Test: offline op queued (UT-11)

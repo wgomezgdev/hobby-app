@@ -79,7 +79,7 @@ Satisfies AC-05.1 through AC-05.5.
 - `CompositeRepository` that writes local-first and queues remote ops
 - `SyncService`: flushes queue on connectivity restore and app foreground resume
 - Exponential back-off retry (max 5 attempts per queued operation)
-- `ConnectivityService` wrapping `connectivity_plus`
+- `connectivity_plus` stream consumed directly in `SyncService` — no wrapper class
 
 ### Sync conflict rule
 Server `updated_at` timestamp wins. If remote is newer, overwrite local silently.

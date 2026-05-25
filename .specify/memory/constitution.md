@@ -9,7 +9,7 @@ Every spec, plan, task, and line of code must align with these rules.
 ## 1. Architecture Principles
 
 - **Feature-first structure**: code lives under `lib/features/<feature-name>/`. No feature imports another feature's internal layers — only shared `core/` modules.
-- **Repository pattern**: UI → Riverpod providers → use cases → repositories → (local/remote). No direct Supabase or Drift calls from widgets.
+- **Repository pattern**: UI → Riverpod providers → repositories → (local/remote). No direct Supabase or Drift calls from widgets. Only extract to a standalone class when logic is genuinely complex or reused across features (e.g., streak calculation).
 - **Riverpod 2.x** is the sole state management solution. No BLoC, Provider, or GetX.
 - **Google Sign-In via Supabase OAuth** is the sole auth method. No email/password, no register screen.
 - **go_router** is the sole navigation solution. No `Navigator.push` calls outside the router config.
@@ -48,7 +48,7 @@ The microservice owns: CRUD operations, feed ranking logic, quote interrelation 
 - **No mocking the database**: integration tests must use a real in-memory Drift database. Mock only external network calls (Supabase remote).
 - **Traceability**: every test must reference an acceptance criterion (e.g., `AC-02.3`). No orphan tests.
 - **Coverage gates** (enforced in CI):
-  - Unit tests: all business logic in use cases and domain entities
+  - Unit tests: all business logic in notifiers, repositories, and extracted helpers
   - Widget tests: all form validation flows and key state transitions
   - Integration tests: all offline → sync flows and auth flows
 
@@ -77,6 +77,7 @@ The microservice owns: CRUD operations, feed ranking logic, quote interrelation 
 - Empty states must have a clear CTA (e.g., "Add your first book").
 - All destructive actions (delete book, remove cover) require a confirmation dialog.
 - Haptic feedback on: favorite toggle, save quote, log session save.
+- Auth guard shows a blank splash screen while auth state is loading — no redirect until state resolves to authenticated or unauthenticated.
 
 ## 7. Security & Privacy
 

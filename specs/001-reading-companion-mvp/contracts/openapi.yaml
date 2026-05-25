@@ -23,54 +23,13 @@ security:
 paths:
 
   # ── AUTH ────────────────────────────────────────────────────────────────
-  /auth/v1/signup:
-    post:
-      tags: [Auth]
-      summary: Register a new user
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthRequest'
-      responses:
-        '200':
-          description: User created and session returned
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '422':
-          $ref: '#/components/responses/ValidationError'
-
-  /auth/v1/token:
-    post:
-      tags: [Auth]
-      summary: Sign in (email + password)
-      security: []
-      parameters:
-        - in: query
-          name: grant_type
-          required: true
-          schema:
-            type: string
-            enum: [password]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthRequest'
-      responses:
-        '200':
-          description: Session returned
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '400':
-          $ref: '#/components/responses/AuthError'
+  # Authentication is Google Sign-In via Supabase OAuth — no email/password.
+  # Flow (handled by Supabase SDK + google_sign_in package, not called directly):
+  #   1. App calls google_sign_in → receives Google ID token
+  #   2. App calls supabase.auth.signInWithIdToken(provider: google, idToken: ...)
+  #   3. Supabase returns AuthResponse (access_token, refresh_token)
+  #   4. App stores tokens in flutter_secure_storage
+  # First sign-in creates the account automatically — no registration step.
 
   /auth/v1/logout:
     post:
@@ -449,16 +408,7 @@ components:
   schemas:
 
     # ── AUTH ──
-    AuthRequest:
-      type: object
-      required: [email, password]
-      properties:
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          minLength: 8
+    # AuthRequest (email/password) removed — app uses Google OAuth only.
 
     AuthResponse:
       type: object

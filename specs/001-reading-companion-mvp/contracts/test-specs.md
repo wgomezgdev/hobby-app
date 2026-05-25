@@ -104,9 +104,9 @@ Integration tests run against a real local Drift database (in-memory) with mocke
 
 | ID | Traces to | Description | Steps | Expected result |
 |---|---|---|---|---|
-| IT-04 | AC-01.6 | Unauthenticated user is redirected | launch app with no session | Navigates to Login screen |
-| IT-05 | — | Successful login stores session | enter valid credentials | Session token stored in secure storage |
-| IT-06 | — | Invalid credentials show error | enter wrong password | Error message visible, no session stored |
+| IT-04 | AC-05.1 | Unauthenticated user is redirected | Launch app with no stored session | Sign-in screen appears, not Library |
+| IT-05 | AC-05.2 | Google OAuth completes and stores session | 1. Tap "Continue with Google" 2. Complete Google OAuth flow | Session token stored in secure storage, navigates to Home |
+| IT-06 | AC-05.3 | Google OAuth cancelled stays on sign-in screen | 1. Tap "Continue with Google" 2. Cancel OAuth flow | Sign-in screen still visible, no session stored |
 
 ### 3.3 Progress + Status Transition
 
@@ -135,6 +135,9 @@ Integration tests run against a real local Drift database (in-memory) with mocke
 | AC-01.4 | — | WT-04 | — |
 | AC-01.5 | — | WT-16 | — |
 | AC-01.6 | UT-11, UT-12, UT-13 | — | IT-01 |
+| AC-05.1 | — | — | IT-04 |
+| AC-05.2 | — | — | IT-05 |
+| AC-05.3 | — | — | IT-06 |
 | AC-02.1 | — | WT-06 | — |
 | AC-02.2 | UT-01, UT-02, UT-06 | WT-08 | IT-08 |
 | AC-02.3 | UT-03 | — | IT-07 |
