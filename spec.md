@@ -1,4 +1,5 @@
 # My flutter app
+<!-- spec version: 1.1.0 | last updated: 2026-05-25 -->
 
 ## Overview
 
@@ -106,25 +107,27 @@ To address this in a scalable app, we need:
 - **App shell**
     - Theming (light/dark), localization-ready
     - go_router routing with guarded routes for auth
-    - Dependency injection setup (get_it or Riverpod providers)
-- **Authentication**
-    - Email/password for MVP (optionally Google/Apple)
-    - Token storage (secure storage) and session handling
+    - Dependency injection: Riverpod 2.x with code generation (`@riverpod`)
+- **State management**: Riverpod 2.x (resolved — see Resolved decisions)
+- **Authentication**: Supabase Auth — email/password for MVP; Google/Apple deferred
+    - Token storage: `flutter_secure_storage`
+    - Session refresh handled by Supabase client automatically
 - **Data layer (offline + sync)**
-    - Repository pattern: UI → use cases → repositories → (local/remote)
-    - Local DB: Drift (SQLite) recommended for structured data + migrations
-    - Remote: REST/GraphQL client behind an interface
-    - Sync strategy: last-write-wins for MVP; conflict handling later
+    - Repository pattern: UI → Riverpod providers → use cases → repositories → (local/remote)
+    - Local DB: Drift (SQLite) with migrations
+    - Remote: Supabase Dart client behind repository interface
+    - Sync: triggers on connectivity restore + app foreground; last-write-wins on `updatedAt`; failed ops retried with exponential back-off (max 5 attempts)
 - **Media storage (covers)**
-    - Local caching for cover thumbnails
-    - Remote storage option (Firebase Storage/S3) behind an abstraction
-    - Background upload + retry
+    - Compress to max 800 KB JPEG; 300×300 px thumbnail generated locally
+    - Remote: Supabase Storage behind abstraction
+    - Background upload + retry; thumbnails cached locally with extended TTL
 - **Search**
-    - Local full-text search for quotes (SQLite FTS if using Drift/SQLite)
+    - Local full-text search for quotes using SQLite FTS5 via Drift
 - **Quality gates**
-    - Lints (very_good_analysis or flutter_lints)
-    - Unit tests for progress calculations + ranking
-    - Crash reporting (Sentry/Firebase Crashlytics)
+    - Lints: `very_good_analysis`
+    - Unit tests for progress calculations + ranking rules
+    - Widget tests for capture flows (add book, add quote, log session)
+    - Crash reporting: Sentry
 
 ### Out of scope (MVP)
 
@@ -135,10 +138,57 @@ To address this in a scalable app, we need:
 
 ## User stories
 
-- As a user, I want to add books with covers so my library is visually organized.
-- As a user, I want to log reading progress so I can keep track over time.
-- As a user, I want to save quotes so I can revisit important passages.
-- As a user, I want to rate/rank books so I remember my favorites.
+### US-01 — Add books with covers
+As a user, I want to add books with covers so my library is visually organized.
+
+**Acceptance criteria**
+- **AC-01.1** Given I am on the Library screen, when I tap the FAB, then the Add Book form opens in under 300 ms.
+- **AC-01.2** Given the Add Book form is open, when I leave title or author empty and tap Save, then inline validation errors appear and the book is not saved.
+- **AC-01.3** Given I fill in title, author, and total pages, when I tap Save, then the book appears in the library with status "Want to read".
+- **AC-01.4** Given I am adding a book, when I tap "Add Cover" and pick an image, then a 300×300 px thumbnail is shown in the form preview.
+- **AC-01.5** Given I save a book with a cover, when the library grid renders, then the cover thumbnail is displayed without jank on a mid-range Android device.
+- **AC-01.6** Given I have no internet connection, when I add a book, then it is saved locally and synced automatically when connectivity is restored.
+
+---
+
+### US-02 — Log reading progress
+As a user, I want to log reading progress so I can keep track over time.
+
+**Acceptance criteria**
+- **AC-02.1** Given I am on the Book Detail screen, when I tap "Log Session", then the session form appears as a modal bottom sheet.
+- **AC-02.2** Given the session form is open, when I enter pages read (pagesFrom and pagesTo) and tap Save, then the session is recorded and the progress bar on Book Detail updates immediately.
+- **AC-02.3** Given pagesTo equals totalPages, when I save the session, then the book status automatically changes to "Finished".
+- **AC-02.4** Given I enter pagesTo greater than totalPages, when I tap Save, then a validation error appears and the session is not saved.
+- **AC-02.5** Given I have no internet connection, when I log a session, then it is saved locally and synced when connectivity is restored.
+- **AC-02.6** Given I open Book Detail, then I can see a chronological list of all past sessions with date, duration, and pages covered.
+
+---
+
+### US-03 — Save quotes
+As a user, I want to save quotes so I can revisit important passages.
+
+**Acceptance criteria**
+- **AC-03.1** Given I am on the Book Detail screen, when I tap "Add Quote", then the quote capture form appears.
+- **AC-03.2** Given the form is open, when I leave the quote text empty and tap Save, then a validation error appears and the quote is not saved.
+- **AC-03.3** Given I enter quote text and tap Save, then the quote appears in the Quotes tab linked to the book.
+- **AC-03.4** Given I am on the Quotes screen, when I type a keyword in the search field, then only quotes containing that keyword are shown (local FTS).
+- **AC-03.5** Given I tap the favorite icon on a quote, then the icon toggles and the quote appears when the "Favorites" filter is active.
+- **AC-03.6** Given I filter by a tag, then only quotes with that tag are shown.
+- **AC-03.7** Given I have no internet connection, when I save a quote, then it is saved locally and synced when connectivity is restored.
+
+---
+
+### US-04 — Rate and rank books
+As a user, I want to rate/rank books so I remember my favorites.
+
+**Acceptance criteria**
+- **AC-04.1** Given I am on the Book Detail screen, when I tap the star rating widget, then I can select 1–5 stars.
+- **AC-04.2** Given I select a rating, when I tap Save, then the rating is displayed on Book Detail and in the Library card.
+- **AC-04.3** Given I add an optional review text alongside a rating, when I save, then the review text appears below the stars on Book Detail.
+- **AC-04.4** Given I am on the Library screen, when I sort by "Top rated", then books are ordered by star rating descending; unrated books appear last.
+- **AC-04.5** Given I already rated a book, when I open the rating widget again, then the previous rating is pre-selected and I can update it.
+
+---
 
 ### Developer stories (scalability)
 
@@ -176,11 +226,14 @@ To address this in a scalable app, we need:
 
 ## Data model (conceptual)
 
-- **UserProfile**: id, email
-- **Book**: id, title, author, status, coverUri, createdAt
-- **ReadingSession**: id, bookId, startedAt, durationMinutes, progressFrom, progressTo, notes?
-- **Quote**: id, bookId, text, pageNumber?, tags[], isFavorite, createdAt
-- **Rating**: bookId, stars (1–5), review?, ratedAt
+- **UserProfile**: id, email, displayName
+- **Book**: id, userId, title, author, totalPages, status, coverUri, createdAt, updatedAt
+- **ReadingSession**: id, bookId, startedAt, durationMinutes, pagesFrom, pagesTo, notes?, createdAt, updatedAt
+- **Quote**: id, bookId, text, pageNumber?, tags[], isFavorite, createdAt, updatedAt
+- **Rating**: id, bookId, stars (1–5), review?, ratedAt, updatedAt
+
+> `updatedAt` is required on all entities for last-write-wins sync conflict resolution.
+> `progressPercentage` is always derived: `pagesTo / book.totalPages * 100` — never stored.
 
 ### Storage mapping
 
@@ -327,17 +380,33 @@ MVP recommendation:
 - Quote search latency (p95)
 - Sync success rate
 
-## Open questions
+## Resolved decisions
 
-- Progress tracking model for v1: pages, percentage, minutes, or hybrid?
-- Cover sources: manual upload only, or fetch by ISBN/online search?
-- Ranking model: stars only, tiers (S/A/B), or both?
+All open questions have been resolved. These are the authoritative choices for v1.
 
-### Open technical questions
+### Product decisions
 
-- Which state management standard: Riverpod vs BLoC?
-- Backend choice for MVP: Firebase vs custom API?
-- Offline-first depth: read-only offline vs full create/update offline?
-- Image pipeline: compression settings, thumbnail generation strategy?
+| Question | Decision | Rationale |
+|---|---|---|
+| Progress tracking model | **Pages as primary unit** | Most intuitive for readers; percentage is derived automatically (`pagesRead / totalPages`). Time tracking deferred to V2. `totalPages` is a required field on Book. |
+| Cover sources | **Manual upload only** | ISBN scanning is explicitly out of scope for MVP. |
+| Ranking model | **Stars 1–5 only** | Tier system (S/A/B) deferred to V2. Stars are universally understood and simpler to implement. |
+
+### Technical decisions
+
+| Question | Decision | Rationale |
+|---|---|---|
+| State management | **Riverpod 2.x with code generation** | Less boilerplate than BLoC, better suited for feature-first modular structure, composable providers map naturally to the repository pattern. |
+| Backend | **Supabase** (Postgres + Auth + Storage) | Relational data model fits the domain better than Firestore; no vendor lock-in risk; strong Row Level Security for privacy; Supabase Auth pairs naturally. |
+| Offline-first depth | **Full create/update offline** | Users log sessions immediately after reading (< 10 s flow requirement). Books, sessions, and quotes must be creatable offline. Sync triggers on connectivity restore and app foreground resume. |
+| Image pipeline | **Compress to max 800 KB JPEG; generate 300×300 px thumbnail locally before upload** | Thumbnails cached locally with extended TTL for smooth grid scrolling. Originals uploaded in background with retry. |
+
+### Sync strategy (expanded)
+
+- **Trigger**: on `onConnectivityRestored` + `AppLifecycleState.resumed`
+- **Conflict resolution**: server timestamp wins (last-write-wins on `updatedAt` column)
+- **Failure**: failed sync operations queued locally and retried with exponential back-off (max 5 attempts)
+
+[Mockups (v1)](https://www.notion.so/Mockups-v1-c1727d9d020b4ebabd1a3f502b91690d?pvs=21)
 
 [Mockups (v1)](https://www.notion.so/Mockups-v1-c1727d9d020b4ebabd1a3f502b91690d?pvs=21)

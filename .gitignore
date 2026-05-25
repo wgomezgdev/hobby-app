@@ -58,6 +58,12 @@ secrets.dart
 google-services.json
 GoogleService-Info.plist
 
+# Personal notes
+misc/learning-path.md
+
+# Claude Code
+.claude/
+
 # IDEs
 .idea/
 .vscode/

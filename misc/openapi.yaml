@@ -1,0 +1,766 @@
+openapi: 3.0.3
+info:
+  title: Reading Companion API
+  version: 1.0.0
+  description: >
+    REST API contract for the Reading Companion mobile app.
+    Backend: Supabase (PostgREST). All routes require a valid Bearer token
+    issued by Supabase Auth except /auth/*.
+
+servers:
+  - url: https://{project}.supabase.co/rest/v1
+    description: Supabase (MVP)
+    variables:
+      project:
+        default: your-project-id
+
+security:
+  - BearerAuth: []
+
+# ---------------------------------------------------------------------------
+# PATHS
+# ---------------------------------------------------------------------------
+paths:
+
+  # ── AUTH ────────────────────────────────────────────────────────────────
+  /auth/v1/signup:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: User created and session returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/v1/token:
+    post:
+      tags: [Auth]
+      summary: Sign in (email + password)
+      security: []
+      parameters:
+        - in: query
+          name: grant_type
+          required: true
+          schema:
+            type: string
+            enum: [password]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Session returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/AuthError'
+
+  /auth/v1/logout:
+    post:
+      tags: [Auth]
+      summary: Sign out current session
+      responses:
+        '204':
+          description: Signed out
+
+  # ── BOOKS ───────────────────────────────────────────────────────────────
+  /books:
+    get:
+      tags: [Books]
+      summary: List all books for the authenticated user
+      parameters:
+        - $ref: '#/components/parameters/StatusFilter'
+        - $ref: '#/components/parameters/OrderBy'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: List of books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+
+    post:
+      tags: [Books]
+      summary: Create a new book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookCreate'
+      responses:
+        '201':
+          description: Book created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /books/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ResourceId'
+    get:
+      tags: [Books]
+      summary: Get a single book
+      responses:
+        '200':
+          description: Book detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Books]
+      summary: Update a book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookUpdate'
+      responses:
+        '200':
+          description: Updated book
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Books]
+      summary: Delete a book (cascades to sessions, quotes, rating)
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── READING SESSIONS ────────────────────────────────────────────────────
+  /reading_sessions:
+    get:
+      tags: [ReadingSessions]
+      summary: List reading sessions (filter by bookId)
+      parameters:
+        - in: query
+          name: book_id
+          schema:
+            type: string
+            format: uuid
+          description: Filter sessions by book
+        - $ref: '#/components/parameters/OrderBy'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: List of reading sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReadingSession'
+
+    post:
+      tags: [ReadingSessions]
+      summary: Log a new reading session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadingSessionCreate'
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadingSession'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /reading_sessions/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ResourceId'
+    patch:
+      tags: [ReadingSessions]
+      summary: Update a reading session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadingSessionUpdate'
+      responses:
+        '200':
+          description: Updated session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadingSession'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [ReadingSessions]
+      summary: Delete a reading session
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── QUOTES ──────────────────────────────────────────────────────────────
+  /quotes:
+    get:
+      tags: [Quotes]
+      summary: List quotes (filter by bookId, tag, isFavorite)
+      parameters:
+        - in: query
+          name: book_id
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: is_favorite
+          schema:
+            type: boolean
+        - in: query
+          name: tag
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Full-text search on quote text
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: List of quotes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Quote'
+
+    post:
+      tags: [Quotes]
+      summary: Save a new quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteCreate'
+      responses:
+        '201':
+          description: Quote created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /quotes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ResourceId'
+    patch:
+      tags: [Quotes]
+      summary: Update a quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteUpdate'
+      responses:
+        '200':
+          description: Updated quote
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quote'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Quotes]
+      summary: Delete a quote
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ── RATINGS ─────────────────────────────────────────────────────────────
+  /ratings:
+    get:
+      tags: [Ratings]
+      summary: List ratings (filter by bookId)
+      parameters:
+        - in: query
+          name: book_id
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/OrderBy'
+      responses:
+        '200':
+          description: List of ratings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rating'
+
+    post:
+      tags: [Ratings]
+      summary: Create or replace a rating for a book (upsert)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingUpsert'
+      responses:
+        '200':
+          description: Rating saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rating'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # ── COVER UPLOAD ────────────────────────────────────────────────────────
+  /storage/v1/object/covers/{filename}:
+    post:
+      tags: [Storage]
+      summary: Upload a book cover image
+      parameters:
+        - in: path
+          name: filename
+          required: true
+          schema:
+            type: string
+          description: "{bookId}/{uuid}.jpg"
+      requestBody:
+        required: true
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Upload successful; returns public URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Key:
+                    type: string
+        '413':
+          description: File exceeds 800 KB limit
+
+# ---------------------------------------------------------------------------
+# COMPONENTS
+# ---------------------------------------------------------------------------
+components:
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ResourceId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    StatusFilter:
+      in: query
+      name: status
+      schema:
+        type: string
+        enum: [want_to_read, reading, finished]
+
+    OrderBy:
+      in: query
+      name: order
+      schema:
+        type: string
+      description: "PostgREST order syntax e.g. created_at.desc"
+
+    Limit:
+      in: query
+      name: limit
+      schema:
+        type: integer
+        default: 50
+        maximum: 200
+
+    Offset:
+      in: query
+      name: offset
+      schema:
+        type: integer
+        default: 0
+
+  schemas:
+
+    # ── AUTH ──
+    AuthRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        expires_in:
+          type: integer
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        display_name:
+          type: string
+
+    # ── BOOK ──
+    Book:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        author:
+          type: string
+        total_pages:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          enum: [want_to_read, reading, finished]
+        cover_uri:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    BookCreate:
+      type: object
+      required: [title, author, total_pages]
+      properties:
+        title:
+          type: string
+        author:
+          type: string
+        total_pages:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          enum: [want_to_read, reading, finished]
+          default: want_to_read
+        cover_uri:
+          type: string
+          nullable: true
+
+    BookUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        author:
+          type: string
+        total_pages:
+          type: integer
+          minimum: 1
+        status:
+          type: string
+          enum: [want_to_read, reading, finished]
+        cover_uri:
+          type: string
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+
+    # ── READING SESSION ──
+    ReadingSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        book_id:
+          type: string
+          format: uuid
+        started_at:
+          type: string
+          format: date-time
+        duration_minutes:
+          type: integer
+          minimum: 1
+        pages_from:
+          type: integer
+          minimum: 0
+        pages_to:
+          type: integer
+          minimum: 1
+        notes:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ReadingSessionCreate:
+      type: object
+      required: [book_id, started_at, duration_minutes, pages_from, pages_to]
+      properties:
+        book_id:
+          type: string
+          format: uuid
+        started_at:
+          type: string
+          format: date-time
+        duration_minutes:
+          type: integer
+          minimum: 1
+        pages_from:
+          type: integer
+          minimum: 0
+        pages_to:
+          type: integer
+          minimum: 1
+        notes:
+          type: string
+          nullable: true
+
+    ReadingSessionUpdate:
+      type: object
+      properties:
+        duration_minutes:
+          type: integer
+          minimum: 1
+        pages_from:
+          type: integer
+          minimum: 0
+        pages_to:
+          type: integer
+          minimum: 1
+        notes:
+          type: string
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+
+    # ── QUOTE ──
+    Quote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        book_id:
+          type: string
+          format: uuid
+        text:
+          type: string
+        page_number:
+          type: integer
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        is_favorite:
+          type: boolean
+          default: false
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    QuoteCreate:
+      type: object
+      required: [book_id, text]
+      properties:
+        book_id:
+          type: string
+          format: uuid
+        text:
+          type: string
+        page_number:
+          type: integer
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+          default: []
+        is_favorite:
+          type: boolean
+          default: false
+
+    QuoteUpdate:
+      type: object
+      properties:
+        text:
+          type: string
+        page_number:
+          type: integer
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        is_favorite:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+
+    # ── RATING ──
+    Rating:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        book_id:
+          type: string
+          format: uuid
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+        review:
+          type: string
+          nullable: true
+        rated_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    RatingUpsert:
+      type: object
+      required: [book_id, stars]
+      properties:
+        book_id:
+          type: string
+          format: uuid
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+        review:
+          type: string
+          nullable: true
+
+    # ── ERRORS ──
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    AuthError:
+      description: Invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
