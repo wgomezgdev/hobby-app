@@ -5,6 +5,77 @@ Technology investigation and validation results that informed the decisions in `
 
 ---
 
+## Database Strategy: Relational vs Non-Relational vs Polyglot
+
+**Conclusion: Supabase (Postgres) for V1 — polyglot persistence in V2**
+
+### Why relational for V1
+
+The core data model is inherently relational:
+- A `ReadingSession` belongs to a `Book` (foreign key)
+- A `Quote` belongs to a `Book` (foreign key)
+- A `Rating` belongs to a `Book` (one-to-one)
+
+SQL handles this naturally. Non-relational (NoSQL) databases like Firestore store data as self-contained documents — forcing relational data into documents creates duplication and makes queries like "all sessions for this book sorted by date" or "calculate a reading streak from session dates" unnecessarily complex.
+
+Key queries that prove SQL is the right choice for V1:
+
+```sql
+-- Reading streak (consecutive days)
+SELECT DISTINCT DATE(started_at) FROM reading_sessions
+WHERE book_id IN (SELECT id FROM books WHERE user_id = ?)
+ORDER BY 1 DESC;
+
+-- Quote full-text search
+SELECT * FROM quotes WHERE text MATCH 'courage';
+
+-- Top rated books
+SELECT b.*, r.stars FROM books b
+LEFT JOIN ratings r ON r.book_id = b.id
+ORDER BY r.stars DESC NULLS LAST;
+```
+
+None of these are practical in Firestore without significant workarounds.
+
+### Why non-relational for V2 feed and quote knowledge graph
+
+The planned V2 features have fundamentally different data shapes:
+
+**Social feed:** Each feed item is self-contained — a post, a shared quote, a reading milestone. Items don't have complex relationships between them. Real-time listeners (new posts appearing instantly) are a NoSQL strength. This is a document model — NoSQL wins.
+
+**Quote knowledge graph:** Interrelations between quotes across books and topics form a flexible, schema-less graph. A quote can relate to multiple topics, multiple books, and other quotes in unpredictable ways. The schema changes as the user builds their knowledge base. NoSQL (or a graph DB) handles this far better than rigid SQL tables.
+
+### Polyglot persistence — microservice pattern for V2
+
+V2 introduces a **dedicated microservice** that owns the non-relational layer. The Flutter app never imports a NoSQL SDK — it calls the microservice's REST API.
+
+```
+V1:
+Flutter → Supabase SDK → Postgres
+
+V2:
+Flutter → Supabase SDK      → Postgres   (unchanged)
+Flutter → Microservice API  → NoSQL      (new, additive)
+```
+
+The V1 repository pattern maps to this cleanly:
+
+```
+lib/features/library/data/book_repository.dart      → calls Supabase SDK (Postgres)
+lib/features/feed/data/feed_repository.dart          → calls microservice REST API → NoSQL (V2)
+lib/features/quote_graph/data/graph_repository.dart  → calls microservice REST API → NoSQL (V2)
+```
+
+**Why a microservice instead of a direct NoSQL SDK in the app?**
+- The NoSQL database implementation is completely hidden — if it changes (e.g. Firestore → MongoDB), Flutter code does not change
+- The microservice owns all business logic for feed ranking and quote interrelations
+- A single REST API contract between Flutter and the microservice is easier to version and test
+- Keeps the Flutter app thin — it only handles UI and calls APIs
+
+Adding V2 features means adding new repositories that call the microservice API — existing repositories are untouched.
+
+---
+
 ## State Management: Riverpod vs BLoC
 
 **Conclusion: Riverpod 2.x**

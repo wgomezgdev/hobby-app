@@ -50,15 +50,66 @@ To address this in a scalable app, we need:
 
 ## Non-goals (v1)
 
-- Full social network / public profiles
+- Social feed / public profiles
 - Complex recommendation engine (ML)
 - Full e-reader functionality (rendering EPUB/PDF)
+- Advanced quote management for study (interrelations between quotes, books, and topics)
+- Barcode/ISBN scanning
+- Import from Goodreads/Kindle
+
+> These are **deferred**, not permanently excluded. See Future Vision below.
 
 ### Technical non-goals (v1)
 
+- Non-relational (NoSQL) database module — planned for V2 feed and quote management features
 - Multi-region sharding, complex microservices
 - Real-time collaborative annotations
 - Advanced DRM/content ingestion
+
+---
+
+## Future Vision (V2+)
+
+This section documents planned future directions that intentionally shape V1 architectural decisions.
+
+### Planned V2 features
+
+| Feature | Description |
+|---|---|
+| **Social feed** | Users can share quotes and reading activity publicly or with friends |
+| **Advanced quote management** | Study mode — interrelations between quotes across books and topics, tagging taxonomy, knowledge graph |
+| **Book interrelations** | Link books by topic, author, theme — "if you liked X, these quotes from Y are related" |
+| **Reading goals** | Daily page goals, weekly reading challenges, streaks with rewards |
+| **Recommendations** | Suggest books based on rated books and saved quotes |
+
+### Polyglot persistence strategy
+
+V1 uses **Supabase (Postgres)** exclusively — the right choice for structured relational data (books, sessions, quotes, ratings). The Flutter app talks directly to Supabase via its SDK.
+
+V2 will introduce a **dedicated microservice** that owns the non-relational layer:
+
+```
+V1 architecture:
+Flutter app → Supabase SDK → Postgres
+
+V2 architecture:
+Flutter app → Supabase SDK    → Postgres          (core data: unchanged)
+Flutter app → Microservice API → NoSQL database   (feed + quote graph: new)
+```
+
+| Module | Access method | Database | Reason |
+|---|---|---|---|
+| Core data (books, sessions, ratings) | Supabase SDK (direct) | Supabase Postgres | Relational, structured, complex queries |
+| Social feed | REST API → Microservice | NoSQL (Firestore or MongoDB) | Self-contained documents, real-time, flexible schema |
+| Quote knowledge graph | REST API → Microservice | NoSQL (Firestore or MongoDB) | Interrelations between quotes, books, topics — document model |
+
+**The microservice is responsible for:**
+- All CRUD operations on the NoSQL database
+- Business logic for feed ranking, quote interrelations, topic tagging
+- Exposing a clean REST API consumed by the Flutter app
+- The Flutter app never imports a NoSQL SDK — it only calls the microservice API
+
+> **Why this matters for V1:** The repository pattern is designed for this. In V2, the feed and quote graph features simply add new repositories that call the microservice REST API — the same pattern as the existing Supabase repositories. Zero changes to existing features.
 
 ## Target users
 

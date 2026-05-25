@@ -31,6 +31,17 @@ Every spec, plan, task, and line of code must align with these rules.
 
 No technology from this table may be swapped without a constitutional amendment (update this file, commit, get team sign-off).
 
+### Planned V2 addition — Polyglot Persistence via Microservice
+
+V1 is Supabase (Postgres) only. V2 will introduce a **dedicated microservice** that owns the non-relational layer for social feed and quote knowledge graph features:
+
+- **Postgres (via Supabase SDK)** → core data (books, sessions, ratings) — stays forever, unchanged
+- **Microservice REST API → NoSQL** → feed items, quote graph, topic interrelations
+
+**The Flutter app never imports a NoSQL SDK directly.** It calls the microservice API — the same repository pattern as Supabase. This keeps the Flutter codebase clean and the NoSQL implementation detail hidden behind the service boundary.
+
+The microservice owns: CRUD operations, feed ranking logic, quote interrelation logic, topic tagging.
+
 ## 3. Testing Requirements
 
 - **Test-first**: write the test spec (in `contracts/test-specs.md`) before writing implementation code. No implementation without a failing test.
