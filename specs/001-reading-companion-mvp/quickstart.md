@@ -167,9 +167,13 @@ specs/
     research.md     ← Technology decisions
     data-model.md   ← Entity definitions and schema
     quickstart.md   ← This file
+    ui-spec.md      ← Screen-by-screen UI specification (components, colours, layout)
     contracts/
       openapi.yaml  ← API contract
       test-specs.md ← Test cases traced to ACs
+ui-design/
+  01-sign-in.png … 13-home-empty-state.png  ← Mockup PNGs (390×844 px)
+  generate.py     ← Script that regenerates all mockups from scratch
 .specify/
   memory/
     constitution.md ← Governing principles

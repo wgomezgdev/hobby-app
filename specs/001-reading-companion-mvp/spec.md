@@ -344,6 +344,9 @@ As a user, I want to see my reading streak so I stay motivated to read every day
 
 ## UX / screens (high level)
 
+> Full component-level UI specification: see `specs/001-reading-companion-mvp/ui-spec.md`.
+> Visual mockups (390×844 px PNGs): see `ui-design/`.
+
 ### Navigation structure
 Bottom navigation bar with 4 tabs — persistent across all screens:
 ```
