@@ -2,6 +2,7 @@
 <!-- derived from specs/001-reading-companion-mvp/plan.md v1.2.0 | 2026-05-25 -->
 
 Check off each task as it is completed. Do not start a phase until all tasks in the previous phase are checked.
+Each phase ends with a **Smoke Test** — run the app on a simulator or device and verify visually before proceeding.
 
 ---
 
@@ -18,6 +19,18 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Configure `--dart-define` environment variables (dev / staging / prod)
 - [ ] Create GitHub Actions workflow: `flutter analyze` + `flutter test` on push
 - [ ] Verify `flutter analyze` passes with zero warnings
+
+### Smoke Test — Phase 1
+**Command:** `flutter run --dart-define-from-file=.env.dev`
+
+| # | What to do | Expected result |
+|---|---|---|
+| 1 | Launch the app on simulator/emulator | App opens with no crash. Warm cream background (`#FFF8F2`) visible |
+| 2 | Observe the bottom navigation bar | 4 tabs visible: Home · Library · Quotes · Profile |
+| 3 | Tap each tab | Each tab navigates to its placeholder screen with the tab name visible. No crashes |
+| 4 | Observe the app bar on each tab | Gradient header (`#4B3D8F → #7060B8`) visible on all tabs |
+| 5 | Enable dark mode on the device | App switches to dark theme without crash or visual breakage |
+| 6 | Run `flutter analyze` in terminal | Zero warnings output |
 
 ---
 
@@ -37,6 +50,19 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Test: successful Google sign-in navigates to Home (AC-05.2, AC-05.3)
 - [ ] Test: returning user with stored session goes directly to Home (AC-05.4)
 - [ ] Test: sign out clears session and returns to sign-in (AC-05.5)
+
+### Smoke Test — Phase 2
+**Command:** `flutter run --dart-define-from-file=.env.dev`
+
+| # | What to do | Expected result |
+|---|---|---|
+| 1 | Clear app data / fresh install | Sign-in screen appears immediately. Home tab is NOT visible |
+| 2 | Observe the sign-in screen | Single "Continue with Google" button. No email field, no register link |
+| 3 | Tap "Continue with Google" | Google account picker opens |
+| 4 | Select a Google account | App navigates to Home screen. No extra steps |
+| 5 | Close and reopen the app | App goes directly to Home — no sign-in prompt |
+| 6 | Go to Profile → tap "Sign Out" | Returns to sign-in screen. Home tab inaccessible |
+| 7 | Check Supabase dashboard → Authentication → Users | New user entry visible with your Google email |
 
 ---
 
@@ -61,6 +87,19 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Test: sync queue flushes on connectivity restore (UT-12)
 - [ ] Test: failed sync retries max 5 times (UT-13)
 
+### Smoke Test — Phase 3
+**Command:** `flutter run --dart-define-from-file=.env.dev`
+
+> Phase 3 has no new visible screens. Use a temporary debug screen or Flutter DevTools to verify.
+
+| # | What to do | Expected result |
+|---|---|---|
+| 1 | Run `flutter test test/unit/` | All data layer unit tests pass (UT-11, UT-12, UT-13) |
+| 2 | Enable airplane mode on device → sign in | App opens without crash. Offline mode works |
+| 3 | Open Flutter DevTools → App Size / Logging tab | No Drift migration errors in logs |
+| 4 | Restore connectivity | No crash. SyncService logs "sync triggered" in debug console |
+| 5 | Check Supabase dashboard → Table Editor | `books`, `reading_sessions`, `quotes`, `ratings` tables exist with correct columns |
+
 ---
 
 ## Phase 4 — Home Dashboard
@@ -81,6 +120,19 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Test: streak increments after logging a session (AC-07.1)
 - [ ] Test: streak resets after missing a day (AC-07.3)
 - [ ] Test: streak badge hidden when streak = 0 (AC-07.4)
+
+### Smoke Test — Phase 4
+**Command:** `flutter run --dart-define-from-file=.env.dev`
+
+| # | What to do | Expected result |
+|---|---|---|
+| 1 | Sign in and open Home tab with no books | Empty state visible: illustration + "Start your reading journey" + CTA button |
+| 2 | (Seed 1 book with status "reading" directly in Supabase) | Home shows the book as a card with cover, title, progress bar |
+| 3 | Tap "Log Session" on the card | Bottom sheet opens pre-filled with that book's name |
+| 4 | Tap "Add Quote" on the card | Quote bottom sheet opens pre-filled with that book's name |
+| 5 | Tap the extended FAB | FAB expands showing "Log Session" and "Add Quote" options |
+| 6 | Minimize the app and reopen it | Home restores to the same scroll position |
+| 7 | Streak ring | Hidden when no sessions logged. Visible and shows correct count after a session |
 
 ---
 
@@ -103,6 +155,20 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Test: cover thumbnail shown after image pick (WT-04)
 - [ ] Test: library grid renders covers correctly (WT-16)
 - [ ] Test: book created offline syncs on reconnect (IT-01)
+
+### Smoke Test — Phase 5
+**Command:** `flutter run --dart-define-from-file=.env.dev`
+
+| # | What to do | Expected result |
+|---|---|---|
+| 1 | Open Library tab | Grid view shows books. Book count visible in header |
+| 2 | Tap the grid/list toggle | Switches between grid and list view smoothly |
+| 3 | Tap the FAB | Add Book form opens in under 300 ms (AC-01.1) |
+| 4 | Tap Save with title and author empty | Inline errors appear on both fields. Book is NOT saved (AC-01.2) |
+| 5 | Fill in title, author, total pages → tap Save | Book appears in library with status "Want to Read" (AC-01.3) |
+| 6 | Add a book with a cover image | 300×300 thumbnail appears in the grid card (AC-01.4, AC-01.5) |
+| 7 | Enable airplane mode → add a book | Book appears immediately in library. Reconnect → book appears in Supabase dashboard (AC-01.6) |
+| 8 | Filter by "Reading" | Only books with status "Reading" shown |
 
 ---
 
@@ -128,6 +194,19 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Test: progress bar reflects latest session (IT-08)
 - [ ] Test: session created offline syncs on reconnect (IT-02)
 
+### Smoke Test — Phase 6
+**Command:** `flutter run --dart-define-from-file=.env.dev`
+
+| # | What to do | Expected result |
+|---|---|---|
+| 1 | Tap any book in the library | Book Detail screen opens with progress bar, info strip, and tabs |
+| 2 | Tap "Log Reading Session" | Bottom sheet opens. "From page" is auto-filled with last session's end page |
+| 3 | Enter a valid pagesTo and duration → Save | Progress bar updates immediately. Session appears in history (AC-02.2) |
+| 4 | Enter pagesTo greater than totalPages → Save | Inline error appears. Session is NOT saved (AC-02.4) |
+| 5 | Log a session where pagesTo = totalPages | Book status changes to "Finished" automatically. Library card updates (AC-02.3) |
+| 6 | Scroll session history | Sessions are listed newest-first (AC-02.6) |
+| 7 | Check Book Detail info strip | Total reading time and estimated completion date are visible |
+
 ---
 
 ## Phase 7 — Quotes Feature
@@ -149,6 +228,19 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Test: tag filter returns tagged quotes only (IT-11)
 - [ ] Test: quote created offline syncs on reconnect (IT-03)
 
+### Smoke Test — Phase 7
+**Command:** `flutter run --dart-define-from-file=.env.dev`
+
+| # | What to do | Expected result |
+|---|---|---|
+| 1 | Open Book Detail → Quotes tab | Quotes list visible with search bar. Decorative quote mark on cards |
+| 2 | Tap FAB → fill quote text → Save | Quote appears in list with Lora serif text (AC-03.3) |
+| 3 | Try to save with empty text | Inline error appears. Quote NOT saved (AC-03.2) |
+| 4 | Tap the favourite heart on a quote | Icon toggles to amber. Haptic vibration felt on device (AC-03.5) |
+| 5 | Open global Quotes tab → type "habits" in search bar | Only quotes containing "habits" appear within 100 ms (AC-03.4) |
+| 6 | Type a word that matches nothing | Empty state shown — no crash (AC-03.4) |
+| 7 | Apply "Favorites" filter | Only favourited quotes shown (AC-03.5) |
+
 ---
 
 ## Phase 8 — Ranking Feature
@@ -168,6 +260,17 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Test: save emits correct rating value (WT-15)
 - [ ] Test: sort by Top Rated reorders list (WT-17)
 
+### Smoke Test — Phase 8
+**Command:** `flutter run --dart-define-from-file=.env.dev`
+
+| # | What to do | Expected result |
+|---|---|---|
+| 1 | Open Book Detail → Ranking tab | Star widget and review field visible |
+| 2 | Tap star 4 → tap Save | 4 stars saved. Rating appears in the info strip and Library card (AC-04.2) |
+| 3 | Reopen the Ranking tab | Widget is pre-filled with the saved 4-star rating (AC-04.5) |
+| 4 | Change rating to 2 → Save | Rating updates to 2 stars (upsert, not duplicate) |
+| 5 | Open Library → sort by "Top Rated" | Books ordered by stars descending. Unrated books appear last (AC-04.4) |
+
 ---
 
 ## Phase 9 — Search & Observability
@@ -181,6 +284,17 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Instrument `book_rated` analytics event
 - [ ] Instrument `app_opened` analytics event
 - [ ] Instrument `sync_completed` and `sync_failed` analytics events
+
+### Smoke Test — Phase 9
+**Command:** `flutter run --dart-define-from-file=.env.dev`
+
+| # | What to do | Expected result |
+|---|---|---|
+| 1 | Add a book in the app | Open Sentry dashboard → Issues/Events: `book_added` event visible |
+| 2 | Log a reading session | `session_logged` event appears in Sentry |
+| 3 | Save a quote | `quote_saved` event appears in Sentry |
+| 4 | Run quote search benchmark script | p95 latency < 100 ms on 10,000 seeded rows |
+| 5 | Force-crash the app (temporary `throw Exception()`) | Crash appears in Sentry dashboard within 30 seconds. Remove after test |
 
 ---
 
@@ -199,3 +313,16 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Upload APK to Google Play Internal Testing track
 - [ ] Build iOS IPA in release mode — no build errors
 - [ ] Upload IPA to TestFlight
+
+### Smoke Test — Phase 10
+**Command:** `flutter run --release --dart-define-from-file=.env.prod`
+
+| # | What to do | Expected result |
+|---|---|---|
+| 1 | Run `flutter test --coverage` | All 41 tests pass. Coverage report generated |
+| 2 | Run `flutter analyze` | Zero warnings |
+| 3 | Run the app on a mid-range Android device (not emulator) | App cold-starts in < 2 seconds |
+| 4 | Enable "Large text" accessibility setting on device | All screens readable, no text clipping or overflow |
+| 5 | Enable "Remove animations" accessibility setting | App functions normally without animations |
+| 6 | Run full golden path: add book → log session → save quote → rate book | All 4 flows complete without error. Data persists after app restart |
+| 7 | Test offline → online flow end to end | Data created offline syncs within 5 seconds of reconnecting |
