@@ -13,6 +13,8 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Set up bottom navigation bar shell with 4 tabs: Home | Library | Quotes | Profile
 - [ ] Configure `go_router` ShellRoute for bottom nav + placeholder routes for all screens
 - [ ] Bootstrap Riverpod 2.x with code generation (`@riverpod`, `build_runner`)
+- [ ] Add `freezed`, `freezed_annotation`, `json_serializable`, `json_annotation` to `pubspec.yaml`
+- [ ] Define sealed `AsyncState<T>` union (`idle / loading / success / error`) in `core/` using `@freezed`
 - [ ] Configure `--dart-define` environment variables (dev / staging / prod)
 - [ ] Create GitHub Actions workflow: `flutter analyze` + `flutter test` on push
 - [ ] Verify `flutter analyze` passes with zero warnings
@@ -47,6 +49,7 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Create `ratings` table with all columns including `updated_at`
 - [ ] Create `sync_queue` table for offline operation queuing
 - [ ] Write initial Drift migration (version 1)
+- [ ] Define domain models (`Book`, `ReadingSession`, `Quote`, `Rating`) as `@freezed` classes
 - [ ] Define `BookRepository`, `SessionRepository`, `QuoteRepository`, `RatingRepository` interfaces
 - [ ] Implement Drift (local) repositories for all four entities
 - [ ] Implement Supabase (remote) repositories for all four entities

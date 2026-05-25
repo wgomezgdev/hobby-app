@@ -86,7 +86,7 @@ This section documents planned future directions that intentionally shape V1 arc
 
 V1 uses **Supabase (Postgres)** exclusively — the right choice for structured relational data (books, sessions, quotes, ratings). The Flutter app talks directly to Supabase via its SDK.
 
-V2 will introduce a **dedicated microservice** that owns the non-relational layer:
+V2 will introduce a **dedicated microservice** that owns the non-relational layer. HTTP calls to the microservice will use **`dio`** — the Flutter community standard HTTP client — behind a repository interface, consistent with V1's repository pattern.
 
 ```
 V1 architecture:
@@ -171,6 +171,7 @@ Flutter app → Microservice API → NoSQL database   (feed + quote graph: new)
     - go_router routing with guarded routes for auth
     - Dependency injection: Riverpod 2.x with code generation (`@riverpod`)
 - **State management**: Riverpod 2.x (resolved — see Resolved decisions)
+- **Immutable models**: `freezed` + `json_serializable` for all domain entities and sealed async states (`idle / loading / success / error`)
 - **Authentication**: Supabase Auth — Google Sign-In (OAuth) only
     - One tap sign-in, no password, no separate registration screen
     - First-time Google sign-in = automatic account creation
@@ -447,6 +448,7 @@ All open questions have been resolved. These are the authoritative choices for v
 | Question | Decision | Rationale |
 |---|---|---|
 | State management | **Riverpod 2.x with code generation** | Less boilerplate than BLoC, better suited for feature-first modular structure, composable providers map naturally to the repository pattern. |
+| Immutable models | **`freezed` + `json_serializable`** | Industry standard for immutable domain models in Flutter. Generates `copyWith`, `==`, `hashCode`, and sealed async state unions (`idle / loading / success / error`) without manual boilerplate. |
 | Backend | **Supabase** (Postgres + Auth + Storage) | Relational data model fits the domain better than Firestore; no vendor lock-in risk; strong Row Level Security for privacy; Supabase Auth pairs naturally. |
 | Authentication | **Google Sign-In via Supabase OAuth** | Daily-use app must have zero-friction auth. One tap, no password, no registration screen. First sign-in creates account automatically. |
 | Navigation | **Bottom navigation bar** (Home / Library / Quotes / Profile) | Daily users need direct access to their most-used screens without drilling through hierarchies. |

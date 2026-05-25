@@ -163,6 +163,43 @@ Server `updated_at` timestamp is set by Supabase on every write via a `BEFORE UP
 
 ---
 
+## Immutable Models: freezed vs manual vs built_value
+
+**Conclusion: freezed + json_serializable**
+
+Domain models in Flutter need to be immutable (a `Book` object should not change in place — you create a new one with `copyWith`). Three options were considered:
+
+| Criterion | freezed | manual | built_value |
+|---|---|---|---|
+| Boilerplate | None — generated | High — write `==`, `hashCode`, `copyWith` by hand | Low — generated, but verbose DSL |
+| Sealed unions (async states) | Yes — `@freezed` with multiple constructors | Complex | Yes |
+| Community adoption | De facto Flutter standard | N/A | Declining |
+| Riverpod integration | Excellent | Manual | Awkward |
+| Code generation tooling | `build_runner` (same as Riverpod + Drift) | None | `build_runner` |
+
+`freezed` wins on all counts. It also enables sealed `AsyncState<T>` unions for the standard async state pattern (`idle / loading / success / error`) the spec requires, without writing a custom class per feature.
+
+`json_serializable` is added alongside `freezed` to handle JSON serialization for Supabase DTOs.
+
+---
+
+## HTTP Client for V2 Microservice: dio vs http
+
+**Conclusion: dio (planned for V2)**
+
+V1 does not need an HTTP client — all remote calls go through the Supabase Dart SDK. V2 introduces calls to a microservice REST API.
+
+| Criterion | dio | http (dart:http) |
+|---|---|---|
+| Interceptors (auth headers, logging, retry) | Yes — first class | No — manual wrapper required |
+| Request cancellation | Yes | No |
+| Community adoption | De facto Flutter standard | Basic use cases only |
+| Timeout handling | Built-in | Manual |
+
+`dio` is the Flutter community standard for REST API calls. It will be added to `pubspec.yaml` in V2 behind a repository interface — the app never calls `dio` directly from widgets.
+
+---
+
 ## Crash Reporting: Sentry vs Firebase Crashlytics
 
 **Conclusion: Sentry**

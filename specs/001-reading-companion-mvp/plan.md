@@ -18,6 +18,7 @@ No features yet — just the skeleton every other phase builds on.
 - Bottom navigation bar shell: Home | Library | Quotes | Profile tabs
 - `go_router` configured with shell route for bottom nav + placeholder routes for all screens
 - Riverpod 2.x with code generation (`@riverpod`) bootstrapped
+- `freezed` + `json_serializable` + `build_runner` configured; sealed `AsyncState<T>` union defined in `core/`
 - Environment config via `--dart-define` (dev / staging / prod)
 - CI pipeline (GitHub Actions): `flutter analyze` + `flutter test` on every push
 
@@ -73,6 +74,7 @@ Satisfies AC-05.1 through AC-05.5.
 - Drift database with tables: `books`, `reading_sessions`, `quotes`, `ratings`
 - All tables include `updated_at` column for sync conflict resolution
 - `SyncQueue` table in Drift for failed remote operations
+- All domain models (`Book`, `ReadingSession`, `Quote`, `Rating`) defined as `@freezed` classes
 - Repository interfaces: `BookRepository`, `SessionRepository`, `QuoteRepository`, `RatingRepository`
 - Supabase implementations of each repository
 - Drift (local) implementations of each repository

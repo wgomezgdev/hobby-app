@@ -28,8 +28,13 @@ Every spec, plan, task, and line of code must align with these rules.
 | Navigation shell | go_router ShellRoute + bottom navigation bar (Home / Library / Quotes / Profile) | Daily users need direct access to top-level screens |
 | Linting | very_good_analysis | Strictest Flutter lint ruleset |
 | Crash reporting | Sentry | Performance tracing + error tracking |
+| Immutable models | freezed + json_serializable | Generates immutable domain models, `copyWith`, sealed async states (`idle/loading/success/error`) — eliminates manual boilerplate |
 
 No technology from this table may be swapped without a constitutional amendment (update this file, commit, get team sign-off).
+
+### Planned V2 addition — HTTP client
+
+V2 introduces calls to a microservice REST API. The HTTP client will be **`dio`**, used exclusively behind repository interfaces. Widgets and providers never call `dio` directly.
 
 ### Planned V2 addition — Polyglot Persistence via Microservice
 
