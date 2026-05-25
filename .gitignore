@@ -61,6 +61,9 @@ GoogleService-Info.plist
 # Personal notes
 misc/learning-path.md
 
+# UI design mockups (local reference only)
+ui-design/*.png
+
 # Claude Code
 .claude/
 
