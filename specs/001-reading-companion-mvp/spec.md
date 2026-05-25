@@ -1,5 +1,5 @@
 # My flutter app
-<!-- spec version: 1.1.0 | last updated: 2026-05-25 -->
+<!-- spec version: 1.2.0 | last updated: 2026-05-25 -->
 
 ## Overview
 
@@ -72,46 +72,60 @@ To address this in a scalable app, we need:
 
 ## Assumptions
 
+- Users open the app every day — the home screen must show their current reading context immediately.
 - Users will often log quickly after reading; the flow must be < 10 seconds.
 - Quotes are personal and must feel safe/private by default.
+- The user authenticates with their Google account — no passwords to remember.
+- App resume must restore the last context; users expect to return exactly where they left off.
 
 ### Technical assumptions
 
-- Auth is required for sync across devices.
-- Local persistence is necessary (SQLite/Drift or Hive) for offline access.
+- Auth is required for sync across devices. Google Sign-In via Supabase OAuth is the sole auth method.
+- Local persistence is necessary (Drift/SQLite) for offline access.
 - Cover images can be stored locally and optionally backed up remotely.
 
 ## MVP scope
 
-### Core features (Feature 1 blueprint)
+### Core features
 
-1. **Library (book list) + cover management**
+1. **Home dashboard** ← entry point for every daily session
+    - "Currently reading" books displayed as large cards with cover + progress bar
+    - Per-book quick actions: "Log session" and "Add quote" — reachable in 1 tap
+    - Reading streak counter (consecutive days with at least one session logged)
+    - Global speed-dial FAB: "Log session" and "Save quote" from anywhere
+    - App resume: restores last screen context on re-open
+2. **Library (book list) + cover management**
     - Add a book (manual entry for MVP)
-    - Book fields: title, author, cover image, status (Want to read / Reading / Finished)
-    - Cover actions: upload photo, crop (optional), remove, replace
+    - Book fields: title, author, total pages, cover image, status (Want to read / Reading / Finished)
+    - Cover actions: upload photo, remove, replace
     - Library views: list and grid (covers)
-2. **Reading tracking**
-    - Track progress by pages read OR percentage OR time (pick one default; allow others later)
-    - Log reading sessions: date/time, duration, progress delta, notes (optional)
-    - Book status updates based on progress (e.g., Finished)
-3. **Quote saving**
+3. **Reading tracking**
+    - Track progress by pages (percentage derived automatically)
+    - Log reading sessions: date/time, duration, pagesFrom → pagesTo, notes (optional)
+    - Book status updates automatically when progress reaches 100%
+    - Reading streak: derived from distinct session dates — no extra table
+4. **Quote saving**
     - Save a quote linked to a book
-    - Optional metadata: page number/location, tags, note, favorite
+    - Optional metadata: page number, tags, favorite
     - Search and filter quotes (by book, tag, favorites)
-4. **Books ranking**
-    - Personal rating (e.g., 1–5 stars) and optional review
+5. **Books ranking**
+    - Personal rating (1–5 stars) and optional review
     - Sorting views: top rated, recently finished, recently added
 
 ### MVP technical scope
 
 - **App shell**
     - Theming (light/dark), localization-ready
+    - Bottom navigation bar: Home | Library | Quotes | Profile
     - go_router routing with guarded routes for auth
     - Dependency injection: Riverpod 2.x with code generation (`@riverpod`)
 - **State management**: Riverpod 2.x (resolved — see Resolved decisions)
-- **Authentication**: Supabase Auth — email/password for MVP; Google/Apple deferred
+- **Authentication**: Supabase Auth — Google Sign-In (OAuth) only
+    - One tap sign-in, no password, no separate registration screen
+    - First-time Google sign-in = automatic account creation
     - Token storage: `flutter_secure_storage`
     - Session refresh handled by Supabase client automatically
+    - Packages: `supabase_flutter`, `google_sign_in`
 - **Data layer (offline + sync)**
     - Repository pattern: UI → Riverpod providers → use cases → repositories → (local/remote)
     - Local DB: Drift (SQLite) with migrations
@@ -190,6 +204,42 @@ As a user, I want to rate/rank books so I remember my favorites.
 
 ---
 
+### US-05 — Sign in with Google
+As a user, I want to sign in with my Google account so I don't have to remember a password.
+
+**Acceptance criteria**
+- **AC-05.1** Given I open the app for the first time, when I see the sign-in screen, then there is exactly one button: "Continue with Google".
+- **AC-05.2** Given I tap "Continue with Google", when I complete the Google account picker, then I am signed in and taken to the Home screen.
+- **AC-05.3** Given it is my first time signing in, when the OAuth flow completes, then my account is created automatically with no extra steps.
+- **AC-05.4** Given I am signed in, when I close and reopen the app, then I am taken directly to the Home screen without signing in again.
+- **AC-05.5** Given I tap "Sign out" in Profile, when confirmed, then my session is cleared and I am taken to the sign-in screen.
+
+---
+
+### US-06 — Home dashboard for daily use
+As a user, I want a home screen that shows my current books and lets me log a session or save a quote in one tap.
+
+**Acceptance criteria**
+- **AC-06.1** Given I open the app, when the Home screen loads, then I see all books with status "reading" as large cards with cover, title, and progress bar.
+- **AC-06.2** Given I am on the Home screen, when I tap "Log session" on a book card, then the session bottom sheet opens pre-filled with that book — without navigating away.
+- **AC-06.3** Given I am on the Home screen, when I tap "Add quote" on a book card, then the quote bottom sheet opens pre-filled with that book.
+- **AC-06.4** Given I tap the speed-dial FAB, when it expands, then two options appear: "Log session" and "Save quote", each with a book picker.
+- **AC-06.5** Given I have no books with status "reading", when I open the Home screen, then an empty state with CTA "Start reading a book" is shown.
+- **AC-06.6** Given I minimize the app and reopen it, when the Home screen appears, then it restores to the same scroll position and context I left.
+
+---
+
+### US-07 — Reading streak
+As a user, I want to see my reading streak so I stay motivated to read every day.
+
+**Acceptance criteria**
+- **AC-07.1** Given I log at least one session today, when I view the Home screen, then the streak counter increments by 1.
+- **AC-07.2** Given I logged a session yesterday and today, when I view the Home screen, then the streak shows at least 2 days.
+- **AC-07.3** Given I missed a day (no session logged), when I view the Home screen, then the streak resets to 0 (or 1 if I logged today).
+- **AC-07.4** Given my streak is 0, when I view the Home screen, then the streak counter is not shown (hidden to avoid discouragement).
+
+---
+
 ### Developer stories (scalability)
 
 - As a developer, I want features modularized so I can add reading goals, challenges, and social later.
@@ -242,11 +292,23 @@ As a user, I want to rate/rank books so I remember my favorites.
 
 ## UX / screens (high level)
 
-- Library: grid/list of books with covers, filters by status
-- Book detail: progress, sessions, quotes, rating
-- Add/edit book: title/author + cover upload
-- Add quote: quote text + tags + page
-- Stats (optional MVP+): books finished, reading streaks
+### Navigation structure
+Bottom navigation bar with 4 tabs — persistent across all screens:
+```
+[ Home ] [ Library ] [ Quotes ] [ Profile ]
+```
+
+### Screens
+
+- **Sign in**: single "Continue with Google" button — no email/password fields, no register screen
+- **Home (default tab)**: currently-reading books as large cards (cover + title + progress bar + streak counter); per-card buttons: "Log session" and "Add quote"; speed-dial FAB with same two actions globally
+- **Library**: grid/list of all books with covers, filter by status (want to read / reading / finished), sort by top rated / recently added / recently finished
+- **Book detail**: `SliverAppBar` with cover hero; tabs: Progress (bar + session history) | Quotes | Ranking
+- **Add/edit book**: title, author, total pages, cover upload
+- **Log session** (bottom sheet): pagesFrom → pagesTo, duration, optional notes — accessible from Home cards and Book Detail
+- **Add quote** (bottom sheet): quote text, optional page number, tags, favorite — accessible from Home FAB, Book Detail
+- **Quotes (global tab)**: all quotes across all books, search bar (FTS), filter by tag / favorites
+- **Profile**: Google account info, light/dark toggle, sign out
 
 ### UI/UX stack: Material Design (Flutter)
 
@@ -280,92 +342,29 @@ This app’s UI/UX will follow the **Material Design** system and Flutter’s Ma
     - Standardized async state: `idle/loading/success/error`
     - Empty states with clear CTAs (e.g., “Add your first book”)
 
-## MVP deployment & free-tier platform choices
+## MVP deployment
 
-Goal: ship an MVP using **free-to-use (or generous free-tier) services**, while keeping the architecture flexible to migrate later.
+All platform choices are resolved. See the Resolved decisions section for rationale.
 
-### Mobile app distribution (where to deploy)
+### Mobile app distribution
 
-- **Internal testing**
-    - Android: Google Play Console *Internal testing* (low cost; requires a Play Developer account)
-    - iOS: TestFlight via App Store Connect (requires Apple Developer Program)
-- **Public release**
-    - Android: Google Play Store
-    - iOS: Apple App Store
+| Track | Platform | Notes |
+|---|---|---|
+| Internal testing | Android — Google Play Console Internal Testing | Requires Play Developer account |
+| Internal testing | iOS — TestFlight via App Store Connect | Requires Apple Developer Program |
+| Public release | Google Play Store + Apple App Store | After internal testing passes |
 
-> Note: app store accounts are paid, but they’re typically the only unavoidable cost to distribute native apps broadly.
-> 
+### Platform stack (resolved)
 
-### Backend hosting (free options)
-
-Pick one based on how “backend-heavy” you want the MVP to be:
-
-1) **Firebase-first (fastest MVP, minimal ops)**
-
-- Hosting: Firebase Hosting (if you add a small web landing page later)
-- Server logic: Cloud Functions (only if needed)
-- Pros: quickest setup, good Flutter support, scales well for early stage
-- Cons: lock-in risk; costs can grow later depending on usage
-
-2) **Supabase-first (Postgres + Auth, still MVP-friendly)**
-
-- Hosting: Supabase-managed Postgres + Edge Functions
-- Pros: SQL/Postgres, easier migration paths; strong DX
-- Cons: some features require careful RLS/security configuration
-
-3) **No custom backend (offline-first MVP)**
-
-- Store everything locally first (Drift/SQLite) and add sync later.
-- Pros: truly cheapest; ship fast
-- Cons: no cross-device sync until you add backend
-
-### Database platform (free-tier suggestions)
-
-Recommended MVP approach:
-
-- **Primary data** (books, sessions, quotes, ratings):
-    - Option A: **Firestore** (Firebase) for fastest schema-less iteration
-    - Option B: **Supabase Postgres** for relational structure and SQL
-- **Local database** (always, for offline):
-    - **Drift (SQLite)** with migrations
-
-Rule of thumb:
-
-- Choose **Firestore** if you want speed and simple data sync.
-- Choose **Supabase Postgres** if you want relational queries and a more traditional backend.
-
-### Authentication platform (free-tier suggestions)
-
-- **Firebase Authentication**
-    - Email/password for MVP; optionally Google/Apple later
-    - Very fast to implement in Flutter
-- **Supabase Auth**
-    - Email/password + OAuth providers
-    - Integrates naturally if you choose Supabase Postgres
-
-MVP recommendation:
-
-- If you choose Firebase DB → use **Firebase Auth**.
-- If you choose Supabase DB → use **Supabase Auth**.
-
-### File storage (covers)
-
-- **Firebase Storage** (pairs well with Firebase)
-- **Supabase Storage** (pairs well with Supabase)
-- Store:
-    - Original cover image + generated thumbnail(s)
-    - Keep local cache for fast scrolling in grid views
-
-### Environments (still MVP-friendly)
-
-- **dev / staging / prod** via separate Firebase projects or Supabase projects
-- Use compile-time env configuration in Flutter (e.g., `--dart-define`)
-
-### CI/CD (free-tier friendly)
-
-- **GitHub Actions**
-    - Run `flutter test`, `flutter analyze`, build APK/IPA (where possible)
-    - Optional: upload artifacts to internal testers
+| Concern | Choice |
+|---|---|
+| Backend | Supabase (Postgres + Auth + Storage) — free tier |
+| Authentication | Supabase Auth with Google OAuth |
+| Local database | Drift (SQLite) |
+| Remote storage | Supabase Storage (cover images) |
+| Crash reporting | Sentry (free tier) |
+| CI/CD | GitHub Actions — `flutter analyze` + `flutter test` + build APK/IPA |
+| Environments | dev / staging / prod via `--dart-define` and separate Supabase projects |
 
 ## Success metrics
 
@@ -398,15 +397,16 @@ All open questions have been resolved. These are the authoritative choices for v
 |---|---|---|
 | State management | **Riverpod 2.x with code generation** | Less boilerplate than BLoC, better suited for feature-first modular structure, composable providers map naturally to the repository pattern. |
 | Backend | **Supabase** (Postgres + Auth + Storage) | Relational data model fits the domain better than Firestore; no vendor lock-in risk; strong Row Level Security for privacy; Supabase Auth pairs naturally. |
+| Authentication | **Google Sign-In via Supabase OAuth** | Daily-use app must have zero-friction auth. One tap, no password, no registration screen. First sign-in creates account automatically. |
+| Navigation | **Bottom navigation bar** (Home / Library / Quotes / Profile) | Daily users need direct access to their most-used screens without drilling through hierarchies. |
 | Offline-first depth | **Full create/update offline** | Users log sessions immediately after reading (< 10 s flow requirement). Books, sessions, and quotes must be creatable offline. Sync triggers on connectivity restore and app foreground resume. |
 | Image pipeline | **Compress to max 800 KB JPEG; generate 300×300 px thumbnail locally before upload** | Thumbnails cached locally with extended TTL for smooth grid scrolling. Originals uploaded in background with retry. |
+| Reading streak | **Derived from `reading_sessions` — no separate table** | Streak = count of consecutive calendar days with ≥ 1 session. Computed on-demand from existing data. |
 
 ### Sync strategy (expanded)
 
 - **Trigger**: on `onConnectivityRestored` + `AppLifecycleState.resumed`
 - **Conflict resolution**: server timestamp wins (last-write-wins on `updatedAt` column)
 - **Failure**: failed sync operations queued locally and retried with exponential back-off (max 5 attempts)
-
-[Mockups (v1)](https://www.notion.so/Mockups-v1-c1727d9d020b4ebabd1a3f502b91690d?pvs=21)
 
 [Mockups (v1)](https://www.notion.so/Mockups-v1-c1727d9d020b4ebabd1a3f502b91690d?pvs=21)

@@ -1,5 +1,5 @@
 # Tasks
-<!-- derived from .specs/plan.md | 2026-05-25 -->
+<!-- derived from specs/001-reading-companion-mvp/plan.md v1.2.0 | 2026-05-25 -->
 
 Check off each task as it is completed. Do not start a phase until all tasks in the previous phase are checked.
 
@@ -10,7 +10,8 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 - [ ] Initialize Flutter project with feature-first folder structure
 - [ ] Add `very_good_analysis` to `analysis_options.yaml`
 - [ ] Configure Material 3 theme with `ColorScheme.fromSeed` (light + dark)
-- [ ] Set up `go_router` with placeholder routes for all top-level screens
+- [ ] Set up bottom navigation bar shell with 4 tabs: Home | Library | Quotes | Profile
+- [ ] Configure `go_router` ShellRoute for bottom nav + placeholder routes for all screens
 - [ ] Bootstrap Riverpod 2.x with code generation (`@riverpod`, `build_runner`)
 - [ ] Configure `--dart-define` environment variables (dev / staging / prod)
 - [ ] Create GitHub Actions workflow: `flutter analyze` + `flutter test` on push
@@ -18,19 +19,22 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 
 ---
 
-## Phase 2 — Authentication
+## Phase 2 — Authentication (Google Sign-In)
 
 - [ ] Add Supabase Flutter SDK and initialize client with env config
+- [ ] Add `google_sign_in` package and configure OAuth client IDs (Android + iOS)
+- [ ] Configure deep link callback URI in AndroidManifest.xml and Info.plist
 - [ ] Define `AuthRepository` interface
-- [ ] Implement `SupabaseAuthRepository`
-- [ ] Build Login screen (email + password fields, validation)
-- [ ] Build Register screen (email + password fields, validation)
+- [ ] Implement `SupabaseAuthRepository` with Google OAuth flow
+- [ ] Build sign-in screen: single "Continue with Google" button, no other fields
 - [ ] Integrate `flutter_secure_storage` for token persistence
-- [ ] Add go_router auth guard — redirect unauthenticated users to `/login`
+- [ ] Add go_router auth guard — redirect unauthenticated users to `/signin`
 - [ ] Create `authStateProvider` (Riverpod) streaming Supabase auth state
-- [ ] Test: unauthenticated cold start navigates to Login (IT-04)
-- [ ] Test: successful login stores session token (IT-05)
-- [ ] Test: invalid credentials show error, no session stored (IT-06)
+- [ ] Verify first sign-in creates account automatically (no registration screen)
+- [ ] Test: unauthenticated cold start navigates to sign-in screen (AC-05.1)
+- [ ] Test: successful Google sign-in navigates to Home (AC-05.2, AC-05.3)
+- [ ] Test: returning user with stored session goes directly to Home (AC-05.4)
+- [ ] Test: sign out clears session and returns to sign-in (AC-05.5)
 
 ---
 
@@ -56,7 +60,28 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 
 ---
 
-## Phase 4 — Library Feature
+## Phase 4 — Home Dashboard
+
+- [ ] Build Home screen with `SliverList` of currently-reading book cards
+- [ ] Build `HomeBookCard` widget: cover thumbnail, title, progress bar, "Log session" button, "Add quote" button
+- [ ] Build empty state for Home: no currently-reading books → CTA "Start reading a book"
+- [ ] Build `SpeedDialFab` — expandable FAB with "Log session" and "Save quote" actions + book picker
+- [ ] Implement streak calculation: count consecutive calendar days with ≥ 1 session
+- [ ] Build `StreakBadge` widget — displays streak count, hidden when streak = 0
+- [ ] Implement app resume: restore last `go_router` route on `AppLifecycleState.resumed`
+- [ ] Wire `HomeNotifier` (Riverpod) for currently-reading books + streak
+- [ ] Test: Home shows currently-reading books (AC-06.1)
+- [ ] Test: "Log session" on card opens sheet pre-filled with that book (AC-06.2)
+- [ ] Test: "Add quote" on card opens form pre-filled with that book (AC-06.3)
+- [ ] Test: speed-dial FAB expands with two actions (AC-06.4)
+- [ ] Test: empty state shows CTA when no books are reading (AC-06.5)
+- [ ] Test: streak increments after logging a session (AC-07.1)
+- [ ] Test: streak resets after missing a day (AC-07.3)
+- [ ] Test: streak badge hidden when streak = 0 (AC-07.4)
+
+---
+
+## Phase 5 — Library Feature
 
 - [ ] Build Library screen with grid and list toggle
 - [ ] Add status filter (want_to_read / reading / finished)
@@ -78,7 +103,7 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 
 ---
 
-## Phase 5 — Reading Tracking Feature
+## Phase 6 — Reading Tracking Feature
 
 - [ ] Build Book Detail screen with progress bar and session history
 - [ ] Build `LogSessionSheet` modal bottom sheet (pagesFrom, pagesTo, duration, notes)
@@ -102,7 +127,7 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 
 ---
 
-## Phase 6 — Quotes Feature
+## Phase 7 — Quotes Feature
 
 - [ ] Build Quotes tab on Book Detail
 - [ ] Build `QuoteCaptureForm` (text required, pageNumber optional, tags, favorite toggle)
@@ -123,7 +148,7 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 
 ---
 
-## Phase 7 — Ranking Feature
+## Phase 8 — Ranking Feature
 
 - [ ] Build `StarRatingWidget` (tappable 1–5 stars, pre-fills existing rating)
 - [ ] Build `ReviewTextField` (optional multi-line)
@@ -142,7 +167,7 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 
 ---
 
-## Phase 8 — Search & Observability
+## Phase 9 — Search & Observability
 
 - [ ] Verify FTS5 index created on `quotes.text` in Drift migration
 - [ ] Benchmark quote search on 10,000 rows — p95 < 100 ms
@@ -156,7 +181,7 @@ Check off each task as it is completed. Do not start a phase until all tasks in 
 
 ---
 
-## Phase 9 — Quality Gates & Release Prep
+## Phase 10 — Quality Gates & Release Prep
 
 - [ ] All unit tests passing (UT-01 through UT-13)
 - [ ] All widget tests passing (WT-01 through WT-17)

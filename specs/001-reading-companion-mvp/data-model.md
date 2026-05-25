@@ -117,6 +117,21 @@ Stores failed remote operations for retry.
 
 ---
 
+## Derived values (never stored)
+
+| Value | Derivation | Source |
+|---|---|---|
+| `progressPercentage` | `latest_session.pages_to / book.total_pages * 100` | `reading_sessions` JOIN `books` |
+| `readingStreak` | Count of consecutive calendar days (UTC) with ≥ 1 session up to and including today | `SELECT DISTINCT DATE(started_at) FROM reading_sessions WHERE book_id IN (user's books) ORDER BY date DESC` |
+
+**Streak algorithm (application layer):**
+1. Fetch all distinct session dates for the user, ordered descending
+2. Starting from today, walk backward — count consecutive days until a gap is found
+3. If today has no session yet, streak starts from yesterday (user still has today to log)
+4. If streak = 0, hide the badge (do not show "0 days" — bad UX)
+
+---
+
 ## Relationships
 
 ```

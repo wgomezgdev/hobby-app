@@ -11,7 +11,9 @@ Every spec, plan, task, and line of code must align with these rules.
 - **Feature-first structure**: code lives under `lib/features/<feature-name>/`. No feature imports another feature's internal layers — only shared `core/` modules.
 - **Repository pattern**: UI → Riverpod providers → use cases → repositories → (local/remote). No direct Supabase or Drift calls from widgets.
 - **Riverpod 2.x** is the sole state management solution. No BLoC, Provider, or GetX.
+- **Google Sign-In via Supabase OAuth** is the sole auth method. No email/password, no register screen.
 - **go_router** is the sole navigation solution. No `Navigator.push` calls outside the router config.
+- **Bottom navigation bar** (Home / Library / Quotes / Profile) is the permanent shell. No drawer, no hamburger menu.
 - **Offline-first**: every write operation goes to Drift (local) first. Remote sync is a background concern handled exclusively by `SyncService`.
 
 ## 2. Technology Stack (Locked)
@@ -22,7 +24,8 @@ Every spec, plan, task, and line of code must align with these rules.
 | State management | Riverpod 2.x + code generation | Less boilerplate, composable, feature-first friendly |
 | Local DB | Drift (SQLite) with migrations | Structured data, FTS5 support, type-safe queries |
 | Remote backend | Supabase (Postgres + Auth + Storage) | Relational model, RLS security, no vendor lock-in |
-| Navigation | go_router | Typed routes, deep links, auth guards |
+| Authentication | Google Sign-In via Supabase OAuth | Zero-friction daily-use auth — one tap, no password |
+| Navigation shell | go_router ShellRoute + bottom navigation bar (Home / Library / Quotes / Profile) | Daily users need direct access to top-level screens |
 | Linting | very_good_analysis | Strictest Flutter lint ruleset |
 | Crash reporting | Sentry | Performance tracing + error tracking |
 
