@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:hobby_app/core/theme/app_colors.dart';
 
-/// Gradient letter cover shown wherever a book has no uploaded image.
 class BookCoverBlock extends StatelessWidget {
   const BookCoverBlock({
     required this.title,
     required this.paletteIndex,
-    this.width = 100,
-    this.height = 136,
-    this.borderRadius = 12,
+    this.width = 80,
+    this.height = 110,
+    this.borderRadius = 8,
     super.key,
   });
 
@@ -21,25 +18,35 @@ class BookCoverBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gradient = AppColors.coverPalettes[paletteIndex % 6];
-    final letter =
-        title.isNotEmpty ? title[0].toUpperCase() : '?';
+    final scheme = Theme.of(context).colorScheme;
+    final bgs = [
+      scheme.primaryContainer,
+      scheme.secondaryContainer,
+      scheme.tertiaryContainer,
+    ];
+    final fgs = [
+      scheme.onPrimaryContainer,
+      scheme.onSecondaryContainer,
+      scheme.onTertiaryContainer,
+    ];
+    final i = paletteIndex % bgs.length;
+    final letter = title.isNotEmpty ? title[0].toUpperCase() : '?';
     return Semantics(
       label: 'Cover for $title',
       child: Container(
         width: width,
         height: height,
         decoration: BoxDecoration(
-          gradient: gradient,
+          color: bgs[i],
           borderRadius: BorderRadius.circular(borderRadius),
         ),
         alignment: Alignment.center,
         child: Text(
           letter,
-          style: GoogleFonts.lora(
-            fontSize: 28,
+          style: TextStyle(
+            fontSize: 32,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: fgs[i],
           ),
         ),
       ),
