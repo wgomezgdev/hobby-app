@@ -53,6 +53,7 @@ build/
 # Environment / secrets
 .env
 .env.*
+!.env.example
 *.env
 secrets.dart
 google-services.json
