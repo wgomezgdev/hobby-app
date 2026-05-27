@@ -32,10 +32,11 @@ A local app to:
 | UI framework | React 18 + TypeScript (`strict: true`) |
 | Routing | React Router v6 |
 | Component library | Material UI (MUI) v5 |
-| State management | Zustand (UI state only; Dexie is source of truth) |
-| Local database | **Dexie.js v4** (IndexedDB wrapper) |
+| State management | Zustand (UI state only — see [Zustand scope](#zustand-scope); Dexie is source of truth) |
+| Local database | Dexie.js v4 + **dexie-react-hooks** (`useLiveQuery`) |
+| Forms | React Hook Form |
 | Build tool | Vite |
-| Test runner | Vitest + React Testing Library |
+| Test runner | Vitest + React Testing Library + **fake-indexeddb** |
 
 ---
 
@@ -74,6 +75,22 @@ class ReadingPalDB extends Dexie {
 
 Dexie handles all index maintenance. Secondary lookups (`quotes by bookId`, `books by status`)
 are native queries, not hand-rolled Maps.
+
+---
+
+## Zustand Scope
+
+Zustand manages only ephemeral UI state. Dexie + `useLiveQuery` is the source of truth for all persisted data.
+
+Zustand stores:
+
+| Slice | State |
+|---|---|
+| `libraryUiStore` | active filter chip (`all \| reading \| want_to_read \| finished`), active sort (`recent \| title \| author`) |
+| `searchStore` | global search query string, search panel open/closed |
+| `uiStore` | any modal / dialog open flags not owned by a specific route |
+
+Everything else (books, sessions, quotes, ratings) is read directly via `useLiveQuery`.
 
 ---
 
@@ -140,13 +157,14 @@ interface Rating {
 
 - Progress is stored as a **percentage** (integer 0–100) on the `Book` entity.
 - Each `ReadingSession` records a `progressDelta` (how many percentage points were added).
-- A book's `currentProgress` is updated on every session save.
-- A book is automatically set to `FINISHED` when `currentProgress >= 100`.
+- On session save, the repository computes: `currentProgress = Math.min(100, book.currentProgress + progressDelta)`.
+- A book is automatically set to `FINISHED` when the resulting `currentProgress >= 100`.
 
 ### Covers
 
 - Covers are stored as base64 data URLs (optional — a placeholder is shown when absent).
 - Recommended max upload size: 1 MB per image (enforced client-side before storing).
+- Base64 is chosen over raw `Blob` storage intentionally: it makes JSON snapshot export/import trivial. The trade-off is higher IndexedDB size (~1.33× the original file). At 200 books × 1 MB each, this can approach ~270 MB — acceptable for a personal local app.
 - Thumbnail generation for the grid view is handled by CSS `object-fit`, not canvas.
 
 ### Quote Search
@@ -155,6 +173,11 @@ interface Rating {
 - Filter by `isFavorite` (Dexie index).
 - Filter by tag (Dexie multi-entry index on `*tags`).
 - Full-text search: case-insensitive `String.includes()` across `quote.text`.
+
+### Tag Autocomplete
+
+- Tag autocomplete in the Add Quote form is scoped to **the current book only** (not global).
+- The suggestion list is derived from all existing quotes for that `bookId` via `useLiveQuery`.
 
 ---
 
@@ -176,11 +199,15 @@ interface Rating {
 
 ### Navigation Model
 
-- **Top app bar**: app name/logo + global search icon + settings icon.
+- **Top app bar**: app name/logo + settings icon. *(Global search is out of scope for v1 — see Out of Scope.)*
 - **Library** is the default route (`/`).
 - **Book Detail** opens via card click; uses tabs for sub-sections.
 - **Ranking** is a top-level nav item.
 - **Settings** is accessible via the top bar icon (snapshot export/import lives here).
+
+### Tab Routing (Book Detail)
+
+Active tab is stored in a URL query parameter: `/books/:id?tab=progress` (default), `?tab=sessions`, `?tab=quotes`, `?tab=rating`. This keeps the browser back button and shareable links working without nested routes.
 
 ---
 
@@ -235,6 +262,22 @@ interface Rating {
 
 ---
 
+## Loading States
+
+`useLiveQuery` returns `undefined` on the first render while the IndexedDB query resolves. Every list and detail view must handle this:
+
+| View | Loading UI |
+|---|---|
+| Library grid | Skeleton cards (matching the cover grid layout) |
+| Book Detail header | Skeleton for cover, title, author, progress bar |
+| Sessions list | Skeleton rows |
+| Quotes list | Skeleton rows |
+| Ranking list | Skeleton cards |
+
+Use MUI `<Skeleton>` components. Do not show an empty state while `useLiveQuery` returns `undefined` — only show empty states when the query resolves to an empty array.
+
+---
+
 ## Empty States
 
 | Screen | Empty state message | CTA |
@@ -282,6 +325,7 @@ interface Rating {
 
 ## Out of Scope for v1
 
+- Global search across all books/quotes (v2).
 - Dark mode (v2).
 - PWA / service worker (v2).
 - Keyboard shortcuts (v2).
@@ -295,7 +339,7 @@ interface Rating {
 
 ## Implementation Plan
 
-1. Scaffold: Vite + React + TypeScript + React Router + MUI + Zustand + Dexie.
+1. Scaffold: Vite + React + TypeScript + React Router + MUI + Zustand + Dexie + dexie-react-hooks + React Hook Form.
 2. Define Dexie schema and typed entity interfaces.
 3. Implement repositories (one per entity: books, sessions, quotes, ratings).
 4. Build Library screen (grid + filters + empty state).
