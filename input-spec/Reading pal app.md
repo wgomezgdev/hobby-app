@@ -1,8 +1,10 @@
-# Reading pal app (React + In-memory DB)
+# Reading Pal App (React + Dexie.js)
 
 ## Overview
 
-A **React** (web stack) version of the *reading companion app* concept, designed to be **100% self‑contained**: it runs locally on a single machine **with no external services**, using an **in‑memory database** inspired by **HBase** (a **column‑family** model).
+A **React** single-page application (SPA) designed to be **100% self-contained**: it runs
+locally in the browser with **no external services**, using **Dexie.js** (an IndexedDB wrapper)
+as the local database. Data persists automatically across sessions without any export step.
 
 ## Purpose
 
@@ -13,220 +15,293 @@ A local app to:
 - Save quotes (text, tags, favorite, page)
 - Rate and rank books (1–5 stars, optional review)
 
-## Hard constraints
+## Hard Constraints
 
 - No remote backend (no Firebase, no Supabase, no external APIs).
-- No “cloud storage”.
-- Persistence: by default **in memory only**.
-    - Optional: export/import a local snapshot file (JSON) so data isn’t lost on refresh/restart (still no services).
+- No cloud storage.
+- Runs entirely in the browser as a pure web SPA.
+- Data is persisted automatically by Dexie.js via the browser's IndexedDB — no manual export
+  required for normal use.
 
 ---
 
-## Proposed stack
+## Stack
 
-### Frontend
-
-- **React + TypeScript**
-- Routing: **React Router**
-- UI: **Material UI (MUI)** or a lighter alternative (if you want minimal dependencies, use CSS + custom components)
-- State: **Zustand** or **Redux Toolkit** (Zustand is simpler)
-
-### Self-contained local runtime (recommended)
-
-Option A (simplest “real app”, single installed app):
-
-- **Tauri** (React UI + Rust backend) or **Electron**
-- The in-memory DB lives inside the local app process
-- Optional disk read/write for snapshots (local file)
-
-Option B (pure web):
-
-- React runs in the browser
-- The in-memory DB lives in browser memory (lost on refresh)
-- Optional snapshot export/import via download/upload of a JSON file (no servers)
-
-> If “fully usable” means **keeping data across sessions**, the cleanest approach without services is **desktop (Tauri/Electron)** or local snapshot files.
-> 
+| Layer | Choice |
+|---|---|
+| UI framework | React 18 + TypeScript (`strict: true`) |
+| Routing | React Router v6 |
+| Component library | Material UI (MUI) v5 |
+| State management | Zustand (UI state only; Dexie is source of truth) |
+| Local database | **Dexie.js v4** (IndexedDB wrapper) |
+| Build tool | Vite |
+| Test runner | Vitest + React Testing Library |
 
 ---
 
-## Design: “HBase-like” in-memory DB
+## Local Database: Dexie.js
 
-### Important note
+Dexie.js wraps the browser's built-in IndexedDB. No installation of external services is needed.
 
-Real HBase is distributed and persistent (HDFS), but we can **emulate the data model** in memory:
+### Why Dexie over the HBase-inspired model
 
-- **RowKey**: entity id (e.g., `book:uuid`)
-- **Column families**: groups (e.g., `meta`, `progress`, `stats`)
-- **Columns**: qualifiers within a family (e.g., `meta:title`)
-- **Cell**: value + timestamp / optional versioning
+- Data persists across browser sessions automatically — no refresh data loss.
+- TypeScript-first: each table is typed to its entity interface.
+- Indexes are declared in the schema and maintained automatically — no manual `quotesByBook` maps.
+- Reactive queries (`liveQuery`) integrate directly with React hooks.
+- Export/import to JSON is straightforward for snapshot portability.
 
-### Minimal API
+### Schema (Dexie table definitions)
 
-- `put(rowKey, family, qualifier, value, ts?)`
-- `get(rowKey, family?, qualifier?)`
-- `scan(prefixRowKey, filter?)`
-- `delete(rowKey, family?, qualifier?)`
-- In-memory secondary indexes for common queries (e.g., quotes by bookId, tags, favorites)
+```typescript
+class ReadingPalDB extends Dexie {
+  books!: Table<Book>;
+  sessions!: Table<ReadingSession>;
+  quotes!: Table<Quote>;
+  ratings!: Table<Rating>;
 
-### Data structure (TypeScript)
+  constructor() {
+    super('ReadingPalDB');
+    this.version(1).stores({
+      books:    '++id, status, title, author, createdAt',
+      sessions: '++id, bookId, startedAt',
+      quotes:   '++id, bookId, isFavorite, *tags',
+      ratings:  'bookId',           // bookId is primary key (one rating per book)
+    });
+  }
+}
+```
 
-- `Map<RowKey, Map<Family, Map<Qualifier, Cell>>>`
-- `Cell = { value: unknown; ts: number }`
-- Indexes:
-    - `quotesByBook: Map<bookId, Set<quoteId>>`
-    - `booksByStatus: Map<status, Set<bookId>>`
-    - `quotesByTag: Map<tag, Set<quoteId>>`
-    - `favoritesQuotes: Set<quoteId>`
+Dexie handles all index maintenance. Secondary lookups (`quotes by bookId`, `books by status`)
+are native queries, not hand-rolled Maps.
 
 ---
 
-## Domain model (entities)
+## Domain Model
 
 ### Book
 
-- `id`
-- `title`
-- `author`
-- `status`: `WANT_TO_READ | READING | FINISHED`
-- `cover`: base64 (or a local path if desktop)
-- `createdAt`, `updatedAt`
+```typescript
+interface Book {
+  id?: number;
+  title: string;
+  author: string;
+  status: 'WANT_TO_READ' | 'READING' | 'FINISHED';
+  cover?: string;        // base64 data URL (optional)
+  currentProgress: number; // 0–100 percentage
+  createdAt: number;     // Unix timestamp
+  updatedAt: number;
+}
+```
 
 ### ReadingSession
 
-- `id`
-- `bookId`
-- `startedAt`
-- `durationMinutes`
-- `progressDelta` (pages or % — define a v1 standard)
-- `notes?`
+```typescript
+interface ReadingSession {
+  id?: number;
+  bookId: number;
+  startedAt: number;       // Unix timestamp
+  durationMinutes: number;
+  progressDelta: number;   // percentage points added (0–100)
+  notes?: string;
+}
+```
 
 ### Quote
 
-- `id`
-- `bookId`
-- `text`
-- `pageNumber?`
-- `tags[]`
-- `isFavorite`
-- `createdAt`
+```typescript
+interface Quote {
+  id?: number;
+  bookId: number;
+  text: string;
+  pageNumber?: number;
+  tags: string[];
+  isFavorite: boolean;
+  createdAt: number;
+}
+```
 
 ### Rating
 
-- `bookId`
-- `stars` (1–5)
-- `review?`
-- `ratedAt`
+```typescript
+interface Rating {
+  bookId: number;          // primary key — one rating per book
+  stars: number;           // 1–5
+  review?: string;
+  ratedAt: number;
+}
+```
 
 ---
 
-## Key functional rules
+## Key Functional Rules
 
 ### Progress
 
-- For v1, pick **one standard**:
-    - Recommended: **percentage** (0–100), simple and consistent
-- A book becomes `FINISHED` if `progress >= 100`
+- Progress is stored as a **percentage** (integer 0–100) on the `Book` entity.
+- Each `ReadingSession` records a `progressDelta` (how many percentage points were added).
+- A book's `currentProgress` is updated on every session save.
+- A book is automatically set to `FINISHED` when `currentProgress >= 100`.
 
 ### Covers
 
-- Fully self-contained approach:
-    - Store covers as **base64** (data URL) in memory
-    - For grids/lists: generate thumbnails client-side (canvas) and cache them
+- Covers are stored as base64 data URLs (optional — a placeholder is shown when absent).
+- Recommended max upload size: 1 MB per image (enforced client-side before storing).
+- Thumbnail generation for the grid view is handled by CSS `object-fit`, not canvas.
 
-### Quote search
+### Quote Search
 
-- In-memory indexes:
-    - by `bookId`
-    - by `tag`
-    - by `isFavorite`
-- Text search:
-    - simple: case-insensitive `includes()`
-    - advanced: tokenization + basic scoring (no external libraries if you prefer)
+- Filter by `bookId` (Dexie index).
+- Filter by `isFavorite` (Dexie index).
+- Filter by tag (Dexie multi-entry index on `*tags`).
+- Full-text search: case-insensitive `String.includes()` across `quote.text`.
 
 ---
 
-## Project architecture (feature-first)
+## Navigation & Screen Map
 
 ```
-src/
-  app/
-    router/
-    store/
-    db/
-  features/
-    library/
-    reading/
-    quotes/
-    ranking/
-  shared/
-    ui/
-    utils/
-    types/
+/ (Library)
+  └── /books/new             (Add Book)
+  └── /books/:id             (Book Detail)
+        └── /books/:id/edit  (Edit Book)
+        └── tab: Progress
+        └── tab: Sessions
+              └── /books/:id/sessions/new  (Log Session)
+        └── tab: Quotes
+        └── tab: Rating
+/ranking                     (Global ranked list)
+/settings                    (Snapshot export / import)
 ```
 
-### Layers
+### Navigation Model
 
-- UI (components)
-- Use cases (actions)
-- Repositories (bridge UI ↔ DB)
-- DB (in-memory column-family store + indexes)
-
----
-
-## Screens (usable MVP)
-
-1. **Library**
-    - Cover grid/list
-    - Filters: status, sorting (recent, title, author)
-    - CTA: “Add book”
-2. **Book Detail**
-    - Tabs: Progress / Sessions / Quotes / Ranking
-3. **Add/Edit Book**
-    - Form: title, author, status, cover
-4. **Log Reading Session**
-    - date/time, duration, delta/progress, notes
-5. **Quotes**
-    - List per book, search, tags, favorites
-    - Modal: “Add quote”
-6. **Ranking**
-    - stars + review
-    - views: top rated, recently finished
+- **Top app bar**: app name/logo + global search icon + settings icon.
+- **Library** is the default route (`/`).
+- **Book Detail** opens via card click; uses tabs for sub-sections.
+- **Ranking** is a top-level nav item.
+- **Settings** is accessible via the top bar icon (snapshot export/import lives here).
 
 ---
 
-## Optional persistence (still no external services)
+## Screens
 
-### Snapshot file (recommended)
+### 1. Library (`/`)
 
-- Export: serialize DB (and/or a normalized model) → JSON
-- Import: load JSON → rebuild maps and indexes
-- Desktop: write/read local filesystem
-- Web: manual download/upload
+- Cover grid (responsive: 4 cols desktop / 2 tablet / 1 mobile).
+- Filter chips: All / Reading / Want to Read / Finished.
+- Sort: Recent, Title A–Z, Author A–Z.
+- FAB (floating action button): "Add book".
+- Empty state: illustration + "Add your first book" CTA.
 
-> This keeps the default “in memory” requirement, while enabling real use across sessions without a backend.
-> 
+### 2. Book Detail (`/books/:id`)
+
+- Header: cover thumbnail, title, author, status badge, current progress bar.
+- Tabs: **Progress** | **Sessions** | **Quotes** | **Rating**.
+- **Progress tab**: progress percentage, "Log Session" shortcut button.
+- **Sessions tab**: chronological list of sessions; each shows date, duration, delta, notes.
+- **Quotes tab**: quote list with tag chips, favorite toggle, search bar.
+- **Rating tab**: star selector (1–5) + optional review textarea.
+
+### 3. Add / Edit Book (`/books/new`, `/books/:id/edit`)
+
+- Fields: title (required), author (required), status (required), cover (optional file upload).
+- Cover: click-to-upload or drag-and-drop; max 1 MB; preview shown immediately.
+- Status defaults to `WANT_TO_READ` on add.
+
+### 4. Log Reading Session (`/books/:id/sessions/new`)
+
+- Fields: date (defaults today), duration in minutes, progress delta (%), optional notes.
+- On save: updates `book.currentProgress`; triggers FINISHED transition if >= 100.
+
+### 5. Quotes (inside Book Detail tab)
+
+- List with text, page number (if set), tags, favorite icon.
+- "Add Quote" FAB opens an inline form (not a separate route): text, page, tags, favorite toggle.
+- Tag input: free-text with comma separation; autocomplete from existing tags for that book.
+
+### 6. Ranking (`/ranking`)
+
+- Displays all rated books sorted by stars desc.
+- Secondary view toggle: "Recently Finished".
+- Each card: cover, title, author, star rating.
+- Unrated books are excluded.
+
+### 7. Settings (`/settings`)
+
+- **Export snapshot**: serializes all Dexie tables to a single JSON file → triggers download.
+- **Import snapshot**: file picker for a previously exported JSON → confirms overwrite → rebuilds DB.
+- Warning shown before import: "This will replace all current data."
 
 ---
 
-## Implementation plan (steps)
+## Empty States
 
-1) Scaffold React + TS + Router + UI
-
-2) Implement the in-memory DB (core + indexes + tests)
-
-3) Implement repositories: books, sessions, quotes, ratings
-
-4) Build screens (Library → Book Detail → Quotes → Ranking)
-
-5) Add snapshot export/import
-
-6) Polish UX (empty states, validation, performance)
+| Screen | Empty state message | CTA |
+|---|---|---|
+| Library (no books) | "Your library is empty" | "Add your first book" |
+| Sessions tab (no sessions) | "No sessions logged yet" | "Log a session" |
+| Quotes tab (no quotes) | "No quotes saved yet" | "Add a quote" |
+| Rating tab (not rated) | "You haven't rated this book" | Star selector shown directly |
+| Ranking (no rated books) | "Rate some books to see your ranking" | Link to Library |
 
 ---
 
-## Open questions (to lock the MVP)
+## Persistence & Snapshot
 
-- v1 progress: % or pages?
-- Desktop (Tauri/Electron) or pure web?
-- Covers: only local upload (file picker), or also local URL/path?
+- **Primary persistence**: Dexie.js / IndexedDB — automatic, no user action needed.
+- **Snapshot export** (Settings screen): full JSON dump of all tables — useful for backup or
+  moving data to another browser/machine.
+- **Snapshot import**: replaces the entire DB; requires explicit user confirmation.
+- **Data loss prevention**: browser's `beforeunload` event is NOT needed — IndexedDB writes
+  are committed immediately on every operation.
+
+---
+
+## Non-Functional Requirements
+
+### Performance
+
+- Library grid must render smoothly up to 200 books (use CSS `object-fit` + lazy `loading`
+  attribute on cover images, not canvas).
+- Dexie queries must return results in < 100 ms for up to 200 books / 1000 quotes.
+
+### Accessibility
+
+- All interactive elements must be keyboard-navigable.
+- MUI components used with correct ARIA roles.
+- Color contrast must meet WCAG 2.1 AA.
+- Modal dialogs must trap focus and restore it on close.
+
+### Responsiveness
+
+- Fully usable on viewport widths from 360 px (mobile) to 1440 px (desktop).
+- Cover grid adapts: 1 col (< 600 px) / 2 cols (600–900 px) / 4 cols (> 900 px).
+
+---
+
+## Out of Scope for v1
+
+- Dark mode (v2).
+- PWA / service worker (v2).
+- Keyboard shortcuts (v2).
+- Undo/redo (v2).
+- Social features or data sharing.
+- Multiple user profiles.
+- External book metadata lookup (ISBN APIs, etc.).
+- Reading goals or streak tracking (v2).
+
+---
+
+## Implementation Plan
+
+1. Scaffold: Vite + React + TypeScript + React Router + MUI + Zustand + Dexie.
+2. Define Dexie schema and typed entity interfaces.
+3. Implement repositories (one per entity: books, sessions, quotes, ratings).
+4. Build Library screen (grid + filters + empty state).
+5. Build Book Detail screen (tabs: Progress, Sessions, Quotes, Rating).
+6. Build Add/Edit Book screen.
+7. Build Log Session screen.
+8. Build Ranking screen.
+9. Build Settings screen (export/import).
+10. Polish: empty states, validation, responsive layout, accessibility pass.
