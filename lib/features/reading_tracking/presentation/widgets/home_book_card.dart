@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:hobby_app/core/widgets/book_cover_block.dart';
-import 'package:hobby_app/features/reading_tracking/domain/models/book.dart';
+import 'package:hobby_app/features/reading_tracking/presentation/home_book_view_model.dart';
 
 class HomeBookCard extends StatelessWidget {
   const HomeBookCard({
-    required this.book,
+    required this.viewModel,
     this.onLogSession,
     this.onAddQuote,
     super.key,
   });
 
-  final Book book;
+  final HomeBookViewModel viewModel;
   final VoidCallback? onLogSession;
   final VoidCallback? onAddQuote;
 
@@ -25,8 +25,8 @@ class HomeBookCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             BookCoverBlock(
-              title: book.title,
-              paletteIndex: book.paletteIndex,
+              title: viewModel.book.title,
+              paletteIndex: viewModel.paletteIndex,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -34,27 +34,27 @@ class HomeBookCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    book.title,
+                    viewModel.book.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleMedium,
                   ),
                   Text(
-                    book.author,
+                    viewModel.book.author,
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 12),
-                  LinearProgressIndicator(value: book.progress),
+                  LinearProgressIndicator(value: viewModel.progress),
                   const SizedBox(height: 4),
                   Text(
-                    book.progressLabel,
+                    viewModel.progressLabel,
                     style: theme.textTheme.labelSmall,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    book.lastReadLabel,
+                    viewModel.lastReadLabel,
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: book.isLastReadOverdue
+                      color: viewModel.isLastReadOverdue
                           ? scheme.error
                           : scheme.onSurfaceVariant,
                     ),
