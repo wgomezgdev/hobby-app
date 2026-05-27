@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hobby_app/core/router/app_shell.dart';
 import 'package:hobby_app/features/auth/presentation/providers/auth_providers.dart';
 import 'package:hobby_app/features/auth/presentation/screens/sign_in_screen.dart';
+import 'package:hobby_app/features/library/presentation/screens/add_book_screen.dart';
 import 'package:hobby_app/features/library/presentation/screens/library_screen.dart';
 import 'package:hobby_app/features/quotes/presentation/screens/quotes_screen.dart';
 import 'package:hobby_app/features/ranking/presentation/screens/profile_screen.dart';
@@ -44,6 +45,12 @@ GoRouter appRouter(AppRouterRef ref) {
           GoRoute(
             path: '/library',
             builder: (context, state) => const LibraryScreen(),
+            routes: [
+              GoRoute(
+                path: 'add',
+                builder: (context, state) => const AddBookScreen(),
+              ),
+            ],
           ),
           GoRoute(
             path: '/quotes',
