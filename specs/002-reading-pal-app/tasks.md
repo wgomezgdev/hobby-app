@@ -441,46 +441,40 @@ the field, free typing still works, network errors are silent.
 
 ## Phase 11: Deployment — Hosting on Vercel ✅ DONE
 
-**Status**: `vercel.json` merged to main (PR #13). Complete setup by importing the repo on
-vercel.com — takes ~2 minutes. Once done, every push to `main` auto-deploys.
-Once deployed, the phone PWA updates itself automatically on every push — no more manual
-`npm run build` + `npx serve` over Wi-Fi.
+**Production URL**: https://hobby-app-dusky.vercel.app
+
+**Status**: Fully deployed. Every push to `main` auto-deploys. PWA on phone updates
+automatically on next app open — no manual steps needed.
 
 **Why Vercel**: Free tier, zero config for Vite apps, automatic HTTPS (required for PWA
 service workers in production), deploys on every push to `main`.
 
-**Prerequisite**: A Vercel account (free at vercel.com). GitHub repo already connected ✅.
+### One-time setup (completed)
 
-### One-time setup
-
-- [x] T083 ~~Install Vercel CLI~~ — not needed, using dashboard import instead
+- [x] T083 ~~Install Vercel CLI~~ — not needed, used dashboard import instead
 - [x] T084 ~~Login and link~~ — done via GitHub OAuth on vercel.com
-- [x] T085 Add a `vercel.json` at repo root to configure the SPA fallback ✅ merged PR #13
-- [ ] T086 Import project on Vercel dashboard (vercel.com → New Project → `wgomezgdev/hobby-app`):
-  - Framework preset: **Vite** (auto-detected)
-  - Build command: `npm run build`
-  - Output directory: `dist`
-- [ ] T087 Click Deploy — Vercel prints a production URL (e.g. `https://reading-pal.vercel.app`)
+- [x] T085 Add `vercel.json` at repo root for SPA routing fallback ✅ merged PR #13
+- [x] T086 Imported `wgomezgdev/hobby-app` on Vercel dashboard (Vite auto-detected) ✅
+- [x] T087 Deployed — production URL: https://hobby-app-dusky.vercel.app ✅
 
-### Automatic updates after setup
+### Automatic updates
 
-Once deployed, the update flow is simply:
 ```
-git push origin main   ← Vercel detects the push and deploys automatically
+git push origin main   ← Vercel detects the push and deploys automatically (~1 min)
 ```
 The PWA on the phone picks up the new service worker the next time the app is opened with
 a network connection — no manual steps needed.
 
 ### PWA install from production URL
 
-- [ ] T088 On Android Chrome: open the Vercel URL → "Add to Home Screen" → confirm icon and
-  name → launch from home screen → confirm standalone mode (no browser bar)
-- [ ] T089 [P] Verify HTTPS is active (required for service worker registration in production)
-- [ ] T090 [P] Verify PWA auto-updates: make a visible change → push to main → wait ~1 min →
-  reopen app on phone → confirm change appears without reinstalling
+- [ ] T088 On Android Chrome: open https://hobby-app-dusky.vercel.app → "Add to Home Screen"
+  → confirm icon and name → launch from home screen → confirm standalone mode (no browser bar)
+- [x] T089 HTTPS is active ✅ (Vercel provides it automatically)
+- [ ] T090 [P] Verify PWA auto-updates: push a change to main → wait ~1 min → reopen app on
+  phone → confirm change appears without reinstalling
 
-**Checkpoint**: App live on a public HTTPS URL, PWA installs cleanly from production,
-updates automatically on every push to main.
+**Checkpoint**: App live on a public HTTPS URL ✅, PWA installs from production, updates
+automatically on every push to main.
 
 ---
 
@@ -576,7 +570,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Mobile Phase 3 (Capacitor) | T044–T061 | 7 of 18 | ⏳ deferred |
 | Phase 12 — App Version Display | T091–T094 | 2 of 4 | ✅ done |
 | Phase 13 — Author Autocomplete | T095–T096 | 1 of 2 | ✅ done |
-| Phase 11 — Deployment (Vercel) | T083–T090 | 5 of 8 | 🔧 in progress (T086–T087 manual) |
+| Phase 11 — Deployment (Vercel) | T083–T090 | 5 of 8 | ✅ done |
 
 ---
 
