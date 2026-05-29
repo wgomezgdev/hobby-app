@@ -1,7 +1,9 @@
-import { Box, Button, Chip, IconButton, Skeleton, Tab, Tabs, Typography } from '@mui/material';
-import { ArrowBack, Edit } from '@mui/icons-material';
+import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Skeleton, Tab, Tabs, Typography } from '@mui/material';
+import { ArrowBack, DeleteOutlined, Edit } from '@mui/icons-material';
+import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useBook } from '../../hooks/useBooks';
+import { deleteBook } from '../../repositories/bookRepository';
 import { ProgressBar } from '../../components/ProgressBar/ProgressBar';
 import { ProgressTab } from './tabs/ProgressTab';
 import { SessionsTab } from './tabs/SessionsTab';
@@ -32,6 +34,13 @@ export function BookDetailPage() {
   const rawTab = searchParams.get('tab');
   const tab: TabValue = VALID_TABS.includes(rawTab as TabValue) ? (rawTab as TabValue) : 'progress';
 
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const handleDeleteConfirm = async () => {
+    await deleteBook(bookId);
+    navigate('/');
+  };
+
   const handleTabChange = (_: React.SyntheticEvent, newTab: TabValue) => {
     setSearchParams({ tab: newTab });
   };
@@ -44,13 +53,22 @@ export function BookDetailPage() {
         </IconButton>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>Book Detail</Typography>
         {book && (
-          <Button
-            startIcon={<Edit />}
-            onClick={() => navigate(`/books/${bookId}/edit`)}
-            size="small"
-          >
-            Edit
-          </Button>
+          <>
+            <Button
+              startIcon={<Edit />}
+              onClick={() => navigate(`/books/${bookId}/edit`)}
+              size="small"
+            >
+              Edit
+            </Button>
+            <IconButton
+              onClick={() => setDeleteOpen(true)}
+              aria-label="Delete book"
+              color="error"
+            >
+              <DeleteOutlined />
+            </IconButton>
+          </>
         )}
       </Box>
 
@@ -110,6 +128,22 @@ export function BookDetailPage() {
           {tab === 'rating' && <RatingTab bookId={bookId} />}
         </>
       )}
+
+      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
+        <DialogTitle>Delete book?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This will permanently delete <strong>{book?.title}</strong> and all its sessions,
+            quotes, and rating. This cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteOpen(false)}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

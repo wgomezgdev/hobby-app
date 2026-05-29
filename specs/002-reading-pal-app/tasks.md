@@ -204,6 +204,35 @@ stories → export snapshot → re-import snapshot → confirm all data restored
 
 ---
 
+## Phase 9: User Story 6 — Delete a Book (Priority: P1)
+
+**Goal**: Users can permanently delete a book and all its data from the book detail page,
+after confirming a warning dialog.
+
+**Note**: `deleteBook` in `src/repositories/bookRepository.ts` already exists and cascades
+(deletes sessions, quotes, ratings in a single Dexie transaction). Only UI work is needed.
+
+**Independent Test**: Add a book with a session and a quote → open book detail → delete →
+confirm dialog → verify redirected to library → confirm book absent under all filters →
+export snapshot → confirm book data absent in JSON.
+
+- [x] T075 Add a "Delete Book" icon button to the `BookDetailPage` header in
+  `src/pages/BookDetailPage/BookDetailPage.tsx` (MUI `IconButton` with `DeleteOutlined` icon,
+  placed in the top-right of the header next to the Edit button)
+- [x] T076 Add a delete confirmation `Dialog` in `BookDetailPage` (MUI Dialog; title: "Delete
+  book?"; body: "This will permanently delete «{title}» and all its sessions, quotes, and
+  rating. This cannot be undone."; actions: Cancel + Delete (color="error"); on confirm: call
+  `deleteBook(id)` then `navigate('/')`)
+- [x] T077 [P] Verify focus is trapped in the confirmation dialog and restored on close in
+  `src/pages/BookDetailPage/BookDetailPage.tsx`
+- [x] T078 [P] Verify that after deletion the library is empty when that was the only book,
+  showing the empty state CTA in `src/pages/LibraryPage/LibraryPage.tsx`
+
+**Checkpoint**: Delete button visible on book detail, confirmation dialog warns about cascade,
+confirming deletes book + data and returns to library, cancelling leaves everything intact.
+
+---
+
 ## Mobile Phase 2: PWA — Installable Web App
 
 **Purpose**: Make the existing SPA installable on Android and iOS home screens, with full
@@ -305,6 +334,7 @@ confirm all 5 user stories still work.
 - **US3 (Phase 6)**: Depends on Phase 2 + BookDetailPage shell from US2 (T023)
 - **US4 (Phase 7)**: Depends on Phase 2 + BookDetailPage shell from US2 (T023)
 - **Polish (Phase 8)**: Depends on all story phases complete
+- **US6 (Phase 9)**: Depends on Phase 8 — `deleteBook` repo function already exists, UI only
 - **Mobile Phase 2 — PWA**: Depends on Phase 8 complete. Independent of Mobile Phase 3. Can be pursued without ever doing Capacitor.
 - **Mobile Phase 3 — Capacitor**: ⏳ DEFERRED. Depends on Phase 8 + Mobile Phase 2 complete. Begin only when the app is fully polished as a PWA.
 
@@ -365,7 +395,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 6. US4 → ratings + ranking
 7. Polish → production-ready
 
-### Total Tasks: 74
+### Total Tasks: 78
 
 | Phase | Tasks | Parallelizable | Status |
 |---|---|---|---|
@@ -377,6 +407,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | US3 (P3) | T029–T032 | 3 of 4 | ✅ done |
 | US4 (P3) | T033–T037 | 3 of 5 | ✅ done |
 | Polish | T038–T043 | 5 of 6 | ✅ done |
+| US6 — Delete Book | T075–T078 | 2 of 4 | ✅ done |
 | Mobile Phase 2 (PWA) | T062–T074 | 8 of 13 | ✅ done (T073–T074 optional) |
 | Mobile Phase 3 (Capacitor) | T044–T061 | 7 of 18 | ⏳ deferred |
 
