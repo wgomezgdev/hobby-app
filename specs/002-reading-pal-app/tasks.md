@@ -152,7 +152,7 @@ sort changes → open a book and update its rating → confirm Ranking reflects 
 
 ---
 
-## Mobile Phase 2: Capacitor — Native Android / iOS App
+## Mobile Phase 3: Capacitor — Native Android / iOS App
 
 **Purpose**: Wrap the existing SPA in a native shell using Capacitor so it can be distributed
 as a real APK/IPA. Reuses 100% of the React codebase — no rewrite required.
@@ -201,7 +201,7 @@ stories → export snapshot → re-import snapshot → confirm all data restored
 
 ---
 
-## Mobile Phase 3: PWA — Installable Web App
+## Mobile Phase 2: PWA — Installable Web App
 
 **Purpose**: Make the existing SPA installable on Android and iOS home screens, with full
 offline support, using `vite-plugin-pwa`. Zero native build toolchain required — this is
@@ -302,8 +302,8 @@ confirm all 5 user stories still work.
 - **US3 (Phase 6)**: Depends on Phase 2 + BookDetailPage shell from US2 (T023)
 - **US4 (Phase 7)**: Depends on Phase 2 + BookDetailPage shell from US2 (T023)
 - **Polish (Phase 8)**: Depends on all story phases complete
-- **Mobile Phase 2 — Capacitor**: Depends on Phase 8 complete. Independent of Mobile Phase 3.
-- **Mobile Phase 3 — PWA**: Depends on Phase 8 complete. Independent of Mobile Phase 2. Can be pursued without ever doing Capacitor.
+- **Mobile Phase 2 — PWA**: Depends on Phase 8 complete. Independent of Mobile Phase 3. Can be pursued without ever doing Capacitor.
+- **Mobile Phase 3 — Capacitor**: Depends on Phase 8 complete. Independent of Mobile Phase 2.
 
 ### Within Each Phase
 
@@ -374,8 +374,8 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | US3 (P3) | T029–T032 | 3 of 4 | ✅ done |
 | US4 (P3) | T033–T037 | 3 of 5 | ✅ done |
 | Polish | T038–T043 | 5 of 6 | ✅ done |
-| Mobile Phase 2 (Capacitor) | T044–T061 | 7 of 18 | ⬜ pending |
-| Mobile Phase 3 (PWA) | T062–T074 | 8 of 13 | ⬜ pending |
+| Mobile Phase 2 (PWA) | T044–T056 | 8 of 13 | ⬜ pending |
+| Mobile Phase 3 (Capacitor) | T057–T074 | 7 of 18 | ⬜ pending |
 
 ---
 
