@@ -8,6 +8,32 @@
 
 ## User Scenarios & Testing
 
+### User Story 6 - Delete a Book (Priority: P1)
+
+A reader wants to permanently remove a book from their library, along with all its associated
+sessions, quotes, and rating, when they no longer want to track it.
+
+**Why this priority**: Deleting is a basic library management operation. Without it, mistakes
+(wrong title, duplicate entry) are irreversible.
+
+**Independent Test**: Add a book with at least one session and one quote. Delete it from the
+book detail page. Confirm it no longer appears in the library. Confirm its sessions and quotes
+are also gone (verify via export snapshot — they must not be present in the JSON).
+
+**Acceptance Scenarios**:
+
+1. **Given** a book exists, **When** the user triggers delete from the book detail page,
+   **Then** a confirmation dialog appears warning that all sessions, quotes, and ratings for
+   that book will also be permanently deleted.
+2. **Given** the confirmation dialog is open, **When** the user confirms, **Then** the book
+   and all its associated data are deleted and the user is navigated back to the library.
+3. **Given** the confirmation dialog is open, **When** the user cancels, **Then** no data is
+   changed and the dialog closes.
+4. **Given** a book is deleted, **When** the user views the library, **Then** the deleted book
+   no longer appears under any filter.
+
+---
+
 ### User Story 1 - Build and Browse a Book Library (Priority: P1)
 
 A reader wants to keep track of all the books they own, are reading, or plan to read. They
@@ -192,6 +218,11 @@ Import the snapshot. Verify all books, sessions, and quotes are restored exactly
   items.
 - **FR-020**: Cover image uploads MUST be validated client-side and rejected if they exceed
   1 MB.
+- **FR-021**: Users MUST be able to permanently delete a book from the book detail page.
+- **FR-022**: Deleting a book MUST cascade — all associated sessions, quotes, and ratings are
+  deleted in the same operation.
+- **FR-023**: The system MUST show a confirmation dialog before executing a delete, clearly
+  warning that all associated data will also be removed.
 
 ### Key Entities
 
