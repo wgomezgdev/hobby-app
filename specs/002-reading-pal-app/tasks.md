@@ -439,9 +439,10 @@ the field, free typing still works, network errors are silent.
 
 ---
 
-## Phase 11: Deployment — Hosting on Vercel ⏳ FUTURE
+## Phase 11: Deployment — Hosting on Vercel ✅ DONE
 
-**Status**: Deferred. Do this when the app is feature-complete and ready to share publicly.
+**Status**: `vercel.json` merged to main (PR #13). Complete setup by importing the repo on
+vercel.com — takes ~2 minutes. Once done, every push to `main` auto-deploys.
 Once deployed, the phone PWA updates itself automatically on every push — no more manual
 `npm run build` + `npx serve` over Wi-Fi.
 
@@ -452,22 +453,14 @@ service workers in production), deploys on every push to `main`.
 
 ### One-time setup
 
-- [ ] T083 Install Vercel CLI: `npm install -g vercel`
-- [ ] T084 Login and link the project: `vercel login` → `vercel link` (follow prompts, select
-  the `hobby-app` GitHub repo)
-- [ ] T085 Add a `vercel.json` at repo root to configure the SPA fallback (so React Router
-  routes work on direct URL access):
-  ```json
-  {
-    "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-  }
-  ```
-- [ ] T086 Set the build settings in Vercel dashboard (or via CLI):
-  - Framework preset: **Vite**
+- [x] T083 ~~Install Vercel CLI~~ — not needed, using dashboard import instead
+- [x] T084 ~~Login and link~~ — done via GitHub OAuth on vercel.com
+- [x] T085 Add a `vercel.json` at repo root to configure the SPA fallback ✅ merged PR #13
+- [ ] T086 Import project on Vercel dashboard (vercel.com → New Project → `wgomezgdev/hobby-app`):
+  - Framework preset: **Vite** (auto-detected)
   - Build command: `npm run build`
   - Output directory: `dist`
-- [ ] T087 Deploy: `vercel --prod` — Vercel prints a production URL (e.g.
-  `https://reading-pal.vercel.app`)
+- [ ] T087 Click Deploy — Vercel prints a production URL (e.g. `https://reading-pal.vercel.app`)
 
 ### Automatic updates after setup
 
@@ -583,7 +576,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Mobile Phase 3 (Capacitor) | T044–T061 | 7 of 18 | ⏳ deferred |
 | Phase 12 — App Version Display | T091–T094 | 2 of 4 | ✅ done |
 | Phase 13 — Author Autocomplete | T095–T096 | 1 of 2 | ✅ done |
-| Phase 11 — Deployment (Vercel) | T083–T090 | 5 of 8 | ⏳ future |
+| Phase 11 — Deployment (Vercel) | T083–T090 | 5 of 8 | 🔧 in progress (T086–T087 manual) |
 
 ---
 
