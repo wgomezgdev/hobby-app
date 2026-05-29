@@ -8,6 +8,38 @@
 
 ## User Scenarios & Testing
 
+### User Story 8 - App Version Display (Priority: P1)
+
+A user wants to see which version of the app is running so they know whether their phone has
+received the latest updates after a deployment.
+
+**Acceptance Scenarios**:
+
+1. **Given** the app is open on any screen, **When** the user looks at the bottom of the
+   page, **Then** the current version number (e.g. `v0.2.0`) is visible in a subtle footer.
+2. **Given** a new version is deployed, **When** the user opens the updated app, **Then**
+   the footer reflects the new version number.
+
+---
+
+### User Story 9 - Author Name Autocomplete (Priority: P2)
+
+A reader wants the Author field to suggest real author names as they type, so they don't
+have to remember exact spellings or full names.
+
+**Acceptance Scenarios**:
+
+1. **Given** the user types at least 2 characters in the Author field, **When** Open Library
+   returns matches, **Then** a dropdown of author name suggestions appears.
+2. **Given** suggestions appear, **When** the user clicks one, **Then** the full author name
+   fills the field.
+3. **Given** the user types a name not in the suggestions, **When** they continue typing,
+   **Then** the field accepts any free-text input with no errors.
+4. **Given** the network is unavailable, **When** the user types in the Author field, **Then**
+   no suggestions appear and the field continues to work normally.
+
+---
+
 ### User Story 7 - Search and Set a Book Cover Online (Priority: P2)
 
 A reader wants to search for a book's cover image by title and author directly inside the

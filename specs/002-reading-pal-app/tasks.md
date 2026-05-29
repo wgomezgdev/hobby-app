@@ -366,6 +366,79 @@ confirm all 5 user stories still work.
 
 ---
 
+## Phase 12: User Story 8 — App Version Display (Priority: P1)
+
+**Goal**: Every build shows the current version number at the bottom of every screen so the
+user always knows which version is running on their phone.
+
+**Strategy**: Read the version from `package.json` at build time via Vite's `define` config.
+Bump `package.json` version for every PR merged to main (use semantic versioning: MINOR for
+new features, PATCH for fixes).
+
+**Independent Test**: Run `npm run dev` → confirm version string visible in footer on every
+page → bump version in `package.json` → rebuild → confirm updated version shown.
+
+- [x] T091 Expose app version at build time in `vite.config.ts`:
+  ```ts
+  import pkg from './package.json'
+  // inside defineConfig:
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) }
+  ```
+- [x] T092 [P] Add global TypeScript declaration in `src/vite-env.d.ts`:
+  ```ts
+  declare const __APP_VERSION__: string
+  ```
+- [x] T093 Add a version footer to the `Layout` component in
+  `src/components/Layout/Layout.tsx`: MUI `Box` fixed at bottom of page, centered
+  `Typography variant="caption"` showing `v{__APP_VERSION__}`, color `text.disabled`,
+  subtle so it doesn't compete with content
+- [x] T094 Bump `package.json` version to `0.2.0` to mark the start of versioned releases
+
+**Checkpoint**: Footer shows `v0.2.0` on every screen after rebuild.
+
+---
+
+## Phase 13: User Story 9 — Author Name Autocomplete (Priority: P2)
+
+**Goal**: When typing in the Author field on the Add/Edit Book form, suggestions from Open
+Library's author search API appear as a dropdown. The user can pick a suggestion or keep
+typing freely. No suggestion is forced — the field stays free-text.
+
+**API**: Open Library author search (free, no key).
+- Endpoint: `https://openlibrary.org/search/authors.json?q={query}&limit=8`
+- Response: `{ docs: [{ name: "George R. R. Martin", ... }] }`
+
+**Key constraints**:
+- Debounce input by 350 ms to avoid hammering the API on every keystroke
+- `freeSolo` mode — user can type any name, suggestions are optional
+- Client-side filtering disabled (server already filters by query)
+- Show suggestions only when query is ≥ 2 characters
+- On network error or timeout: fail silently, no suggestions shown (field still works)
+
+**Independent Test**: Type "george" in the Author field → suggestions appear including
+"George R. R. Martin" → select it → confirm field fills completely → type an unknown author
+name → confirm no suggestions → field still accepts free input.
+
+- [x] T095 Create `useAuthorSuggestions` hook in `src/hooks/useAuthorSuggestions.ts`:
+  - Input: `query: string`
+  - Debounces 350 ms before fetching
+  - Fetches `https://openlibrary.org/search/authors.json?q={query}&limit=8`
+  - Returns `string[]` of author names (empty array on error or query < 2 chars)
+  - Cancels in-flight requests via `AbortController` when query changes
+- [x] T096 Replace the author `TextField` in `src/pages/AddEditBookPage/AddEditBookPage.tsx`
+  with MUI `Autocomplete`:
+  - `freeSolo` — allows any input, not just suggestions
+  - `options` from `useAuthorSuggestions(watchedAuthor)`
+  - `filterOptions={x => x}` — disable client-side filtering
+  - `onInputChange` updates the RHF field value via `field.onChange`
+  - Preserve `required` validation and error display
+  - Loading indicator (`loading` prop) while fetch is in-flight
+
+**Checkpoint**: Author field suggests real author names from Open Library, selecting fills
+the field, free typing still works, network errors are silent.
+
+---
+
 ## Phase 11: Deployment — Hosting on Vercel ⏳ FUTURE
 
 **Status**: Deferred. Do this when the app is feature-complete and ready to share publicly.
@@ -492,7 +565,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 6. US4 → ratings + ranking
 7. Polish → production-ready
 
-### Total Tasks: 90
+### Total Tasks: 96
 
 | Phase | Tasks | Parallelizable | Status |
 |---|---|---|---|
@@ -508,6 +581,8 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | US7 — Cover Search | T079–T082 | 2 of 4 | ✅ done |
 | Mobile Phase 2 (PWA) | T062–T074 | 8 of 13 | ✅ done (T073–T074 optional) |
 | Mobile Phase 3 (Capacitor) | T044–T061 | 7 of 18 | ⏳ deferred |
+| Phase 12 — App Version Display | T091–T094 | 2 of 4 | ✅ done |
+| Phase 13 — Author Autocomplete | T095–T096 | 1 of 2 | ✅ done |
 | Phase 11 — Deployment (Vercel) | T083–T090 | 5 of 8 | ⏳ future |
 
 ---

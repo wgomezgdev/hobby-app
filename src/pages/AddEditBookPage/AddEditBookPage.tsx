@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import {
-  Box, Button, FormControl, InputLabel, MenuItem, Select,
-  Stack, TextField, Typography, FormHelperText,
+  Autocomplete, Box, Button, CircularProgress, FormControl,
+  InputLabel, MenuItem, Select, Stack, TextField, Typography, FormHelperText,
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuthorSuggestions } from '../../hooks/useAuthorSuggestions';
 import { useBook } from '../../hooks/useBooks';
 import { addBook, updateBook } from '../../repositories/bookRepository';
 import { CoverUpload } from '../../components/CoverUpload/CoverUpload';
@@ -26,7 +27,6 @@ export function AddEditBookPage() {
   const navigate = useNavigate();
 
   const {
-    register,
     handleSubmit,
     control,
     reset,
@@ -35,6 +35,9 @@ export function AddEditBookPage() {
   } = useForm<BookFormData>({
     defaultValues: { status: 'WANT_TO_READ' },
   });
+
+  const [authorInput, setAuthorInput] = useState('');
+  const { suggestions: authorSuggestions, loading: authorLoading } = useAuthorSuggestions(authorInput);
 
   useEffect(() => {
     if (isEditMode && book) {
@@ -59,22 +62,57 @@ export function AddEditBookPage() {
       </Typography>
 
       <Stack spacing={3}>
-        <TextField
-          label="Title"
-          required
-          fullWidth
-          {...register('title', { required: 'Title is required' })}
-          error={!!errors.title}
-          helperText={errors.title?.message}
+        <Controller
+          name="title"
+          control={control}
+          rules={{ required: 'Title is required' }}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Title"
+              required
+              fullWidth
+              error={!!errors.title}
+              helperText={errors.title?.message}
+            />
+          )}
         />
 
-        <TextField
-          label="Author"
-          required
-          fullWidth
-          {...register('author', { required: 'Author is required' })}
-          error={!!errors.author}
-          helperText={errors.author?.message}
+        <Controller
+          name="author"
+          control={control}
+          rules={{ required: 'Author is required' }}
+          render={({ field }) => (
+            <Autocomplete
+              freeSolo
+              options={authorSuggestions}
+              filterOptions={x => x}
+              loading={authorLoading}
+              inputValue={field.value ?? ''}
+              onInputChange={(_, value) => {
+                field.onChange(value);
+                setAuthorInput(value);
+              }}
+              renderInput={params => (
+                <TextField
+                  {...params}
+                  label="Author"
+                  required
+                  error={!!errors.author}
+                  helperText={errors.author?.message}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {authorLoading && <CircularProgress size={18} />}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+            />
+          )}
         />
 
         <Controller

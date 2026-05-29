@@ -27,6 +27,11 @@ export function Layout() {
       <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3 } }}>
         <Outlet />
       </Box>
+      <Box component="footer" sx={{ textAlign: 'center', py: 1 }}>
+        <Typography variant="caption" color="text.disabled">
+          v{__APP_VERSION__}
+        </Typography>
+      </Box>
     </Box>
   );
 }
