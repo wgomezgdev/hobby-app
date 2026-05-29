@@ -14,7 +14,7 @@ export function Layout() {
             to="/"
             sx={{ flexGrow: 1, color: 'inherit', textDecoration: 'none' }}
           >
-            Reading Pal
+            My Hobbies
           </Typography>
           <IconButton color="inherit" component={Link} to="/ranking" aria-label="Ranking">
             <Typography variant="button" sx={{ mr: 1 }}>Ranking</Typography>
