@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png'],
       manifest: {
-        name: 'Reading Pal',
-        short_name: 'Reading Pal',
-        description: 'Your personal reading companion',
+        name: 'My Hobbies',
+        short_name: 'My Hobbies',
+        description: 'Your personal hobby tracker',
         theme_color: '#1976d2',
         background_color: '#ffffff',
         display: 'standalone',
