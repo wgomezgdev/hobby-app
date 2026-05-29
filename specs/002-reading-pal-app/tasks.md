@@ -233,6 +233,50 @@ confirming deletes book + data and returns to library, cancelling leaves everyth
 
 ---
 
+## Phase 10: User Story 7 — Cover Search via Open Library (Priority: P2)
+
+**Goal**: Users can search for a book cover by title and author inside the Add/Edit form,
+pick one from a thumbnail grid, and have its URL stored and displayed throughout the app.
+
+**API**: Open Library (free, no API key).
+- Search: `https://openlibrary.org/search.json?title=…&author=…&fields=cover_i,title&limit=20`
+- Thumbnail: `https://covers.openlibrary.org/b/id/{cover_i}-M.jpg`
+- Stored URL (full size): `https://covers.openlibrary.org/b/id/{cover_i}-L.jpg`
+
+**Data model**: No change. `cover: string | undefined` on `Book` already accepts URLs.
+`<img src>` handles both data URIs (existing uploads) and URLs transparently.
+
+**No migration needed**: existing base64 covers continue to display correctly.
+
+**Independent Test**: Add Book → type title + author → click "Search cover online" → confirm
+thumbnail grid appears → select a cover → confirm preview shown in form → save → confirm
+cover appears on BookCard and BookDetailPage header.
+
+- [x] T079 Create `CoverSearch` component in `src/components/CoverSearch/CoverSearch.tsx`:
+  - Props: `title: string`, `author: string`, `onSelect: (url: string) => void`
+  - "Search cover online" `Button` (outlined, `SearchOutlined` icon); disabled when both title and author are empty
+  - On click: opens MUI `Dialog` and fires Open Library search fetch
+  - While loading: centered `CircularProgress`
+  - Results: MUI `ImageList` (3 cols) of `<img>` thumbnails (`-M.jpg`); each clickable
+  - On thumbnail click: calls `onSelect` with the `-L.jpg` URL and closes dialog
+  - No results: "No covers found. Try adjusting the title or author." centered text
+  - Fetch error: same "No covers found" message
+- [x] T080 Integrate `CoverSearch` into `AddEditBookPage` in
+  `src/pages/AddEditBookPage/AddEditBookPage.tsx`:
+  - Use `watch(['title', 'author'])` from `useForm` to pass live values to `CoverSearch`
+  - Place `CoverSearch` below `CoverUpload` inside the existing cover `Controller`
+  - `onSelect` calls `field.onChange` with the URL — replaces any previous cover value
+  - Add a "Remove cover" text button (shown when `field.value` is set) that calls `field.onChange(undefined)`
+- [x] T081 [P] Update `vite.config.ts` `workbox.runtimeCaching` to cache Open Library cover
+  images (`https://covers.openlibrary.org/`) with a `CacheFirst` strategy (max 100 entries,
+  30-day expiry) so covers load offline after first view
+- [x] T082 [P] Verify existing books with base64 covers still display correctly after the change
+
+**Checkpoint**: User can search, pick, and persist a cover URL. BookCard and BookDetailPage
+show the cover. Existing base64 covers unchanged. Cover images cached for offline.
+
+---
+
 ## Mobile Phase 2: PWA — Installable Web App
 
 **Purpose**: Make the existing SPA installable on Android and iOS home screens, with full
@@ -335,6 +379,7 @@ confirm all 5 user stories still work.
 - **US4 (Phase 7)**: Depends on Phase 2 + BookDetailPage shell from US2 (T023)
 - **Polish (Phase 8)**: Depends on all story phases complete
 - **US6 (Phase 9)**: Depends on Phase 8 — `deleteBook` repo function already exists, UI only
+- **US7 (Phase 10)**: Depends on Phase 8 — no data model changes, UI + API integration only
 - **Mobile Phase 2 — PWA**: Depends on Phase 8 complete. Independent of Mobile Phase 3. Can be pursued without ever doing Capacitor.
 - **Mobile Phase 3 — Capacitor**: ⏳ DEFERRED. Depends on Phase 8 + Mobile Phase 2 complete. Begin only when the app is fully polished as a PWA.
 
@@ -395,7 +440,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 6. US4 → ratings + ranking
 7. Polish → production-ready
 
-### Total Tasks: 78
+### Total Tasks: 82
 
 | Phase | Tasks | Parallelizable | Status |
 |---|---|---|---|
@@ -408,6 +453,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | US4 (P3) | T033–T037 | 3 of 5 | ✅ done |
 | Polish | T038–T043 | 5 of 6 | ✅ done |
 | US6 — Delete Book | T075–T078 | 2 of 4 | ✅ done |
+| US7 — Cover Search | T079–T082 | 2 of 4 | ✅ done |
 | Mobile Phase 2 (PWA) | T062–T074 | 8 of 13 | ✅ done (T073–T074 optional) |
 | Mobile Phase 3 (Capacitor) | T044–T061 | 7 of 18 | ⏳ deferred |
 

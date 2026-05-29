@@ -8,6 +8,37 @@
 
 ## User Scenarios & Testing
 
+### User Story 7 - Search and Set a Book Cover Online (Priority: P2)
+
+A reader wants to search for a book's cover image by title and author directly inside the
+app, pick one from the results, and have it displayed throughout the app — without uploading
+a file manually.
+
+**Why this priority**: Finding covers manually and uploading files is friction. Searching
+online is faster and produces better results. The cover URL is stored in the database; the
+image is loaded from the network when displayed.
+
+**Independent Test**: Open Add Book. Enter a title and author. Click "Search cover online".
+Confirm a grid of covers appears. Select one. Confirm the preview updates in the form.
+Save the book. Confirm the cover is shown on the BookCard and BookDetailPage header.
+
+**Acceptance Scenarios**:
+
+1. **Given** the user is on the Add or Edit Book form, **When** they click "Search cover
+   online", **Then** the app searches Open Library using the current title and author values
+   and displays matching covers as a thumbnail grid.
+2. **Given** covers are returned, **When** the user clicks a thumbnail, **Then** the dialog
+   closes and a preview of the selected cover appears in the form.
+3. **Given** no covers are found for the search terms, **When** results load, **Then** a
+   "No covers found" message is shown.
+4. **Given** a cover has been selected from search, **When** the user saves the book, **Then**
+   the cover URL is stored in the database and the cover is shown on the BookCard and
+   BookDetailPage.
+5. **Given** a book has an existing cover (uploaded or from a previous search), **When** the
+   user searches and selects a new cover, **Then** the new selection replaces the previous one.
+
+---
+
 ### User Story 6 - Delete a Book (Priority: P1)
 
 A reader wants to permanently remove a book from their library, along with all its associated
@@ -218,10 +249,18 @@ Import the snapshot. Verify all books, sessions, and quotes are restored exactly
   items.
 - **FR-020**: Cover image uploads MUST be validated client-side and rejected if they exceed
   1 MB.
-- **FR-021**: Users MUST be able to permanently delete a book from the book detail page.
-- **FR-022**: Deleting a book MUST cascade — all associated sessions, quotes, and ratings are
+- **FR-021**: Users MUST be able to search for a book cover by title and author via Open
+  Library directly inside the Add/Edit Book form.
+- **FR-022**: Search results MUST be displayed as a grid of cover thumbnails inside a dialog.
+- **FR-023**: Selecting a cover from search results MUST store the image URL in the database
+  and show a preview in the form.
+- **FR-024**: Cover URLs and base64 covers from file upload MUST both display correctly
+  throughout the app (BookCard, BookDetailPage header) — no display code change required as
+  `<img src>` handles both.
+- **FR-025**: Users MUST be able to permanently delete a book from the book detail page.
+- **FR-026**: Deleting a book MUST cascade — all associated sessions, quotes, and ratings are
   deleted in the same operation.
-- **FR-023**: The system MUST show a confirmation dialog before executing a delete, clearly
+- **FR-027**: The system MUST show a confirmation dialog before executing a delete, clearly
   warning that all associated data will also be removed.
 
 ### Key Entities

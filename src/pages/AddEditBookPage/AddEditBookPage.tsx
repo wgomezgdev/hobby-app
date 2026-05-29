@@ -8,6 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useBook } from '../../hooks/useBooks';
 import { addBook, updateBook } from '../../repositories/bookRepository';
 import { CoverUpload } from '../../components/CoverUpload/CoverUpload';
+import { CoverSearch } from '../../components/CoverSearch/CoverSearch';
 import type { BookStatus } from '../../types/entities';
 
 interface BookFormData {
@@ -29,6 +30,7 @@ export function AddEditBookPage() {
     handleSubmit,
     control,
     reset,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<BookFormData>({
     defaultValues: { status: 'WANT_TO_READ' },
@@ -100,7 +102,24 @@ export function AddEditBookPage() {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 Cover (optional)
               </Typography>
-              <CoverUpload value={field.value} onChange={field.onChange} />
+              <Stack spacing={1}>
+                <CoverUpload value={field.value} onChange={field.onChange} />
+                <CoverSearch
+                  title={getValues('title') ?? ''}
+                  author={getValues('author') ?? ''}
+                  onSelect={field.onChange}
+                />
+                {field.value && (
+                  <Button
+                    size="small"
+                    color="inherit"
+                    sx={{ alignSelf: 'flex-start', color: 'text.secondary' }}
+                    onClick={() => field.onChange(undefined)}
+                  >
+                    Remove cover
+                  </Button>
+                )}
+              </Stack>
             </Box>
           )}
         />
