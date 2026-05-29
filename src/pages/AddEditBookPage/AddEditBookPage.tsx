@@ -30,13 +30,11 @@ export function AddEditBookPage() {
     handleSubmit,
     control,
     reset,
-    watch,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<BookFormData>({
     defaultValues: { status: 'WANT_TO_READ' },
   });
-
-  const [watchedTitle, watchedAuthor] = watch(['title', 'author']);
 
   useEffect(() => {
     if (isEditMode && book) {
@@ -107,8 +105,8 @@ export function AddEditBookPage() {
               <Stack spacing={1}>
                 <CoverUpload value={field.value} onChange={field.onChange} />
                 <CoverSearch
-                  title={watchedTitle ?? ''}
-                  author={watchedAuthor ?? ''}
+                  title={getValues('title') ?? ''}
+                  author={getValues('author') ?? ''}
                   onSelect={field.onChange}
                 />
                 {field.value && (
