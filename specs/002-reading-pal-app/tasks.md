@@ -216,16 +216,16 @@ after confirming a warning dialog.
 confirm dialog → verify redirected to library → confirm book absent under all filters →
 export snapshot → confirm book data absent in JSON.
 
-- [ ] T075 Add a "Delete Book" icon button to the `BookDetailPage` header in
+- [x] T075 Add a "Delete Book" icon button to the `BookDetailPage` header in
   `src/pages/BookDetailPage/BookDetailPage.tsx` (MUI `IconButton` with `DeleteOutlined` icon,
   placed in the top-right of the header next to the Edit button)
-- [ ] T076 Add a delete confirmation `Dialog` in `BookDetailPage` (MUI Dialog; title: "Delete
+- [x] T076 Add a delete confirmation `Dialog` in `BookDetailPage` (MUI Dialog; title: "Delete
   book?"; body: "This will permanently delete «{title}» and all its sessions, quotes, and
   rating. This cannot be undone."; actions: Cancel + Delete (color="error"); on confirm: call
   `deleteBook(id)` then `navigate('/')`)
-- [ ] T077 [P] Verify focus is trapped in the confirmation dialog and restored on close in
+- [x] T077 [P] Verify focus is trapped in the confirmation dialog and restored on close in
   `src/pages/BookDetailPage/BookDetailPage.tsx`
-- [ ] T078 [P] Verify that after deletion the library is empty when that was the only book,
+- [x] T078 [P] Verify that after deletion the library is empty when that was the only book,
   showing the empty state CTA in `src/pages/LibraryPage/LibraryPage.tsx`
 
 **Checkpoint**: Delete button visible on book detail, confirmation dialog warns about cascade,
@@ -407,7 +407,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | US3 (P3) | T029–T032 | 3 of 4 | ✅ done |
 | US4 (P3) | T033–T037 | 3 of 5 | ✅ done |
 | Polish | T038–T043 | 5 of 6 | ✅ done |
-| US6 — Delete Book | T075–T078 | 2 of 4 | ⬜ pending |
+| US6 — Delete Book | T075–T078 | 2 of 4 | ✅ done |
 | Mobile Phase 2 (PWA) | T062–T074 | 8 of 13 | ✅ done (T073–T074 optional) |
 | Mobile Phase 3 (Capacitor) | T044–T061 | 7 of 18 | ⏳ deferred |
 
