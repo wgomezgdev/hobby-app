@@ -366,6 +366,58 @@ confirm all 5 user stories still work.
 
 ---
 
+## Phase 11: Deployment — Hosting on Vercel ⏳ FUTURE
+
+**Status**: Deferred. Do this when the app is feature-complete and ready to share publicly.
+Once deployed, the phone PWA updates itself automatically on every push — no more manual
+`npm run build` + `npx serve` over Wi-Fi.
+
+**Why Vercel**: Free tier, zero config for Vite apps, automatic HTTPS (required for PWA
+service workers in production), deploys on every push to `main`.
+
+**Prerequisite**: A Vercel account (free at vercel.com). GitHub repo already connected ✅.
+
+### One-time setup
+
+- [ ] T083 Install Vercel CLI: `npm install -g vercel`
+- [ ] T084 Login and link the project: `vercel login` → `vercel link` (follow prompts, select
+  the `hobby-app` GitHub repo)
+- [ ] T085 Add a `vercel.json` at repo root to configure the SPA fallback (so React Router
+  routes work on direct URL access):
+  ```json
+  {
+    "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  }
+  ```
+- [ ] T086 Set the build settings in Vercel dashboard (or via CLI):
+  - Framework preset: **Vite**
+  - Build command: `npm run build`
+  - Output directory: `dist`
+- [ ] T087 Deploy: `vercel --prod` — Vercel prints a production URL (e.g.
+  `https://reading-pal.vercel.app`)
+
+### Automatic updates after setup
+
+Once deployed, the update flow is simply:
+```
+git push origin main   ← Vercel detects the push and deploys automatically
+```
+The PWA on the phone picks up the new service worker the next time the app is opened with
+a network connection — no manual steps needed.
+
+### PWA install from production URL
+
+- [ ] T088 On Android Chrome: open the Vercel URL → "Add to Home Screen" → confirm icon and
+  name → launch from home screen → confirm standalone mode (no browser bar)
+- [ ] T089 [P] Verify HTTPS is active (required for service worker registration in production)
+- [ ] T090 [P] Verify PWA auto-updates: make a visible change → push to main → wait ~1 min →
+  reopen app on phone → confirm change appears without reinstalling
+
+**Checkpoint**: App live on a public HTTPS URL, PWA installs cleanly from production,
+updates automatically on every push to main.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -440,7 +492,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 6. US4 → ratings + ranking
 7. Polish → production-ready
 
-### Total Tasks: 82
+### Total Tasks: 90
 
 | Phase | Tasks | Parallelizable | Status |
 |---|---|---|---|
@@ -456,6 +508,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | US7 — Cover Search | T079–T082 | 2 of 4 | ✅ done |
 | Mobile Phase 2 (PWA) | T062–T074 | 8 of 13 | ✅ done (T073–T074 optional) |
 | Mobile Phase 3 (Capacitor) | T044–T061 | 7 of 18 | ⏳ deferred |
+| Phase 11 — Deployment (Vercel) | T083–T090 | 5 of 8 | ⏳ future |
 
 ---
 
