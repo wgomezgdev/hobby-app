@@ -152,6 +152,144 @@ sort changes → open a book and update its rating → confirm Ranking reflects 
 
 ---
 
+## Mobile Phase 2: Capacitor — Native Android / iOS App
+
+**Purpose**: Wrap the existing SPA in a native shell using Capacitor so it can be distributed
+as a real APK/IPA. Reuses 100% of the React codebase — no rewrite required.
+
+**Prerequisite**: Phases 1–8 complete ✅. `npm run build` must pass before every sync.
+
+**Key constraint**: Two features need native adaptation because the default browser APIs they
+rely on (`<a download>` and `<input type="file">`) behave differently inside a WebView:
+- **Export** uses an anchor-click download → must switch to `@capacitor/filesystem` + `@capacitor/share`
+- **Import** uses a file-picker input → works in WebView on Android; verify and fix on iOS if needed
+
+**Independent Test**: Build APK → install on Android emulator → walk through all 5 user
+stories → export snapshot → re-import snapshot → confirm all data restored.
+
+### Setup
+
+- [ ] T044 Install Capacitor core and CLI: `npm install @capacitor/core @capacitor/cli`
+- [ ] T045 Initialize Capacitor project: `npx cap init "Reading Pal" "com.readingpal.app" --web-dir dist` — generates `capacitor.config.ts` at repo root
+- [ ] T046 Install Android platform: `npm install @capacitor/android && npx cap add android` — generates `android/` directory
+- [ ] T047 [P] Install native-file plugins: `npm install @capacitor/filesystem @capacitor/share` — needed for export/import adaptation (T051–T052)
+- [ ] T048 [P] Review `capacitor.config.ts`: set `appId: "com.readingpal.app"`, `appName: "Reading Pal"`, `webDir: "dist"`, enable `allowNavigation: []` (keep empty — no external URLs needed)
+
+### Native Adaptation
+
+- [ ] T049 Add platform detection utility in `src/utils/platform.ts`: export `isNative = Capacitor.isNativePlatform()` — used to branch export/import logic without polluting component code
+- [ ] T050 Adapt export in `src/utils/snapshot.ts`: when `isNative`, write the JSON string to a temp file via `@capacitor/filesystem` (Directory.Cache) then trigger `@capacitor/share` Share sheet; keep existing `<a download>` path for web
+- [ ] T051 [P] Verify import (file picker `<input type="file">`) on Android WebView — if broken, replace with `@capacitor/filesystem` pickFiles; keep existing path for web
+- [ ] T052 [P] Verify Dexie.js / IndexedDB works inside Android WebView — open DevTools via `chrome://inspect`, confirm DB tables populate on first launch
+
+### Build & Run
+
+- [ ] T053 Add npm scripts to `package.json`: `"cap:sync": "npm run build && npx cap sync android"`, `"cap:android": "npx cap open android"`, `"cap:run": "npm run build && npx cap sync android && npx cap run android"`
+- [ ] T054 Run first build and sync: `npm run cap:sync` — confirm no errors, `android/app/src/main/assets/public/` populated
+- [ ] T055 Run on Android emulator: `npm run cap:run` (or `npx cap open android` → Run in Android Studio) — confirm app launches
+- [ ] T056 Walk all 5 user stories on emulator: add book, log session, add quote, rate book, export snapshot, import snapshot
+
+### Validation Checklist
+
+- [ ] T057 [P] All 5 user stories work end-to-end on Android emulator
+- [ ] T058 [P] Export produces a shareable JSON file (share sheet appears)
+- [ ] T059 [P] Import restores all data after a full clear
+- [ ] T060 [P] App works fully offline (airplane mode) — no network requests needed
+- [ ] T061 [P] No white screen on cold launch (verify `webDir: dist` is correct and build ran before sync)
+
+**Checkpoint**: APK runs on emulator, all features functional, export/import adapted for native.
+
+---
+
+## Mobile Phase 3: PWA — Installable Web App
+
+**Purpose**: Make the existing SPA installable on Android and iOS home screens, with full
+offline support, using `vite-plugin-pwa`. Zero native build toolchain required — this is
+pure web technology on top of the existing Vite app.
+
+**Prerequisite**: Phases 1–8 complete ✅. Does NOT require Mobile Phase 2.
+
+**What PWA gives you**: installable from Chrome/Safari, works offline, home-screen icon,
+splash screen, no app store. What it does NOT give you: app store listing, push notifications
+(beyond basic web push), access to all native APIs.
+
+**Key constraint**: iOS Safari has stricter PWA support than Android Chrome. Test both.
+The export (`<a download>`) and import (`<input type="file">`) features work natively in
+browsers — no adaptation needed unlike Capacitor.
+
+**Independent Test**: Open app in Chrome → install via "Add to Home Screen" → launch from
+home screen icon → confirm standalone mode (no browser chrome) → turn on airplane mode →
+confirm all 5 user stories still work.
+
+### Icons & Manifest Assets
+
+- [ ] T062 Create `public/icons/` directory with the following PNG files (generate with any icon tool, e.g. https://realfavicongenerator.net or a script):
+  - `icon-192x192.png` — standard Android home screen icon
+  - `icon-512x512.png` — Android splash and Play Store (if ever needed)
+  - `icon-maskable-192x192.png` — adaptive icon for Android (safe zone: inner 80%)
+  - `icon-maskable-512x512.png` — same, large variant
+  - `apple-touch-icon-180x180.png` — iOS home screen icon
+
+### Vite PWA Plugin
+
+- [ ] T063 Install vite-plugin-pwa: `npm install -D vite-plugin-pwa`
+- [ ] T064 Configure `vite-plugin-pwa` in `vite.config.ts`:
+  ```ts
+  VitePWA({
+    registerType: 'autoUpdate',
+    includeAssets: ['icons/*.png'],
+    manifest: {
+      name: 'Reading Pal',
+      short_name: 'Reading Pal',
+      description: 'Your personal reading companion',
+      theme_color: '#1976d2',
+      background_color: '#ffffff',
+      display: 'standalone',
+      start_url: '/',
+      icons: [
+        { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+        { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+        { src: '/icons/icon-maskable-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+        { src: '/icons/icon-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ],
+    },
+    workbox: {
+      globPatterns: ['**/*.{js,css,html,ico,png,woff2}'],
+      runtimeCaching: [], // Dexie is local — no API calls to cache
+    },
+  })
+  ```
+- [ ] T065 Add Apple-specific meta tags to `index.html`:
+  ```html
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Reading Pal">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180x180.png">
+  ```
+- [ ] T066 Register the service worker in `src/main.tsx` using vite-plugin-pwa's virtual module:
+  ```ts
+  import { registerSW } from 'virtual:pwa-register'
+  registerSW({ immediate: true })
+  ```
+- [ ] T067 Add TypeScript declaration for the virtual module in `src/vite-env.d.ts`:
+  ```ts
+  /// <reference types="vite-plugin-pwa/client" />
+  ```
+
+### Validation
+
+- [ ] T068 Run `npm run build` — confirm no errors, `dist/sw.js` and `dist/manifest.webmanifest` generated
+- [ ] T069 [P] Open Chrome DevTools → Application → Manifest — confirm no errors, all icons resolve, `display: standalone` shown
+- [ ] T070 [P] Open Chrome DevTools → Application → Service Workers — confirm SW is active and not erroring
+- [ ] T071 [P] Install via Chrome "Install app" prompt — confirm standalone window opens (no browser address bar)
+- [ ] T072 [P] Airplane mode test — launch installed PWA offline, confirm all 5 user stories work
+- [ ] T073 [P] iOS Safari test — open in Safari → Share → Add to Home Screen → launch → confirm standalone mode
+- [ ] T074 [P] Run Lighthouse PWA audit (`npm run build && npx serve dist` → Chrome DevTools → Lighthouse → PWA) — aim for all green PWA checks
+
+**Checkpoint**: App installs from browser on Android and iOS, works fully offline, all 5 user stories pass in installed mode.
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -164,6 +302,8 @@ sort changes → open a book and update its rating → confirm Ranking reflects 
 - **US3 (Phase 6)**: Depends on Phase 2 + BookDetailPage shell from US2 (T023)
 - **US4 (Phase 7)**: Depends on Phase 2 + BookDetailPage shell from US2 (T023)
 - **Polish (Phase 8)**: Depends on all story phases complete
+- **Mobile Phase 2 — Capacitor**: Depends on Phase 8 complete. Independent of Mobile Phase 3.
+- **Mobile Phase 3 — PWA**: Depends on Phase 8 complete. Independent of Mobile Phase 2. Can be pursued without ever doing Capacitor.
 
 ### Within Each Phase
 
@@ -222,18 +362,20 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 6. US4 → ratings + ranking
 7. Polish → production-ready
 
-### Total Tasks: 43
+### Total Tasks: 74
 
-| Phase | Tasks | Parallelizable |
-|---|---|---|
-| Setup | T001–T006 | 4 of 6 |
-| Foundational | T007–T013 | 4 of 7 |
-| US1 (P1) | T014–T019 | 4 of 6 |
-| US2 (P2) | T020–T026 | 3 of 7 |
-| US5 (P2) | T027–T028 | 1 of 2 |
-| US3 (P3) | T029–T032 | 3 of 4 |
-| US4 (P3) | T033–T037 | 3 of 5 |
-| Polish | T038–T043 | 5 of 6 |
+| Phase | Tasks | Parallelizable | Status |
+|---|---|---|---|
+| Setup | T001–T006 | 4 of 6 | ✅ done |
+| Foundational | T007–T013 | 4 of 7 | ✅ done |
+| US1 (P1) | T014–T019 | 4 of 6 | ✅ done |
+| US2 (P2) | T020–T026 | 3 of 7 | ✅ done |
+| US5 (P2) | T027–T028 | 1 of 2 | ✅ done |
+| US3 (P3) | T029–T032 | 3 of 4 | ✅ done |
+| US4 (P3) | T033–T037 | 3 of 5 | ✅ done |
+| Polish | T038–T043 | 5 of 6 | ✅ done |
+| Mobile Phase 2 (Capacitor) | T044–T061 | 7 of 18 | ⬜ pending |
+| Mobile Phase 3 (PWA) | T062–T074 | 8 of 13 | ⬜ pending |
 
 ---
 
