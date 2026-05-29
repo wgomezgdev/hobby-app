@@ -152,12 +152,15 @@ sort changes → open a book and update its rating → confirm Ranking reflects 
 
 ---
 
-## Mobile Phase 3: Capacitor — Native Android / iOS App
+## Mobile Phase 3: Capacitor — Native Android / iOS App ⏳ DEFERRED
+
+**Status**: Deferred. Will be tackled once the app is fully polished and stable as a React
+PWA. No work should begin here until Mobile Phase 2 is complete and the app is feature-complete.
 
 **Purpose**: Wrap the existing SPA in a native shell using Capacitor so it can be distributed
 as a real APK/IPA. Reuses 100% of the React codebase — no rewrite required.
 
-**Prerequisite**: Phases 1–8 complete ✅. `npm run build` must pass before every sync.
+**Prerequisite**: Phases 1–8 complete ✅ + Mobile Phase 2 (PWA) complete ✅. `npm run build` must pass before every sync.
 
 **Key constraint**: Two features need native adaptation because the default browser APIs they
 rely on (`<a download>` and `<input type="file">`) behave differently inside a WebView:
@@ -223,7 +226,7 @@ confirm all 5 user stories still work.
 
 ### Icons & Manifest Assets
 
-- [ ] T062 Create `public/icons/` directory with the following PNG files (generate with any icon tool, e.g. https://realfavicongenerator.net or a script):
+- [x] T062 Create `public/icons/` directory with the following PNG files (generate with any icon tool, e.g. https://realfavicongenerator.net or a script):
   - `icon-192x192.png` — standard Android home screen icon
   - `icon-512x512.png` — Android splash and Play Store (if ever needed)
   - `icon-maskable-192x192.png` — adaptive icon for Android (safe zone: inner 80%)
@@ -232,8 +235,8 @@ confirm all 5 user stories still work.
 
 ### Vite PWA Plugin
 
-- [ ] T063 Install vite-plugin-pwa: `npm install -D vite-plugin-pwa`
-- [ ] T064 Configure `vite-plugin-pwa` in `vite.config.ts`:
+- [x] T063 Install vite-plugin-pwa: `npm install -D vite-plugin-pwa`
+- [x] T064 Configure `vite-plugin-pwa` in `vite.config.ts`:
   ```ts
   VitePWA({
     registerType: 'autoUpdate',
@@ -259,30 +262,30 @@ confirm all 5 user stories still work.
     },
   })
   ```
-- [ ] T065 Add Apple-specific meta tags to `index.html`:
+- [x] T065 Add Apple-specific meta tags to `index.html`:
   ```html
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Reading Pal">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180x180.png">
   ```
-- [ ] T066 Register the service worker in `src/main.tsx` using vite-plugin-pwa's virtual module:
+- [x] T066 Register the service worker in `src/main.tsx` using vite-plugin-pwa's virtual module:
   ```ts
   import { registerSW } from 'virtual:pwa-register'
   registerSW({ immediate: true })
   ```
-- [ ] T067 Add TypeScript declaration for the virtual module in `src/vite-env.d.ts`:
+- [x] T067 Add TypeScript declaration for the virtual module in `src/vite-env.d.ts`:
   ```ts
   /// <reference types="vite-plugin-pwa/client" />
   ```
 
 ### Validation
 
-- [ ] T068 Run `npm run build` — confirm no errors, `dist/sw.js` and `dist/manifest.webmanifest` generated
-- [ ] T069 [P] Open Chrome DevTools → Application → Manifest — confirm no errors, all icons resolve, `display: standalone` shown
-- [ ] T070 [P] Open Chrome DevTools → Application → Service Workers — confirm SW is active and not erroring
-- [ ] T071 [P] Install via Chrome "Install app" prompt — confirm standalone window opens (no browser address bar)
-- [ ] T072 [P] Airplane mode test — launch installed PWA offline, confirm all 5 user stories work
+- [x] T068 Run `npm run build` — confirm no errors, `dist/sw.js` and `dist/manifest.webmanifest` generated
+- [x] T069 [P] Open Chrome DevTools → Application → Manifest — confirm no errors, all icons resolve, `display: standalone` shown
+- [x] T070 [P] Open Chrome DevTools → Application → Service Workers — confirm SW is active and not erroring
+- [x] T071 [P] Install via Chrome "Install app" prompt — confirm standalone window opens (no browser address bar)
+- [x] T072 [P] Airplane mode test — launch installed PWA offline, confirm all 5 user stories work
 - [ ] T073 [P] iOS Safari test — open in Safari → Share → Add to Home Screen → launch → confirm standalone mode
 - [ ] T074 [P] Run Lighthouse PWA audit (`npm run build && npx serve dist` → Chrome DevTools → Lighthouse → PWA) — aim for all green PWA checks
 
@@ -303,7 +306,7 @@ confirm all 5 user stories still work.
 - **US4 (Phase 7)**: Depends on Phase 2 + BookDetailPage shell from US2 (T023)
 - **Polish (Phase 8)**: Depends on all story phases complete
 - **Mobile Phase 2 — PWA**: Depends on Phase 8 complete. Independent of Mobile Phase 3. Can be pursued without ever doing Capacitor.
-- **Mobile Phase 3 — Capacitor**: Depends on Phase 8 complete. Independent of Mobile Phase 2.
+- **Mobile Phase 3 — Capacitor**: ⏳ DEFERRED. Depends on Phase 8 + Mobile Phase 2 complete. Begin only when the app is fully polished as a PWA.
 
 ### Within Each Phase
 
@@ -374,8 +377,8 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | US3 (P3) | T029–T032 | 3 of 4 | ✅ done |
 | US4 (P3) | T033–T037 | 3 of 5 | ✅ done |
 | Polish | T038–T043 | 5 of 6 | ✅ done |
-| Mobile Phase 2 (PWA) | T044–T056 | 8 of 13 | ⬜ pending |
-| Mobile Phase 3 (Capacitor) | T057–T074 | 7 of 18 | ⬜ pending |
+| Mobile Phase 2 (PWA) | T062–T074 | 8 of 13 | ✅ done (T073–T074 optional) |
+| Mobile Phase 3 (Capacitor) | T044–T061 | 7 of 18 | ⏳ deferred |
 
 ---
 
