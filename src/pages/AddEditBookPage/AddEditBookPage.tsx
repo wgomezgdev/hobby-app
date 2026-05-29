@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthorSuggestions } from '../../hooks/useAuthorSuggestions';
+import { useTitleSuggestions } from '../../hooks/useTitleSuggestions';
 import { useBook } from '../../hooks/useBooks';
 import { addBook, updateBook } from '../../repositories/bookRepository';
 import { CoverUpload } from '../../components/CoverUpload/CoverUpload';
@@ -31,12 +32,15 @@ export function AddEditBookPage() {
     control,
     reset,
     getValues,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<BookFormData>({
     defaultValues: { status: 'WANT_TO_READ' },
   });
 
+  const [titleInput, setTitleInput] = useState('');
   const [authorInput, setAuthorInput] = useState('');
+  const { suggestions: titleSuggestions, loading: titleLoading } = useTitleSuggestions(titleInput);
   const { suggestions: authorSuggestions, loading: authorLoading } = useAuthorSuggestions(authorInput);
 
   useEffect(() => {
@@ -67,13 +71,55 @@ export function AddEditBookPage() {
           control={control}
           rules={{ required: 'Title is required' }}
           render={({ field }) => (
-            <TextField
-              {...field}
-              label="Title"
-              required
-              fullWidth
-              error={!!errors.title}
-              helperText={errors.title?.message}
+            <Autocomplete
+              freeSolo
+              options={titleSuggestions}
+              getOptionLabel={o => (typeof o === 'string' ? o : o.title)}
+              filterOptions={x => x}
+              loading={titleLoading}
+              inputValue={field.value ?? ''}
+              onInputChange={(_, value) => {
+                field.onChange(value);
+                setTitleInput(value);
+              }}
+              onChange={(_, value) => {
+                if (value && typeof value !== 'string') {
+                  field.onChange(value.title);
+                  setTitleInput(value.title);
+                  if (!getValues('author')) {
+                    setValue('author', value.author);
+                    setAuthorInput(value.author);
+                  }
+                }
+              }}
+              renderOption={(props, option) => (
+                <li {...props} key={`${option.title}-${option.author}`}>
+                  <Box>
+                    <Typography variant="body2">{option.title}</Typography>
+                    {option.author && (
+                      <Typography variant="caption" color="text.secondary">{option.author}</Typography>
+                    )}
+                  </Box>
+                </li>
+              )}
+              renderInput={params => (
+                <TextField
+                  {...params}
+                  label="Title"
+                  required
+                  error={!!errors.title}
+                  helperText={errors.title?.message}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {titleLoading && <CircularProgress size={18} />}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
             />
           )}
         />
