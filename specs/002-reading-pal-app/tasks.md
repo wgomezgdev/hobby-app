@@ -571,6 +571,143 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Phase 12 — App Version Display | T091–T094 | 2 of 4 | ✅ done |
 | Phase 13 — Author Autocomplete | T095–T096 | 1 of 2 | ✅ done |
 | Phase 11 — Deployment (Vercel) | T083–T090 | 5 of 8 | ✅ done |
+| Phase 14 — AI Cover Scan (Gemini) | T097–T106 | 4 of 10 | ⏳ planned |
+| Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ planned |
+| Phase 16 — Supabase Cloud Sync | T112–T120 | 5 of 9 | ⏳ planned |
+
+---
+
+## Phase 14: User Story 10 — AI Book Cover Scan ⏳ PLANNED
+
+**Goal**: User takes a photo of a book's front cover; Gemini Flash extracts the title and
+author and fills the form fields automatically.
+
+**Prerequisites**:
+- A free Google AI Studio account and API key (`VITE_GEMINI_API_KEY`)
+- Key added to Vercel environment variables (Project → Settings → Environment Variables)
+- Key added to local `.env.local` for development (`VITE_GEMINI_API_KEY=your-key`)
+- `.env.local` must be in `.gitignore` (already is by default with Vite)
+
+**API**: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}`
+
+**Prompt used**:
+```
+Look at this book cover image. Extract the book title and the author name.
+Reply in this exact format:
+Title: <title>
+Author: <author>
+If you cannot find a value, write "Unknown" for that field.
+```
+
+**Response parsing**: Split lines, find `Title:` and `Author:` prefixes, trim whitespace.
+Treat `"Unknown"` as missing (do not overwrite existing field value with "Unknown").
+
+**Independent Test**: Add Book → tap "Scan cover" → take a clear photo of a front cover →
+confirm title and author fill in → save → confirm book appears correctly in library.
+
+### One-time Setup
+
+- [ ] T097 Create a free API key at https://aistudio.google.com → "Get API key"
+- [ ] T098 Add `VITE_GEMINI_API_KEY` to Vercel environment variables
+- [ ] T099 Add `VITE_GEMINI_API_KEY=your-key` to local `.env.local`
+
+### Implementation
+
+- [ ] T100 Create `src/hooks/useCoverScan.ts`:
+  - Input: `imageBase64: string` (data URL from camera)
+  - Strips `data:image/...;base64,` prefix before sending to API
+  - Sends multipart request with image + prompt to Gemini Flash endpoint
+  - Returns `{ title: string; author: string; loading: boolean; error: string | null }`
+  - Handles quota exceeded (HTTP 429) with a clear message
+  - Handles unreadable image (Gemini returns "Unknown" for both fields)
+
+- [ ] T101 Add "Scan cover" `IconButton` (use `AutoFixHigh` or `DocumentScanner` MUI icon)
+  to the cover section in `src/pages/AddEditBookPage/AddEditBookPage.tsx`:
+  - Triggers a hidden `<input type="file" accept="image/*" capture="environment">`
+  - On photo taken: calls `useCoverScan` with the captured base64 image
+  - Shows `CircularProgress` while loading
+
+- [ ] T102 On successful scan result in `AddEditBookPage`:
+  - If Title field is empty: fill automatically
+  - If Title field already has a value: show a confirmation snackbar
+    ("Scan found «{title}». Replace current title?") with Accept / Keep buttons
+  - Same logic for Author field
+  - If Gemini returns "Unknown" for a field: leave that field unchanged
+
+- [ ] T103 Error states in `AddEditBookPage`:
+  - API key missing (`import.meta.env.VITE_GEMINI_API_KEY` is undefined): show
+    `Alert` with message "AI scan not configured. Add VITE_GEMINI_API_KEY to enable."
+  - Quota exceeded (HTTP 429): show `Alert` "Daily scan limit reached. Try again tomorrow."
+  - Network error: show `Alert` "Could not reach AI service. Check your connection."
+  - Unreadable image (both fields "Unknown"): show `Alert` "Cover not recognized.
+    Try a clearer photo or fill in the fields manually."
+
+- [ ] T104 [P] Verify scan works end-to-end on mobile: take a clear photo → fields fill
+- [ ] T105 [P] Verify blurry/non-book photo shows the "not recognized" error gracefully
+- [ ] T106 [P] Verify that if only one field is "Unknown", only that field is left unchanged
+
+**Checkpoint**: "Scan cover" button visible on Add/Edit form, photo opens camera, Gemini
+fills title and author, existing values are protected with confirmation, all error states
+show clear messages.
+
+---
+
+## Phase 15: User Story 11 — AI Reading Summary ⏳ PLANNED
+
+**Goal**: On the book detail page, the user can generate a 2–3 sentence AI summary of
+the book using Gemini Flash, then save it as a note on the book.
+
+**Prerequisites**: Phase 14 setup complete (same API key).
+
+**Data model change**: Add `notes?: string` field to the `Book` entity in
+`src/types/entities.ts`. Add a Dexie migration in `src/db/db.ts` (bump schema version).
+
+- [ ] T107 Add `notes?: string` to `Book` interface in `src/types/entities.ts`
+- [ ] T108 Bump Dexie schema version in `src/db/db.ts` (existing books get `notes: undefined`)
+- [ ] T109 Add `generateSummary(title: string, author: string): Promise<string>` utility in
+  `src/utils/gemini.ts` (shares the same fetch logic as `useCoverScan`):
+  - Prompt: `"Write a 2-3 sentence summary of the book «{title}» by {author}. Be factual and concise."`
+  - Returns the raw text response
+- [ ] T110 Add "Generate summary" button to `src/pages/BookDetailPage/BookDetailPage.tsx`:
+  - Only shown when book has title + author
+  - Shows `CircularProgress` while loading
+  - On success: displays summary in an editable `TextField`; user can edit before saving
+  - "Save note" button calls `updateBook(id, { notes: editedSummary })`
+  - Existing note displayed if `book.notes` is set, with option to regenerate
+- [ ] T111 [P] Verify note persists after page refresh and appears on book detail
+
+**Checkpoint**: Book detail shows a "Generate summary" button; tapping it fetches and
+displays an AI summary; user can edit and save it; it persists in the database.
+
+---
+
+## Phase 16: User Story 12 — Supabase Cloud Sync ⏳ PLANNED
+
+**Goal**: Books, sessions, quotes, and ratings sync to Supabase Postgres so data
+survives browser clears and is available across devices.
+
+**Prerequisites**: A free Supabase account and project. Google Sign-In already
+implemented in an earlier phase (Supabase Auth).
+
+**Architecture**: Dexie (IndexedDB) as local cache → sync queue → Supabase Postgres.
+Reads from local first (fast, offline-capable); writes go to both local and Supabase.
+
+- [ ] T112 Create Supabase project and note `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`
+- [ ] T113 Add Supabase environment variables to Vercel and `.env.local`
+- [ ] T114 Install `@supabase/supabase-js` and create `src/lib/supabase.ts` client
+- [ ] T115 Create Supabase tables mirroring the Dexie schema:
+  `books`, `sessions`, `quotes`, `ratings` — each with a `user_id` column for RLS
+- [ ] T116 Enable Row Level Security on all tables: users can only read/write their own rows
+- [ ] T117 Implement `src/sync/syncService.ts`:
+  - On app start (online): pull all user rows from Supabase → upsert into Dexie
+  - On every write (add/update/delete): write to Dexie first, then push to Supabase
+  - On offline write: queue in a local `sync_queue` Dexie table; replay on reconnect
+- [ ] T118 Wire `syncService.ts` into `src/main.tsx` — call `syncOnStartup()` after auth
+- [ ] T119 Add sync status indicator to the Layout header (syncing spinner / last synced time)
+- [ ] T120 [P] Test cross-device: add book on device A → open app on device B → confirm book appears
+
+**Checkpoint**: Books added on one device appear on another after sync; offline writes
+queue and sync when reconnected; data survives a full browser storage clear.
 
 ---
 

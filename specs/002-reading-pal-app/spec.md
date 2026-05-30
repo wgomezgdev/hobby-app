@@ -342,3 +342,114 @@ Import the snapshot. Verify all books, sessions, and quotes are restored exactly
 - The snapshot export/import is the only mechanism for moving data between browsers or
   devices.
 - Internet connectivity is never assumed or required.
+
+---
+
+## Advanced Features
+
+These features are planned for a future phase once the core app is stable and deployed.
+They extend the reading module with AI capabilities powered by Google Gemini Flash.
+
+---
+
+### User Story 10 — AI Book Cover Scan (Priority: P2)
+
+A reader wants to point their phone camera at a book's front cover and have the app
+automatically fill in the title and author fields — no typing required.
+
+**Why this feature**: Manual entry is error-prone for long titles and unfamiliar author
+names. A photo scan eliminates friction and reduces mistakes, especially for books borrowed
+from a library or discovered in a bookshop.
+
+**Technology**: Google Gemini Flash 1.5 (free tier: 1,500 requests/day, 15 req/min).
+The model receives the cover image as base64 and a structured prompt; it returns the
+title and author as plain text which the app parses and injects into the form fields.
+
+**API**: `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={VITE_GEMINI_API_KEY}`
+
+**Prompt**:
+```
+Look at this book cover image. Extract the book title and the author name.
+Reply in this exact format:
+Title: <title>
+Author: <author>
+If you cannot find a value, write "Unknown" for that field.
+```
+
+**Architecture — Simple (personal app)**:
+- API key stored as `VITE_GEMINI_API_KEY` in Vercel environment variables
+- Call made directly from the browser (key is in the JS bundle but the app is personal)
+- Acceptable risk for a single-user personal PWA
+
+**Architecture — Safe (if app goes public)**:
+- Add a Vercel serverless function at `/api/scan-cover`
+- Function receives base64 image, calls Gemini, returns title + author
+- API key never leaves the server — not visible in the browser bundle
+
+**Acceptance Scenarios**:
+
+1. **Given** the user is on the Add or Edit Book form, **When** they tap "Scan cover",
+   **Then** the camera opens pointing at the back environment (back camera on mobile).
+2. **Given** a photo is taken, **When** Gemini processes it, **Then** a loading indicator
+   is shown while waiting for the response (max ~3 seconds).
+3. **Given** Gemini returns a title and author, **When** the response is parsed, **Then**
+   the Title and Author fields are filled automatically.
+4. **Given** the fields are already filled, **When** a scan returns new values, **Then**
+   a confirmation prompt asks the user before overwriting existing data.
+5. **Given** the image is unreadable (blurry, not a book cover), **When** Gemini cannot
+   extract the data, **Then** a friendly error is shown and the fields are left unchanged.
+6. **Given** the API key is missing or the quota is exceeded, **When** the scan is
+   attempted, **Then** a clear error message is shown with a fallback suggestion
+   (type manually or search online).
+
+**Independent Test**: Open Add Book → tap "Scan cover" → take a clear photo of a book's
+front cover → confirm title and author fill automatically → save and confirm the book
+appears correctly in the library.
+
+---
+
+### User Story 11 — AI Reading Summary (Priority: P3)
+
+A reader wants to generate a short AI summary of a book based on the title and author,
+to jog their memory or fill in their notes when they finish reading.
+
+**Technology**: Same Gemini Flash API key as US10.
+
+**Acceptance Scenarios**:
+
+1. **Given** a book has a title and author, **When** the user taps "Generate summary" on
+   the book detail page, **Then** Gemini returns a 2–3 sentence summary of the book.
+2. **Given** a summary is generated, **When** the user accepts it, **Then** it is saved
+   as a note on the book (new `notes` field on the `Book` entity).
+3. **Given** the book is unknown to Gemini, **When** a summary is requested, **Then** a
+   message indicates no summary could be generated.
+
+---
+
+### User Story 12 — Supabase Cloud Sync (Priority: P1)
+
+A reader wants their books, sessions, quotes, and ratings to sync across devices and
+survive browser storage clears — without manual export/import.
+
+**Technology**: Supabase (free tier: 500 MB database, 1 GB file storage, 50,000 MAU).
+
+**Why this priority**: All data is currently local only. A browser storage clear or a
+new device means losing everything. Cloud sync is the biggest reliability gap in the app.
+
+**Architecture**:
+- Supabase Postgres as the source of truth
+- Dexie (IndexedDB) as the local cache for offline support
+- A sync queue (already partially scaffolded from the React Native phase) to replay
+  local writes when back online
+- Google Sign-In via Supabase Auth (already implemented in an earlier phase)
+
+**Acceptance Scenarios**:
+
+1. **Given** the user is signed in, **When** they add or edit a book, **Then** the change
+   is synced to Supabase within seconds.
+2. **Given** the user opens the app on a second device with the same account, **When** the
+   app loads, **Then** all books, sessions, quotes, and ratings are available.
+3. **Given** the device is offline, **When** the user makes changes, **Then** changes are
+   queued locally and synced automatically when connectivity is restored.
+4. **Given** the user clears browser storage, **When** they sign back in, **Then** all
+   data is restored from Supabase.
