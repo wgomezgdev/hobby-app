@@ -8,27 +8,35 @@ import { useAllRatings } from '../../hooks/useRatings';
 import { useAllBooks } from '../../hooks/useBooks';
 import { StarRating } from '../../components/StarRating/StarRating';
 import { SkeletonCard } from '../../components/SkeletonCard/SkeletonCard';
+import type { Book, Rating } from '../../types/entities';
 
 type View = 'stars' | 'recent';
+
+interface RankedEntry {
+  book: Book;
+  rating?: Rating;
+}
 
 export function RankingPage() {
   const ratings = useAllRatings();
   const books = useAllBooks();
   const [view, setView] = useState<View>('stars');
 
-  const ranked = useMemo(() => {
+  const ranked = useMemo((): RankedEntry[] | undefined => {
     if (!ratings || !books) return undefined;
-    const bookMap = new Map(books.map((b) => [b.id!, b]));
-    const pairs = ratings
-      .map((r) => ({ rating: r, book: bookMap.get(r.bookId) }))
-      .filter((p): p is { rating: typeof ratings[0]; book: NonNullable<typeof books[0]> } => !!p.book);
+    const ratingMap = new Map(ratings.map((r) => [r.bookId, r]));
 
     if (view === 'stars') {
-      return [...pairs].sort((a, b) => b.rating.stars - a.rating.stars);
+      return ratings
+        .map((r) => ({ rating: r, book: books.find((b) => b.id === r.bookId) }))
+        .filter((p): p is RankedEntry & { rating: Rating } => !!p.book)
+        .sort((a, b) => b.rating.stars - a.rating.stars);
     }
-    return [...pairs]
-      .filter((p) => p.book.status === 'FINISHED')
-      .sort((a, b) => b.book.updatedAt - a.book.updatedAt);
+
+    return books
+      .filter((b) => b.status === 'FINISHED')
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .map((book) => ({ book, rating: ratingMap.get(book.id!) }));
   }, [ratings, books, view]);
 
   return (
@@ -89,7 +97,10 @@ export function RankingPage() {
                     <Typography variant="caption" color="text.secondary" sx={{ mr: 1 }}>
                       #{idx + 1}
                     </Typography>
-                    <StarRating value={rating.stars} readOnly />
+                    {rating
+                      ? <StarRating value={rating.stars} readOnly />
+                      : <Typography variant="caption" color="text.disabled">Not rated</Typography>
+                    }
                   </Stack>
                   <Typography variant="subtitle2" noWrap>{book.title}</Typography>
                   <Typography variant="caption" color="text.secondary" noWrap>{book.author}</Typography>
