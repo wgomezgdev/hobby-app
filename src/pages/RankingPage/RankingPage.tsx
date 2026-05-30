@@ -41,8 +41,13 @@ export function RankingPage() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h5">Ranking</Typography>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
+        <Box>
+          <Typography variant="h5">Ranking</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {view === 'stars' ? 'Your books sorted by star rating' : 'Finished books, most recent first'}
+          </Typography>
+        </Box>
         <ToggleButtonGroup
           value={view}
           exclusive

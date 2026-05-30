@@ -1,4 +1,4 @@
-import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Skeleton, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Skeleton, Snackbar, Tab, Tabs, Typography } from '@mui/material';
 import { ArrowBack, DeleteOutlined, Edit } from '@mui/icons-material';
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -35,10 +35,13 @@ export function BookDetailPage() {
   const tab: TabValue = VALID_TABS.includes(rawTab as TabValue) ? (rawTab as TabValue) : 'progress';
 
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletedTitle, setDeletedTitle] = useState<string | null>(null);
 
   const handleDeleteConfirm = async () => {
+    const title = book?.title ?? 'Book';
     await deleteBook(bookId);
-    navigate('/');
+    setDeleteOpen(false);
+    setDeletedTitle(title);
   };
 
   const handleTabChange = (_: React.SyntheticEvent, newTab: TabValue) => {
@@ -128,6 +131,14 @@ export function BookDetailPage() {
           {tab === 'rating' && <RatingTab bookId={bookId} />}
         </>
       )}
+
+      <Snackbar
+        open={!!deletedTitle}
+        autoHideDuration={1500}
+        onClose={() => navigate('/')}
+        message={`"${deletedTitle}" deleted`}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
 
       <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
         <DialogTitle>Delete book?</DialogTitle>

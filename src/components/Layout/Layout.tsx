@@ -1,5 +1,5 @@
 import { AppBar, Box, IconButton, Toolbar, Typography } from '@mui/material';
-import { MenuBook, Settings } from '@mui/icons-material';
+import { EmojiEvents, MenuBook, Settings } from '@mui/icons-material';
 import { Link, Outlet } from 'react-router-dom';
 
 export function Layout() {
@@ -17,7 +17,7 @@ export function Layout() {
             My Hobbies
           </Typography>
           <IconButton color="inherit" component={Link} to="/ranking" aria-label="Ranking">
-            <Typography variant="button" sx={{ mr: 1 }}>Ranking</Typography>
+            <EmojiEvents />
           </IconButton>
           <IconButton color="inherit" component={Link} to="/settings" aria-label="Settings">
             <Settings />
