@@ -7,8 +7,8 @@ interface CoverUploadProps {
   onChange: (base64: string | undefined) => void;
 }
 
-const MAX_DIMENSION = 800;
-const JPEG_QUALITY = 0.82;
+const MAX_DIMENSION = 500;
+const JPEG_QUALITY = 0.75;
 
 function resizeAndEncode(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
