@@ -439,6 +439,20 @@ the field, free typing still works, network errors are silent.
 
 ---
 
+## Phase 18: Bug Fix — Ranking Shows All Finished Books ✅ DONE
+
+**Root cause**: "Recently Finished" view was built from the `ratings` list, so finished books
+without a rating were invisible. The view must come from `books` filtered by status.
+
+**Fix**: For the "recently finished" view, iterate `books.filter(status === FINISHED)` sorted
+by `updatedAt` desc, then look up the rating separately (optional). Unrated books show
+"Not rated" instead of empty/crashed stars. TypeScript type updated: `rating?: Rating`.
+
+- [x] T125 Fix `RankingPage.tsx` "Recently Finished" view to include all finished books
+  regardless of rating — unrated books show "Not rated" label v0.3.3
+
+---
+
 ## Phase 11: Deployment — Hosting on Vercel ✅ DONE
 
 **Production URL**: https://hobby-app-dusky.vercel.app
@@ -571,6 +585,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Phase 12 — App Version Display | T091–T094 | 2 of 4 | ✅ done |
 | Phase 13 — Author Autocomplete | T095–T096 | 1 of 2 | ✅ done |
 | Phase 11 — Deployment (Vercel) | T083–T090 | 5 of 8 | ✅ done |
+| Phase 18 — Bug Fix: Ranking finished books | T125 | 1 of 1 | ✅ done |
 | Phase 14 — AI Cover Scan (Gemini) | T097–T106 | 4 of 10 | ⏳ planned |
 | Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ planned |
 | Phase 16 — Supabase Cloud Sync | T112–T120 | 5 of 9 | ⏳ planned |
