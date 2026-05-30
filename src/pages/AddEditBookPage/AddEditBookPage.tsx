@@ -186,24 +186,17 @@ export function AddEditBookPage() {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 Cover (optional)
               </Typography>
-              <Stack spacing={1}>
-                <CoverUpload value={field.value} onChange={field.onChange} />
-                <CoverSearch
-                  title={getValues('title') ?? ''}
-                  author={getValues('author') ?? ''}
-                  onSelect={field.onChange}
-                />
-                {field.value && (
-                  <Button
-                    size="small"
-                    color="inherit"
-                    sx={{ alignSelf: 'flex-start', color: 'text.secondary' }}
-                    onClick={() => field.onChange(undefined)}
-                  >
-                    Remove cover
-                  </Button>
-                )}
-              </Stack>
+              <CoverUpload
+                value={field.value}
+                onChange={field.onChange}
+                extra={
+                  <CoverSearch
+                    title={getValues('title') ?? ''}
+                    author={getValues('author') ?? ''}
+                    onSelect={field.onChange}
+                  />
+                }
+              />
             </Box>
           )}
         />

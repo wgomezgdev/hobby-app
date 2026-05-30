@@ -439,6 +439,25 @@ the field, free typing still works, network errors are silent.
 
 ---
 
+## Phase 17: UX Polish — High Impact Fixes ✅ DONE
+
+**Goal**: Four targeted UX improvements identified from a full app audit.
+
+- [x] T121 Replace "Ranking" text button in `Layout.tsx` with `EmojiEvents` icon to match the
+  Settings icon style — consistent icon-only nav buttons
+- [x] T122 Add `Snackbar` to `BookDetailPage.tsx` after book deletion: shows `"<title> deleted"`
+  for 1.5s then navigates to library — confirmation feedback before leaving the screen
+- [x] T123 Consolidate cover action buttons in `CoverUpload.tsx` into a single flex row:
+  Upload | Camera | {extra slot} | Remove — `extra` prop allows `AddEditBookPage` to inject
+  the CoverSearch button inline, eliminating the duplicate Remove button and scattered layout
+- [x] T124 Add dynamic subtitle to `RankingPage.tsx` below the title, updating based on the
+  active view: "Your books sorted by star rating" or "Finished books, most recent first"
+
+**Checkpoint**: Nav bar icons consistent, delete gives feedback, cover buttons in one row,
+ranking page explains its sort order.
+
+---
+
 ## Phase 18: Bug Fix — Ranking Shows All Finished Books ✅ DONE
 
 **Root cause**: "Recently Finished" view was built from the `ratings` list, so finished books
@@ -585,6 +604,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Phase 12 — App Version Display | T091–T094 | 2 of 4 | ✅ done |
 | Phase 13 — Author Autocomplete | T095–T096 | 1 of 2 | ✅ done |
 | Phase 11 — Deployment (Vercel) | T083–T090 | 5 of 8 | ✅ done |
+| Phase 17 — UX Polish (high impact) | T121–T124 | 4 of 4 | ✅ done |
 | Phase 18 — Bug Fix: Ranking finished books | T125 | 1 of 1 | ✅ done |
 | Phase 14 — AI Cover Scan (Gemini) | T097–T106 | 4 of 10 | ⏳ planned |
 | Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ planned |

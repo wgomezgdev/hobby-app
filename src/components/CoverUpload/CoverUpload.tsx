@@ -5,6 +5,7 @@ import { CloudUpload, CameraAlt, MenuBook } from '@mui/icons-material';
 interface CoverUploadProps {
   value?: string;
   onChange: (base64: string | undefined) => void;
+  extra?: React.ReactNode;
 }
 
 const MAX_DIMENSION = 500;
@@ -37,7 +38,7 @@ function resizeAndEncode(file: File): Promise<string> {
   });
 }
 
-export function CoverUpload({ value, onChange }: CoverUploadProps) {
+export function CoverUpload({ value, onChange, extra }: CoverUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -108,22 +109,21 @@ export function CoverUpload({ value, onChange }: CoverUploadProps) {
       <input ref={inputRef} type="file" accept="image/*" hidden onChange={handleFileInput} />
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={handleFileInput} />
 
-      {value && (
-        <Button size="small" onClick={() => onChange(undefined)} sx={{ mt: 0.5 }}>
-          Remove cover
-        </Button>
-      )}
       {error && <Alert severity="error" sx={{ mt: 1 }}>{error}</Alert>}
 
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-        <CloudUpload fontSize="small" color="action" />
-        <Button variant="outlined" size="small" onClick={() => inputRef.current?.click()}>
-          Choose file
+      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+        <Button variant="outlined" size="small" startIcon={<CloudUpload />} onClick={() => inputRef.current?.click()}>
+          Upload
         </Button>
-        <CameraAlt fontSize="small" color="action" />
-        <Button variant="outlined" size="small" onClick={() => cameraRef.current?.click()}>
-          Take photo
+        <Button variant="outlined" size="small" startIcon={<CameraAlt />} onClick={() => cameraRef.current?.click()}>
+          Camera
         </Button>
+        {extra}
+        {value && (
+          <Button size="small" color="error" onClick={() => onChange(undefined)}>
+            Remove
+          </Button>
+        )}
       </Box>
     </Box>
   );
