@@ -245,6 +245,84 @@ Import the snapshot. Verify all books, sessions, and quotes are restored exactly
 
 ---
 
+## UI Design
+
+> Reference designs: `misc/ui-design/` (screen1_home.png, screen2_add.png, screen3_stats.png, screen4_detail.png)
+
+### Design Language
+
+- **Theme**: Dark (deep navy background), no light mode in scope.
+- **Accent color**: Cyan/teal for primary CTAs, active states, FAB, and progress bars.
+- **Typography**: Clean sans-serif; large bold numbers for stats; uppercase small labels for form field captions.
+- **Icons**: Material Icons (Google Fonts) throughout — `home`, `menu_book`, `bar_chart`, `person`, `add`, `check_circle`, `edit`, `share`, `arrow_back`, `more_vert`, `trending_up`, `photo_alt`.
+- **Cards**: Rounded corners, subtle elevation on dark surface; stat cards with teal-accent borders.
+
+### Navigation Structure
+
+Five-tab bottom navigation bar, always visible:
+
+| Tab | Icon | Label |
+|-----|------|-------|
+| 1 | `home` | Inicio |
+| 2 | `menu_book` | Biblioteca |
+| 3 | `add` (FAB) | — |
+| 4 | `bar_chart` | Stats |
+| 5 | `person` | Perfil |
+
+The center tab is a raised FAB (teal circle with white `add` icon) that opens the Add Book screen.
+
+### Screen 1 — Home (`Inicio`)
+
+- **Header**: Personalized time-of-day greeting ("Buenos días, [Name] 👋") + "Mi Biblioteca" title + user avatar initials chip (top right).
+- **Stats row**: Three mini-cards side by side — Leídos (finished count), En progreso (reading count), Pendientes (want-to-read count).
+- **"Leyendo ahora" section**: Full-width card for the active book showing cover thumbnail, `● ACTIVO` badge, title, author, "Pág X de Y", and a teal progress bar with percentage.
+- **"Completados" section**: Horizontal scrollable row of finished book cover cards with title, author, and star rating below each. "Ver todo →" link navigates to a filtered library view.
+
+### Screen 2 — Add / Edit Book (`Agregar Libro`)
+
+- **Header**: Back arrow (`arrow_back`) + screen title.
+- **Cover area**: Centered dashed-border rectangle with `photo_alt` icon and "Agregar portada" label; tapping opens camera/file picker.
+- **Form fields** (in order):
+  1. TÍTULO DEL LIBRO — full-width text input.
+  2. AUTOR + AÑO — two-column row (text + 4-digit numeric).
+  3. ESTADO — single-select toggle chips: `📖 Leyendo` / `✅ Leído` / `⏳ Pendiente`.
+  4. TOTAL PÁGINAS + PÁGINA ACTUAL — two-column numeric row.
+  5. TU CALIFICACIÓN — 5-star interactive rating (tap a star to set 1–5).
+  6. GÉNERO — multi-select chips: Fantasía · Aventura · Ciencia Ficción · Romance · Thriller.
+- **Save button**: Full-width teal button "check_circle Guardar libro" pinned to the bottom.
+
+### Screen 3 — Stats (`Estadísticas`)
+
+- **Header**: "Estadísticas" title + "Tu progreso lector" subtitle.
+- **Year filter**: Row of pill buttons — current year (selected/teal), prior years, and "Todo".
+- **Libros leídos card**: Large bold count + "Meta anual · N libros" sub-label + `trending_up` badge with YoY change.
+- **Libros por mes chart**: Monthly bar chart (Jan–Dec); average per month shown top-right.
+- **Side-by-side summary row**:
+  - Left: Genre donut chart with legend (Fantasía, Ciencia, Ficción, Otro with percentages).
+  - Right (stacked): PÁGINAS LEÍDAS large number + "este año"; MEJOR MES text + book count.
+
+### Screen 4 — Book Detail
+
+- **Header**: Back arrow + `share` + `more_vert` (kebab) icons.
+- **Cover hero**: Book cover image, full-width.
+- **Metadata**: Genre badge chip, title (large bold), "Author · Year", star display with numeric value (e.g., ★★★★☆ 4.0).
+- **PROGRESO DE LECTURA section**: Large percentage + "Pág X de Y" + teal progress bar + "edit Actualizar progreso" button.
+- **Reading stats 2×2 grid**:
+  - 📅 Start date — Inicio de lectura
+  - ⏱ Days reading — Tiempo leyendo
+  - 🔥 Daily page pace — Ritmo promedio
+  - 🎯 Days to finish — Para terminar
+- **Mis Notas section**: Saved quotes listed with "PÁG. N" label and quoted text.
+
+### Design Decisions
+
+- Progress is tracked **by page** (current page + total pages), displayed as both "Pág X de Y" and a derived percentage. This supersedes the earlier assumption that progress is percentage-only.
+- Genre is a **multi-select chip field** (predefined values: Fantasía, Aventura, Ciencia Ficción, Romance, Thriller).
+- **Year (Año)** is a metadata field on the book alongside title, author, status, and cover.
+- The **Home screen** is the app's default landing screen and is distinct from the Biblioteca screen.
+
+---
+
 ## Requirements
 
 ### Functional Requirements
@@ -294,11 +372,24 @@ Import the snapshot. Verify all books, sessions, and quotes are restored exactly
   deleted in the same operation.
 - **FR-027**: The system MUST show a confirmation dialog before executing a delete, clearly
   warning that all associated data will also be removed.
+- **FR-028**: The Home screen MUST show a personalized greeting, a stats summary row
+  (finished / reading / want-to-read counts), a "Leyendo ahora" card for the active book,
+  and a horizontal "Completados" scroll row with a "Ver todo" link.
+- **FR-029**: Books MUST support a multi-select Genre field. Predefined values: Fantasía,
+  Aventura, Ciencia Ficción, Romance, Thriller.
+- **FR-030**: Books MUST store a total-page count and a current-page number. Progress
+  percentage is derived from these two values (currentPage / totalPages × 100).
+- **FR-031**: The Book Detail screen MUST display derived reading-pace stats: start date,
+  total days reading, average pages per day, and estimated days to finish.
+- **FR-032**: The Stats screen MUST support a year filter (individual years + "Todo") and
+  display: total books read vs. annual goal, monthly bar chart, genre donut chart,
+  total pages read, and best reading month.
 
 ### Key Entities
 
-- **Book**: Represents a book in the user's library. Has a title, author, reading status,
-  optional cover image, and a cumulative progress percentage (0–100).
+- **Book**: Represents a book in the user's library. Has a title, author, publication year,
+  reading status, optional cover image, total-page count, current-page number, and one or
+  more genres. Progress percentage is derived (currentPage / totalPages × 100).
 - **Reading Session**: A single reading event linked to a book. Records the date, duration,
   progress added during that session, and optional notes.
 - **Quote**: A saved passage linked to a book. Has text content, an optional page number,
@@ -337,7 +428,8 @@ Import the snapshot. Verify all books, sessions, and quotes are restored exactly
 - The browser's local storage is not cleared between sessions (normal browser behavior).
 - Cover images are provided by the user as photo files from their device; no automatic
   image lookup is in scope.
-- Reading progress is tracked as a percentage of the book (0–100%), not by page number.
+- Reading progress is tracked by current page and total pages; the percentage is derived
+  and displayed alongside the raw page fraction ("Pág X de Y").
 - A book can only have one rating; updating the rating replaces the previous one.
 - The snapshot export/import is the only mechanism for moving data between browsers or
   devices.
