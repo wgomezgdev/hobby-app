@@ -25,38 +25,41 @@ export function Layout() {
         elevation={8}
         sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }}
       >
-        <BottomNavigation value={activeTab} onChange={(_, val) => navigate(val)}>
-          <BottomNavigationAction label="Inicio" value="/" icon={<Home />} />
-          <BottomNavigationAction label="Biblioteca" value="/library" icon={<MenuBook />} />
-          {/* placeholder slot for the center FAB */}
-          <BottomNavigationAction sx={{ visibility: 'hidden', pointerEvents: 'none' }} value="" />
-          <BottomNavigationAction label="Stats" value="/stats" icon={<BarChart />} />
-          <BottomNavigationAction label="Perfil" value="/settings" icon={<Person />} />
-        </BottomNavigation>
-
-        <Fab
-          color="primary"
-          aria-label="Add book"
-          size="medium"
-          onClick={() => navigate('/books/new')}
-          sx={{
-            position: 'absolute',
-            bottom: 8,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 1,
-          }}
-        >
-          <Add />
-        </Fab>
-
+        {/* Version sits at the top of the nav panel — always visible above nav icons */}
         <Typography
           variant="caption"
           color="text.disabled"
-          sx={{ display: 'block', textAlign: 'center', pb: 0.5, fontSize: '0.65rem' }}
+          sx={{ display: 'block', textAlign: 'center', pt: 0.5, fontSize: '0.6rem', lineHeight: 1 }}
         >
           v{__APP_VERSION__}
         </Typography>
+
+        <Box sx={{ position: 'relative' }}>
+          <BottomNavigation value={activeTab} onChange={(_, val) => navigate(val)}>
+            <BottomNavigationAction label="Home" value="/" icon={<Home />} />
+            <BottomNavigationAction label="Library" value="/library" icon={<MenuBook />} />
+            {/* placeholder slot for the center FAB */}
+            <BottomNavigationAction sx={{ visibility: 'hidden', pointerEvents: 'none' }} value="" />
+            <BottomNavigationAction label="Stats" value="/stats" icon={<BarChart />} />
+            <BottomNavigationAction label="Profile" value="/settings" icon={<Person />} />
+          </BottomNavigation>
+
+          <Fab
+            color="primary"
+            aria-label="Add book"
+            size="medium"
+            onClick={() => navigate('/books/new')}
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 1,
+            }}
+          >
+            <Add />
+          </Fab>
+        </Box>
       </Paper>
     </Box>
   );
