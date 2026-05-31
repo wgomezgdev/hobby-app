@@ -1,8 +1,8 @@
 export type BookStatus = 'WANT_TO_READ' | 'READING' | 'FINISHED';
 
-export type Genre = 'Fantasía' | 'Aventura' | 'Ciencia Ficción' | 'Romance' | 'Thriller';
+export type Genre = 'Fantasy' | 'Adventure' | 'Science Fiction' | 'Romance' | 'Thriller';
 
-export const GENRES: Genre[] = ['Fantasía', 'Aventura', 'Ciencia Ficción', 'Romance', 'Thriller'];
+export const GENRES: Genre[] = ['Fantasy', 'Adventure', 'Science Fiction', 'Romance', 'Thriller'];
 
 export interface Book {
   id?: number;

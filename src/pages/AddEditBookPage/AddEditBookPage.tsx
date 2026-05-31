@@ -16,9 +16,9 @@ import type { BookStatus } from '../../types/entities';
 import { GENRES } from '../../types/entities';
 
 const STATUS_OPTIONS: { value: BookStatus; label: string; emoji: string }[] = [
-  { value: 'READING', label: 'Leyendo', emoji: '📖' },
-  { value: 'FINISHED', label: 'Leído', emoji: '✅' },
-  { value: 'WANT_TO_READ', label: 'Pendiente', emoji: '⏳' },
+  { value: 'READING', label: 'Reading', emoji: '📖' },
+  { value: 'FINISHED', label: 'Finished', emoji: '✅' },
+  { value: 'WANT_TO_READ', label: 'Want to Read', emoji: '⏳' },
 ];
 
 interface BookFormData {
@@ -106,7 +106,7 @@ export function AddEditBookPage() {
           <ArrowBack />
         </IconButton>
         <Typography variant="h6" fontWeight={700}>
-          {isEditMode ? 'Editar Libro' : 'Agregar Libro'}
+          {isEditMode ? 'Edit Book' : 'Add Book'}
         </Typography>
       </Box>
 
@@ -136,12 +136,12 @@ export function AddEditBookPage() {
           {/* Title */}
           <Box>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
-              TÍTULO DEL LIBRO
+              BOOK TITLE
             </Typography>
             <Controller
               name="title"
               control={control}
-              rules={{ required: 'El título es obligatorio' }}
+              rules={{ required: 'Title is required' }}
               render={({ field }) => (
                 <Autocomplete
                   freeSolo
@@ -185,12 +185,12 @@ export function AddEditBookPage() {
           <Stack direction="row" spacing={1.5}>
             <Box sx={{ flex: 2 }}>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
-                AUTOR
+                AUTHOR
               </Typography>
               <Controller
                 name="author"
                 control={control}
-                rules={{ required: 'El autor es obligatorio' }}
+                rules={{ required: 'Author is required' }}
                 render={({ field }) => (
                   <Autocomplete
                     freeSolo
@@ -215,7 +215,7 @@ export function AddEditBookPage() {
             </Box>
             <Box sx={{ flex: 1 }}>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
-                AÑO
+                YEAR
               </Typography>
               <Controller
                 name="year"
@@ -230,7 +230,7 @@ export function AddEditBookPage() {
           {/* Status chips */}
           <Box>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block', letterSpacing: 1 }}>
-              ESTADO
+              STATUS
             </Typography>
             <Controller
               name="status"
@@ -256,7 +256,7 @@ export function AddEditBookPage() {
           <Stack direction="row" spacing={1.5}>
             <Box sx={{ flex: 1 }}>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
-                TOTAL PÁGINAS
+                TOTAL PAGES
               </Typography>
               <Controller
                 name="totalPages"
@@ -268,7 +268,7 @@ export function AddEditBookPage() {
             </Box>
             <Box sx={{ flex: 1 }}>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
-                PÁGINA ACTUAL
+                CURRENT PAGE
               </Typography>
               <Controller
                 name="currentPage"
@@ -283,7 +283,7 @@ export function AddEditBookPage() {
           {/* Genre chips */}
           <Box>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block', letterSpacing: 1 }}>
-              GÉNERO
+              GENRE
             </Typography>
             <Controller
               name="genres"
@@ -322,7 +322,7 @@ export function AddEditBookPage() {
             startIcon={<CheckCircle />}
             sx={{ mt: 1, py: 1.5, fontWeight: 700 }}
           >
-            {isEditMode ? 'Guardar cambios' : 'Guardar libro'}
+            {isEditMode ? 'Save Changes' : 'Save Book'}
           </Button>
         </Stack>
       </Box>

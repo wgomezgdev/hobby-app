@@ -121,7 +121,7 @@ export function BookDetailPage() {
             />
             {book.currentPage != null && book.totalPages ? (
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
-                Pág {book.currentPage} de {book.totalPages}
+                Page {book.currentPage} of {book.totalPages}
               </Typography>
             ) : null}
             <ProgressBar value={book.currentProgress} />
@@ -133,10 +133,10 @@ export function BookDetailPage() {
       {book && sessions && sessions.length > 0 && (book.currentPage != null || book.totalPages) && (() => {
         const pace = calcPaceStats(sessions, book);
         const stats = [
-          { icon: '📅', value: pace.startDate ? formatDate(pace.startDate) : '—', label: 'Inicio de lectura' },
-          { icon: '⏱', value: pace.daysReading > 0 ? `${pace.daysReading} días` : '—', label: 'Tiempo leyendo' },
-          { icon: '🔥', value: pace.avgPacePerDay > 0 ? `${pace.avgPacePerDay} pág/día` : '—', label: 'Ritmo promedio' },
-          { icon: '🎯', value: pace.daysToFinish != null ? `${pace.daysToFinish} días` : '—', label: 'Para terminar' },
+          { icon: '📅', value: pace.startDate ? formatDate(pace.startDate) : '—', label: 'Started reading' },
+          { icon: '⏱', value: pace.daysReading > 0 ? `${pace.daysReading} days` : '—', label: 'Days reading' },
+          { icon: '🔥', value: pace.avgPacePerDay > 0 ? `${pace.avgPacePerDay} pg/day` : '—', label: 'Avg pace' },
+          { icon: '🎯', value: pace.daysToFinish != null ? `${pace.daysToFinish} days` : '—', label: 'To finish' },
         ];
         return (
           <Grid container spacing={1.5} sx={{ mb: 2 }}>

@@ -64,7 +64,7 @@ export function BookCard({ book }: BookCardProps) {
           </Box>
           {book.currentPage != null && book.totalPages ? (
             <Typography variant="caption" color="text.secondary">
-              Pág {book.currentPage} de {book.totalPages}
+              Page {book.currentPage} of {book.totalPages}
             </Typography>
           ) : null}
           <ProgressBar value={book.currentProgress} />

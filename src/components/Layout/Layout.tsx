@@ -36,7 +36,7 @@ export function Layout() {
 
         <Fab
           color="primary"
-          aria-label="Agregar libro"
+          aria-label="Add book"
           size="medium"
           onClick={() => navigate('/books/new')}
           sx={{

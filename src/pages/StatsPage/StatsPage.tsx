@@ -30,9 +30,9 @@ export function StatsPage() {
   if (booksRead === 0 && availableYears.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: 10 }}>
-        <Typography variant="h6">Estadísticas 📊</Typography>
+        <Typography variant="h6">Statistics 📊</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          Termina tu primer libro para ver estadísticas
+          Finish your first book to see statistics
         </Typography>
       </Box>
     );
@@ -41,15 +41,15 @@ export function StatsPage() {
   return (
     <Box sx={{ pb: 2 }}>
       {/* Header */}
-      <Typography variant="h5" fontWeight={700}>Estadísticas 📊</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Tu progreso lector</Typography>
+      <Typography variant="h5" fontWeight={700}>Statistics 📊</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Your reading progress</Typography>
 
       {/* Year filter */}
       <Stack direction="row" spacing={1} sx={{ mb: 3, flexWrap: 'wrap' }}>
         {years.map(y => (
           <Chip
             key={String(y)}
-            label={y === 'all' ? 'Todo' : String(y)}
+            label={y === 'all' ? 'All' : String(y)}
             onClick={() => setYear(y)}
             color={selectedYear === y ? 'primary' : 'default'}
             variant={selectedYear === y ? 'filled' : 'outlined'}
@@ -63,12 +63,12 @@ export function StatsPage() {
         <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <Box>
             <Typography variant="h3" fontWeight={800} color="primary.main">{booksRead}</Typography>
-            <Typography variant="body2" color="text.secondary">Libros leídos · Meta anual: 50</Typography>
+            <Typography variant="body2" color="text.secondary">Books read · Annual goal: 50</Typography>
           </Box>
           {yoyChange != null && (
             <Chip
               icon={<TrendingUp fontSize="small" />}
-              label={`${yoyChange > 0 ? '+' : ''}${yoyChange}% vs año anterior`}
+              label={`${yoyChange > 0 ? '+' : ''}${yoyChange}% vs last year`}
               size="small"
               color={yoyChange >= 0 ? 'success' : 'error'}
               sx={{ fontSize: '0.7rem' }}
@@ -80,8 +80,8 @@ export function StatsPage() {
       {/* Monthly bar chart */}
       <Card sx={{ p: 2, mb: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Typography variant="subtitle2" fontWeight={700}>Libros por mes</Typography>
-          <Typography variant="caption" color="text.secondary">ø {avgPerMonth} / mes</Typography>
+          <Typography variant="subtitle2" fontWeight={700}>Books per month</Typography>
+          <Typography variant="caption" color="text.secondary">ø {avgPerMonth} / mo</Typography>
         </Box>
         <ResponsiveContainer width="100%" height={160}>
           <BarChart data={booksByMonth} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
@@ -104,7 +104,7 @@ export function StatsPage() {
       <Grid container spacing={2}>
         <Grid item xs={6}>
           <Card sx={{ p: 2, height: '100%' }}>
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>Géneros</Typography>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>Genres</Typography>
             {genreBreakdown.length > 0 ? (
               <>
                 <ResponsiveContainer width="100%" height={100}>
@@ -137,7 +137,7 @@ export function StatsPage() {
                 </Stack>
               </>
             ) : (
-              <Typography variant="caption" color="text.secondary">Sin datos</Typography>
+              <Typography variant="caption" color="text.secondary">No data</Typography>
             )}
           </Card>
         </Grid>
@@ -145,23 +145,23 @@ export function StatsPage() {
         <Grid item xs={6}>
           <Stack spacing={2} sx={{ height: '100%' }}>
             <Card sx={{ p: 2, flex: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 1 }}>PÁGINAS LEÍDAS</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 1 }}>PAGES READ</Typography>
               <Typography variant="h5" fontWeight={800} color="primary.main">
-                {totalPages.toLocaleString('es-ES')}
+                {totalPages.toLocaleString('en-US')}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {selectedYear === 'all' ? 'en total' : `en ${selectedYear}`}
+                {selectedYear === 'all' ? 'all time' : `in ${selectedYear}`}
               </Typography>
             </Card>
             <Card sx={{ p: 2, flex: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 1 }}>MEJOR MES</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 1 }}>BEST MONTH</Typography>
               {bestMonth ? (
                 <>
                   <Typography variant="h6" fontWeight={800}>{bestMonth.month}</Typography>
-                  <Typography variant="caption" color="text.secondary">{bestMonth.count} libros 🔥</Typography>
+                  <Typography variant="caption" color="text.secondary">{bestMonth.count} books 🔥</Typography>
                 </>
               ) : (
-                <Typography variant="caption" color="text.secondary">Sin datos</Typography>
+                <Typography variant="caption" color="text.secondary">No data</Typography>
               )}
             </Card>
           </Stack>

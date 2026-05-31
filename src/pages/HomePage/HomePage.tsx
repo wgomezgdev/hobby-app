@@ -7,9 +7,9 @@ import { StarRating } from '../../components/StarRating/StarRating';
 
 function greeting(): string {
   const h = new Date().getHours();
-  if (h >= 5 && h < 12) return 'Buenos días';
-  if (h >= 12 && h < 20) return 'Buenas tardes';
-  return 'Buenas noches';
+  if (h >= 5 && h < 12) return 'Good morning';
+  if (h >= 12 && h < 20) return 'Good afternoon';
+  return 'Good evening';
 }
 
 export function HomePage() {
@@ -43,7 +43,7 @@ export function HomePage() {
             {greeting()} 👋
           </Typography>
           <Typography variant="h5" fontWeight={700}>
-            Mi <Box component="span" color="primary.main">Biblioteca</Box>
+            My <Box component="span" color="primary.main">Library</Box>
           </Typography>
         </Box>
         <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40, fontWeight: 700 }}>RP</Avatar>
@@ -52,9 +52,9 @@ export function HomePage() {
       {/* Stats row */}
       <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
         {[
-          { label: 'Leídos', count: finishedCount },
-          { label: 'En progreso', count: readingCount },
-          { label: 'Pendientes', count: pendingCount },
+          { label: 'Read', count: finishedCount },
+          { label: 'In progress', count: readingCount },
+          { label: 'Pending', count: pendingCount },
         ].map(({ label, count }) => (
           <Card key={label} sx={{ flex: 1, p: 1.5, textAlign: 'center' }}>
             <Typography variant="h5" fontWeight={800} color="primary.main">{count}</Typography>
@@ -63,9 +63,9 @@ export function HomePage() {
         ))}
       </Box>
 
-      {/* Leyendo ahora */}
+      {/* Currently reading */}
       <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
-        Leyendo ahora
+        Currently Reading
       </Typography>
       {currentBook ? (
         <Card sx={{ mb: 3 }}>
@@ -84,13 +84,13 @@ export function HomePage() {
                 </Box>
               )}
               <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                <Chip label="● ACTIVO" size="small" color="primary" sx={{ mb: 0.5, fontSize: '0.65rem', height: 20 }} />
+                <Chip label="● ACTIVE" size="small" color="primary" sx={{ mb: 0.5, fontSize: '0.65rem', height: 20 }} />
                 <Typography variant="subtitle2" fontWeight={700} noWrap>{currentBook.title}</Typography>
                 <Typography variant="caption" color="text.secondary">{currentBook.author}</Typography>
                 <Box sx={{ mt: 1 }}>
                   {currentBook.currentPage != null && currentBook.totalPages ? (
                     <Typography variant="caption" color="text.secondary">
-                      Pág {currentBook.currentPage} de {currentBook.totalPages}
+                      Page {currentBook.currentPage} of {currentBook.totalPages}
                     </Typography>
                   ) : (
                     <Typography variant="caption" color="text.secondary">
@@ -110,10 +110,10 @@ export function HomePage() {
       ) : (
         <Card sx={{ mb: 3, p: 2, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            No estás leyendo nada en este momento
+            You are not reading anything right now
           </Typography>
           <Chip
-            label="Empieza a leer →"
+            label="Start reading →"
             color="primary"
             onClick={() => navigate('/library')}
             clickable
@@ -125,14 +125,14 @@ export function HomePage() {
       {recentlyFinished.length > 0 && (
         <>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-            <Typography variant="subtitle1" fontWeight={700}>Completados</Typography>
+            <Typography variant="subtitle1" fontWeight={700}>Completed</Typography>
             <Typography
               variant="body2"
               color="primary.main"
               sx={{ cursor: 'pointer' }}
               onClick={() => navigate('/library?status=FINISHED')}
             >
-              Ver todo →
+              See all →
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>

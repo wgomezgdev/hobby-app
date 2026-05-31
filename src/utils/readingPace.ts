@@ -35,5 +35,5 @@ export function calcPaceStats(sessions: ReadingSession[], book: Book): PaceStats
 }
 
 export function formatDate(date: Date): string {
-  return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 }
