@@ -1,59 +1,72 @@
-# Implementation Plan: Reading Pal
+# Implementation Plan: Reading Pal — UI Design Phase
 
-**Branch**: `002-reading-pal-app` | **Date**: 2026-05-26 | **Spec**: [spec.md](spec.md)
+**Branch**: `docs/ui-design-spec` | **Date**: 2026-05-30 | **Spec**: [spec.md](spec.md)
 
 **Input**: Feature specification from `specs/002-reading-pal-app/spec.md`
 
+---
+
 ## Summary
 
-Reading Pal is a personal reading companion SPA that runs entirely in the browser with no
-backend. Users manage a book library, log reading sessions, save quotes, and rate books. All
-data persists automatically via IndexedDB (Dexie.js). A snapshot export/import system
-provides data portability. The app has 6 screens connected by React Router v6 and uses
-a strict repository pattern to isolate all database logic from UI components.
+The Reading Pal web SPA (v0.4.0) has a complete core feature set (FR-001–FR-027, US1–US9).
+This plan covers the next increment: implementing the UI design reference screens added in
+the spec (FR-028–FR-032) — a dark-theme visual overhaul, Home dashboard screen, page-based
+progress tracking, genre tagging, reading-pace stats on the detail screen, and a Stats screen.
+All work stays within the existing Vite + React + MUI + Dexie stack.
+
+---
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x with `strict: true` + React 18
+**Language/Version**: TypeScript 5.x, `strict: true`
 
-**Primary Dependencies**: Vite (build), React Router v6 (routing), MUI v5 (components),
-Zustand (UI state), Dexie.js v4 + dexie-react-hooks (IndexedDB), React Hook Form (forms)
+**Primary Dependencies**:
+- React 18 + React Router v6 (SPA routing)
+- MUI v5 (Material UI) — components, theming
+- Dexie.js v4 + dexie-react-hooks (`useLiveQuery`) — local IndexedDB
+- Zustand — UI-only state (filters, sort, modal flags)
+- React Hook Form — all form validation
 
-**Storage**: Dexie.js v4 / IndexedDB — automatic, browser-native, no setup required
+**Storage**: Dexie / IndexedDB — browser-local, no backend, no network required
 
-**Testing**: Vitest + React Testing Library + fake-indexeddb
+**Testing**: Vitest + React Testing Library + fake-indexeddb + jsdom
 
-**Target Platform**: Modern browsers (Chrome 110+, Firefox 110+, Safari 16+, Edge 110+).
-No mobile app. No server. No PWA in v1.
+**Target Platform**: Browser SPA / installable PWA (Android Chrome, iOS Safari)
 
-**Project Type**: Single-page web application (SPA)
+**Project Type**: Web application (SPA + PWA)
 
 **Performance Goals**:
-- Library grid renders 200 books without visible lag
-- Quote search returns results in < 1 second across 1,000 quotes
-- Snapshot export completes in < 5 seconds for 200 books
+- Library grid: 200 books, no visible lag during filter/sort
+- Quote search: < 1 s across 1,000 quotes
+- Stats aggregation: < 500 ms across 200 books
 
-**Constraints**: Fully offline, no internet required; cover images capped at 1 MB
-(client-side validation); IndexedDB storage is browser-managed
+**Constraints**: Fully offline-capable; no backend calls for data; all new code under strict TS
 
-**Scale/Scope**: Single user, single browser. Up to ~200 books, ~1,000 quotes total.
-6 route-level screens, 4 entity repositories.
+**Scale/Scope**: ~5 new/modified screens, ~8 new components, 1 Dexie schema migration
+
+---
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design — all pass.*
+*Constitution version: 2.0.0 (Mobile-First, Device-Local). Ratified 2026-05-26.*
 
-| Principle | Gate | Status |
-|---|---|---|
-| I. Browser-Only | No remote calls, no auth, no backend deps | ✅ Pass |
-| II. Dexie as Source of Truth | All reads via `useLiveQuery`; writes via repositories | ✅ Pass |
-| III. TypeScript Strict | `strict: true` in tsconfig; no `any` | ✅ Pass |
-| IV. Repository Pattern | One repo per entity; business logic in repo layer | ✅ Pass |
-| V. Component & Form Standards | React Hook Form; URL tab params; MUI Skeleton for loading | ✅ Pass |
-| VI. Accessibility | MUI ARIA roles; WCAG 2.1 AA contrast; focus trap in modals | ✅ Pass |
-| VII. Testing Discipline | Vitest + RTL + fake-indexeddb; no real IndexedDB in tests | ✅ Pass |
+| Gate | Principle | Status | Justification |
+|------|-----------|--------|---------------|
+| I | Mobile-First, Expo-only | ⚠ PARTIAL | App is a browser SPA/PWA pre-dating the v2 pivot. Mobile Phase 3 (Capacitor/RN) is deferred. Web work continues under the existing architecture. No new web-only APIs added. |
+| II | WatermelonDB as source of truth | ⚠ OVERRIDE | App uses Dexie/IndexedDB. Predates constitution v2. Migration to WatermelonDB is scoped to Mobile Phase 3. |
+| III | TypeScript strict mode | ✅ PASS | `tsconfig.json` has `strict: true`; all new files must compile clean. |
+| IV | Repository pattern | ✅ PASS | All mutations go through `src/repositories/`. New entities follow the same pattern. |
+| V | React Native Paper + React Navigation | ⚠ OVERRIDE | App uses MUI + React Router. Predates constitution v2. New components use MUI throughout. |
+| VI | Accessibility & Mobile UX | ✅ PASS | All touch targets ≥ 48 dp, `accessibilityLabel` on interactive elements, keyboard navigation, `KeyboardAvoidingView` equivalent via MUI. |
+| VII | Testing discipline | ✅ PASS | Repository tests use Vitest + fake-indexeddb. Component tests use RTL. No DB mocking. |
 
-No violations. Complexity Tracking section not required.
+**Override rationale (I, II, V)**: The `002-reading-pal-app` spec branch targets the existing
+browser SPA. The constitution v2 pivot to Expo/React Native is deferred and tracked separately
+(the `003-reading-pal-rn` spec was planned but not yet created). New features here add value
+to the deployed app (https://hobby-app-dusky.vercel.app) without blocking the eventual mobile
+migration.
+
+---
 
 ## Project Structure
 
@@ -61,61 +74,98 @@ No violations. Complexity Tracking section not required.
 
 ```text
 specs/002-reading-pal-app/
-├── plan.md              # This file
-├── research.md          # Phase 0 output
-├── data-model.md        # Phase 1 output
-├── quickstart.md        # Phase 1 output
+├── plan.md              ← This file
+├── research.md          ← Architectural decisions (v1 complete)
+├── data-model.md        ← Updated: new Book fields + Dexie v2 schema
+├── quickstart.md        ← Setup guide (v1 complete)
 ├── contracts/
-│   ├── repositories.md  # Repository function signatures
-│   └── routes.md        # Route definitions
-└── tasks.md             # Phase 2 output (/speckit-tasks)
+│   ├── repositories.md  ← Updated: new repo signatures
+│   └── routes.md        ← Updated: new routes
+└── tasks.md             ← Updated: new phases 19–23
 ```
 
 ### Source Code (repository root)
 
 ```text
 src/
-├── db/
-│   └── db.ts                     # Dexie DB class + schema + singleton export
-├── types/
-│   └── entities.ts               # Book, ReadingSession, Quote, Rating interfaces
-├── repositories/
-│   ├── bookRepository.ts
-│   ├── sessionRepository.ts
-│   ├── quoteRepository.ts
-│   └── ratingRepository.ts
-├── hooks/
-│   ├── useBooks.ts               # useLiveQuery wrappers for books
-│   ├── useSessions.ts
-│   ├── useQuotes.ts
-│   └── useRatings.ts
-├── stores/
-│   ├── libraryUiStore.ts         # filter chip + sort order
-│   └── uiStore.ts                # modal open flags
 ├── components/
-│   ├── BookCard/
-│   ├── CoverUpload/
-│   ├── StarRating/
-│   ├── TagInput/
-│   ├── ProgressBar/
-│   └── SkeletonCard/
+│   ├── BookCard/          ← update: show genre badge, page progress
+│   ├── BottomNav/         ← NEW: dark bottom navigation with FAB
+│   ├── StatsCard/         ← NEW: reusable stat card (number + label)
+│   ├── MonthlyChart/      ← NEW: bar chart (recharts or MUI-based)
+│   └── GenreDonut/        ← NEW: donut chart (recharts)
+├── hooks/
+│   ├── useBooks.ts        ← update: new query for Home screen
+│   ├── useStats.ts        ← NEW: aggregation hook (books read, pages, pace)
+│   └── (existing)
 ├── pages/
-│   ├── LibraryPage/
-│   ├── BookDetailPage/           # tabs via ?tab= query param
-│   ├── AddEditBookPage/
-│   ├── LogSessionPage/
-│   ├── RankingPage/
-│   └── SettingsPage/
-├── utils/
-│   └── snapshot.ts               # export / import JSON snapshot
-├── App.tsx                       # Router + top-level layout
-└── main.tsx
+│   ├── HomePage/          ← NEW: dashboard screen (FR-028)
+│   ├── StatsPage/         ← NEW: statistics screen (FR-032)
+│   ├── BookDetailPage/    ← update: add pace stats grid (FR-031)
+│   └── AddEditBookPage/   ← update: year, totalPages, currentPage, genres (FR-029/030)
+├── repositories/
+│   └── bookRepository.ts  ← update: new fields in addBook/updateBook
+├── stores/
+│   └── statsUiStore.ts    ← NEW: year filter state for StatsPage
+├── theme/
+│   └── theme.ts           ← NEW (or update): dark theme with cyan accent
+├── types/
+│   └── entities.ts        ← update: Book + new fields
+└── db/
+    └── db.ts              ← update: Dexie schema v2
 
 tests/
-├── repositories/                 # Unit tests (fake-indexeddb)
-├── components/                   # RTL component tests
-└── utils/                        # snapshot.ts tests
+├── repositories/
+│   └── bookRepository.test.ts  ← update: cover new fields
+└── hooks/
+    └── useStats.test.ts        ← NEW
 ```
 
-**Structure Decision**: Single SPA project at repo root. No backend directory. All source
-under `src/`. Tests mirror the source structure under `tests/`.
+---
+
+## Phase 0 Research Summary
+
+All architectural decisions for the new phases resolved from existing context:
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Charting library | `recharts` | Lightweight, React-first, tree-shakeable; avoids heavy Chart.js. Already used in similar MUI apps. |
+| Dark theme | MUI `createTheme({ palette: { mode: 'dark' } })` + cyan primary | Zero new dependency; MUI dark mode flips all surface colours automatically. Cyan accent: `primary.main = #00BCD4`. |
+| Progress tracking | Keep `currentProgress: number` (0–100); add `totalPages` + `currentPage` as optional; derive percentage | Backward compat with all v1 books; forms that don't fill page fields still work. |
+| Genres storage | `genres: string[]` multi-entry index in Dexie | Same pattern as `Quote.tags`; enables future filter-by-genre without schema change. |
+| Pace stats | Compute from `sessions` array in a hook; no extra DB columns | Start date = `sessions[0].startedAt`, days reading = unique session dates count, avg pace = `currentPage / daysSinceStart`, ETA = `(totalPages - currentPage) / avgPace`. |
+| Home "currently reading" | `useLiveQuery` filter `status === 'READING'`, take first | Simple; reactive; no extra index needed. |
+| Stats year filter | `Zustand` store (same pattern as library filter) | Ephemeral UI state, survives nav; consistent with existing pattern. |
+| Bottom navigation | MUI `BottomNavigation` + `BottomNavigationAction` + `Fab` | No new dep; existing MUI. Center FAB overlaid with negative margin trick. |
+
+---
+
+## Phase 1 Design Artifacts
+
+### Updated Data Model
+
+See [data-model.md](data-model.md) — changes:
+- `Book`: adds `year?: number`, `totalPages?: number`, `currentPage?: number`, `genres: string[]`
+- `currentProgress` retained for backward compat; updated by repo when `currentPage`/`totalPages` available
+- Dexie schema bumped to version 2: adds `*genres` multi-entry index on `books` table
+
+### Updated Contracts
+
+See [contracts/repositories.md](contracts/repositories.md) — changes:
+- `bookRepository`: `addBook` / `updateBook` accept new fields
+- `getReadingStats(year?: number)` utility function added (not a repository — in `src/utils/stats.ts`)
+
+### New Routes
+
+| Route | Page | Notes |
+|-------|------|-------|
+| `/` | `HomePage` | Default landing screen (was `LibraryPage`) |
+| `/library` | `LibraryPage` | Moved off root |
+| `/stats` | `StatsPage` | New |
+| (existing) | — | All `/books/…` routes unchanged |
+
+---
+
+## Complexity Tracking
+
+No constitution violations that block implementation — overrides justified above.
