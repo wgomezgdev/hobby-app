@@ -1,4 +1,4 @@
-import { BottomNavigation, BottomNavigationAction, Box, Fab, Paper } from '@mui/material';
+import { BottomNavigation, BottomNavigationAction, Box, Fab, Paper, Typography } from '@mui/material';
 import { Add, BarChart, Home, MenuBook, Person } from '@mui/icons-material';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
@@ -16,7 +16,7 @@ export function Layout() {
   const activeTab = getActiveTab(location.pathname);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', pb: '56px' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', pb: '72px' }}>
       <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3 } }}>
         <Outlet />
       </Box>
@@ -49,6 +49,14 @@ export function Layout() {
         >
           <Add />
         </Fab>
+
+        <Typography
+          variant="caption"
+          color="text.disabled"
+          sx={{ display: 'block', textAlign: 'center', pb: 0.5, fontSize: '0.65rem' }}
+        >
+          v{__APP_VERSION__}
+        </Typography>
       </Paper>
     </Box>
   );
