@@ -7,7 +7,7 @@ import {
 import { useStats } from '../../hooks/useStats';
 import { useStatsUiStore } from '../../stores/statsUiStore';
 
-const GENRE_COLORS = ['#00BCD4', '#4DD0E1', '#80DEEA', '#B2EBF2', '#E0F7FA'];
+const GENRE_COLORS = ['#E07940', '#F4A261', '#E9C46A', '#A8DADC', '#6A994E'];
 
 export function StatsPage() {
   const stats = useStats();
@@ -88,12 +88,12 @@ export function StatsPage() {
             <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9E9E9E' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 11, fill: '#9E9E9E' }} axisLine={false} tickLine={false} allowDecimals={false} />
             <Tooltip
-              contentStyle={{ background: '#161B22', border: 'none', borderRadius: 8 }}
+              contentStyle={{ background: '#FFFFFF', border: '1px solid #F0E0D0', borderRadius: 8 }}
               cursor={{ fill: 'rgba(0,188,212,0.1)' }}
             />
             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
               {booksByMonth.map((entry, index) => (
-                <Cell key={index} fill={entry.count > 0 ? '#00BCD4' : '#263238'} />
+                <Cell key={index} fill={entry.count > 0 ? '#E07940' : '#F0E0D0'} />
               ))}
             </Bar>
           </BarChart>
