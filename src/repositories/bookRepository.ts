@@ -13,14 +13,16 @@ export async function addBook(
   book: Omit<Book, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<number> {
   const now = Date.now();
-  return db.books.add({ ...book, createdAt: now, updatedAt: now });
+  const derived = deriveProgress(book);
+  return db.books.add({ ...book, ...derived, genres: book.genres ?? [], createdAt: now, updatedAt: now });
 }
 
 export async function updateBook(
   id: number,
   changes: Partial<Omit<Book, 'id' | 'createdAt'>>
 ): Promise<void> {
-  await db.books.update(id, { ...changes, updatedAt: Date.now() });
+  const derived = deriveProgress(changes);
+  await db.books.update(id, { ...changes, ...derived, updatedAt: Date.now() });
 }
 
 export async function deleteBook(id: number): Promise<void> {
@@ -30,4 +32,14 @@ export async function deleteBook(id: number): Promise<void> {
     await db.ratings.where('bookId').equals(id).delete();
     await db.books.delete(id);
   });
+}
+
+function deriveProgress(
+  data: Partial<Pick<Book, 'currentPage' | 'totalPages' | 'currentProgress'>>
+): Partial<Pick<Book, 'currentProgress'>> {
+  const { currentPage, totalPages } = data;
+  if (currentPage !== undefined && totalPages && totalPages > 0) {
+    return { currentProgress: Math.min(100, Math.round((currentPage / totalPages) * 100)) };
+  }
+  return {};
 }

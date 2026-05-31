@@ -42,7 +42,7 @@ export function BookCard({ book }: BookCardProps) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              bgcolor: 'grey.100',
+              bgcolor: 'background.paper',
             }}
           >
             <MenuBook sx={{ fontSize: 48, color: 'grey.400' }} />
@@ -62,6 +62,11 @@ export function BookCard({ book }: BookCardProps) {
               size="small"
             />
           </Box>
+          {book.currentPage != null && book.totalPages ? (
+            <Typography variant="caption" color="text.secondary">
+              Page {book.currentPage} of {book.totalPages}
+            </Typography>
+          ) : null}
           <ProgressBar value={book.currentProgress} />
         </CardContent>
       </CardActionArea>
