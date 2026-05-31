@@ -6,18 +6,32 @@
 
 ## Entity Interfaces (`src/types/entities.ts`)
 
+> **v2 additions** (2026-05-30): `year`, `totalPages`, `currentPage`, `genres` added to `Book`.
+> All new fields are optional to preserve backward compatibility with v1 books.
+
 ```typescript
 export type BookStatus = 'WANT_TO_READ' | 'READING' | 'FINISHED';
 
+export type Genre =
+  | 'Fantasía'
+  | 'Aventura'
+  | 'Ciencia Ficción'
+  | 'Romance'
+  | 'Thriller';
+
 export interface Book {
-  id?: number;           // auto-increment primary key
-  title: string;         // required
-  author: string;        // required
-  status: BookStatus;    // required; defaults to 'WANT_TO_READ' on add
-  cover?: string;        // base64 data URL; absent → show placeholder
-  currentProgress: number; // integer 0–100 (percentage)
-  createdAt: number;     // Unix timestamp (ms)
-  updatedAt: number;     // Unix timestamp (ms)
+  id?: number;              // auto-increment primary key
+  title: string;            // required
+  author: string;           // required
+  status: BookStatus;       // required; defaults to 'WANT_TO_READ' on add
+  cover?: string;           // base64 data URL or remote URL; absent → placeholder
+  currentProgress: number;  // integer 0–100 (percentage); derived from currentPage/totalPages when available
+  year?: number;            // publication year (4-digit) — NEW v2
+  totalPages?: number;      // total page count — NEW v2
+  currentPage?: number;     // current page number — NEW v2; drives progress calculation
+  genres: string[];         // multi-select from Genre type; empty array if not set — NEW v2
+  createdAt: number;        // Unix timestamp (ms)
+  updatedAt: number;        // Unix timestamp (ms)
 }
 
 export interface ReadingSession {
@@ -51,6 +65,10 @@ export interface Rating {
 
 ## Dexie Schema (`src/db/db.ts`)
 
+Version 2 adds `*genres` multi-entry index to `books`. All other tables unchanged.
+Existing v1 books automatically get `genres: []` (Dexie fills missing fields with `undefined`;
+the form defaults to `[]` on load).
+
 ```typescript
 import Dexie, { type Table } from 'dexie';
 import type { Book, ReadingSession, Quote, Rating } from '../types/entities';
@@ -69,6 +87,10 @@ export class ReadingPalDB extends Dexie {
       quotes:   '++id, bookId, isFavorite, *tags',
       ratings:  'bookId',
     });
+    // v2: adds *genres multi-entry index; year/totalPages/currentPage are non-indexed fields
+    this.version(2).stores({
+      books:    '++id, status, title, author, createdAt, *genres',
+    });
   }
 }
 
@@ -85,12 +107,16 @@ export const db = new ReadingPalDB();
 | books | `title` | Sort A–Z by title |
 | books | `author` | Sort A–Z by author |
 | books | `createdAt` | Sort by most recent |
+| books | `*genres` (v2) | Multi-entry: filter by genre |
 | sessions | `bookId` | Fetch sessions for a book |
 | sessions | `startedAt` | Chronological ordering |
 | quotes | `bookId` | Fetch quotes for a book |
 | quotes | `isFavorite` | Filter by favorite |
 | quotes | `*tags` | Multi-entry: filter by tag |
 | ratings | `bookId` (PK) | One rating per book; fast lookup |
+
+`year`, `totalPages`, `currentPage` are stored as plain fields (not indexed); they are
+accessed only via the already-loaded `Book` object so an index adds no benefit.
 
 Full-text quote search (`String.includes()`) is done in memory after fetching by `bookId`;
 no index needed for this volume.
@@ -137,8 +163,12 @@ WANT_TO_READ
 | Book.title | Required, non-empty string |
 | Book.author | Required, non-empty string |
 | Book.status | One of `WANT_TO_READ`, `READING`, `FINISHED` |
-| Book.cover | Optional; if provided, must be base64 data URL; source file ≤ 1 MB |
+| Book.cover | Optional; base64 data URL or remote URL; source file ≤ 1 MB |
 | Book.currentProgress | Integer 0–100; enforced by repository (not form) |
+| Book.year | Optional; integer 1000–current year |
+| Book.totalPages | Optional; integer ≥ 1 |
+| Book.currentPage | Optional; integer 0–`totalPages`; must be ≤ `totalPages` if both set |
+| Book.genres | Optional; array of valid `Genre` values; empty array allowed |
 | ReadingSession.durationMinutes | Required, integer ≥ 1 |
 | ReadingSession.progressDelta | Required, integer 1–100 |
 | Quote.text | Required, non-empty string |
