@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import {
-  Autocomplete, Box, Button, CircularProgress, FormControl,
-  InputLabel, MenuItem, Select, Stack, TextField, Typography, FormHelperText,
+  Autocomplete, Box, Button, Chip, CircularProgress,
+  IconButton, Stack, TextField, Typography,
 } from '@mui/material';
+import { ArrowBack, CheckCircle } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthorSuggestions } from '../../hooks/useAuthorSuggestions';
 import { useTitleSuggestions } from '../../hooks/useTitleSuggestions';
@@ -12,12 +13,23 @@ import { addBook, updateBook } from '../../repositories/bookRepository';
 import { CoverUpload } from '../../components/CoverUpload/CoverUpload';
 import { CoverSearch } from '../../components/CoverSearch/CoverSearch';
 import type { BookStatus } from '../../types/entities';
+import { GENRES } from '../../types/entities';
+
+const STATUS_OPTIONS: { value: BookStatus; label: string; emoji: string }[] = [
+  { value: 'READING', label: 'Leyendo', emoji: '📖' },
+  { value: 'FINISHED', label: 'Leído', emoji: '✅' },
+  { value: 'WANT_TO_READ', label: 'Pendiente', emoji: '⏳' },
+];
 
 interface BookFormData {
   title: string;
   author: string;
+  year: string;
   status: BookStatus;
+  totalPages: string;
+  currentPage: string;
   cover?: string;
+  genres: string[];
 }
 
 export function AddEditBookPage() {
@@ -35,7 +47,7 @@ export function AddEditBookPage() {
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<BookFormData>({
-    defaultValues: { status: 'WANT_TO_READ' },
+    defaultValues: { status: 'READING', genres: [], year: '', totalPages: '', currentPage: '' },
   });
 
   const [titleInput, setTitleInput] = useState('');
@@ -45,147 +57,66 @@ export function AddEditBookPage() {
 
   useEffect(() => {
     if (isEditMode && book) {
-      reset({ title: book.title, author: book.author, status: book.status, cover: book.cover });
+      reset({
+        title: book.title,
+        author: book.author,
+        year: book.year?.toString() ?? '',
+        status: book.status,
+        totalPages: book.totalPages?.toString() ?? '',
+        currentPage: book.currentPage?.toString() ?? '',
+        cover: book.cover,
+        genres: book.genres ?? [],
+      });
+      setTitleInput(book.title);
+      setAuthorInput(book.author);
     }
   }, [book, isEditMode, reset]);
 
   const onSubmit = async (data: BookFormData) => {
+    const totalPages = data.totalPages ? parseInt(data.totalPages, 10) : undefined;
+    const currentPage = data.currentPage ? parseInt(data.currentPage, 10) : undefined;
+    const year = data.year ? parseInt(data.year, 10) : undefined;
+
+    const payload = {
+      title: data.title,
+      author: data.author,
+      status: data.status,
+      cover: data.cover,
+      genres: data.genres,
+      year,
+      totalPages,
+      currentPage,
+      currentProgress: 0,
+    };
+
     if (isEditMode && bookId) {
-      await updateBook(bookId, data);
+      await updateBook(bookId, payload);
       navigate(`/books/${bookId}`);
     } else {
-      const newId = await addBook({ ...data, currentProgress: 0 });
+      const newId = await addBook(payload);
       navigate(`/books/${newId}`);
     }
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ maxWidth: 480, mx: 'auto' }}>
-      <Typography variant="h5" sx={{ mb: 3 }}>
-        {isEditMode ? 'Edit Book' : 'Add Book'}
-      </Typography>
+    <Box sx={{ maxWidth: 480, mx: 'auto', pb: 4 }}>
+      {/* Header */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+        <IconButton onClick={() => navigate(-1)} aria-label="Volver">
+          <ArrowBack />
+        </IconButton>
+        <Typography variant="h6" fontWeight={700}>
+          {isEditMode ? 'Editar Libro' : 'Agregar Libro'}
+        </Typography>
+      </Box>
 
-      <Stack spacing={3}>
-        <Controller
-          name="title"
-          control={control}
-          rules={{ required: 'Title is required' }}
-          render={({ field }) => (
-            <Autocomplete
-              freeSolo
-              options={titleSuggestions}
-              getOptionLabel={o => (typeof o === 'string' ? o : o.title)}
-              filterOptions={x => x}
-              loading={titleLoading}
-              inputValue={field.value ?? ''}
-              onInputChange={(_, value) => {
-                field.onChange(value);
-                setTitleInput(value);
-              }}
-              onChange={(_, value) => {
-                if (value && typeof value !== 'string') {
-                  field.onChange(value.title);
-                  setTitleInput(value.title);
-                  if (!getValues('author')) {
-                    setValue('author', value.author);
-                    setAuthorInput(value.author);
-                  }
-                }
-              }}
-              renderOption={(props, option) => (
-                <li {...props} key={`${option.title}-${option.author}`}>
-                  <Box>
-                    <Typography variant="body2">{option.title}</Typography>
-                    {option.author && (
-                      <Typography variant="caption" color="text.secondary">{option.author}</Typography>
-                    )}
-                  </Box>
-                </li>
-              )}
-              renderInput={params => (
-                <TextField
-                  {...params}
-                  label="Title"
-                  required
-                  error={!!errors.title}
-                  helperText={errors.title?.message}
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {titleLoading && <CircularProgress size={18} />}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                />
-              )}
-            />
-          )}
-        />
-
-        <Controller
-          name="author"
-          control={control}
-          rules={{ required: 'Author is required' }}
-          render={({ field }) => (
-            <Autocomplete
-              freeSolo
-              options={authorSuggestions}
-              filterOptions={x => x}
-              loading={authorLoading}
-              inputValue={field.value ?? ''}
-              onInputChange={(_, value) => {
-                field.onChange(value);
-                setAuthorInput(value);
-              }}
-              renderInput={params => (
-                <TextField
-                  {...params}
-                  label="Author"
-                  required
-                  error={!!errors.author}
-                  helperText={errors.author?.message}
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {authorLoading && <CircularProgress size={18} />}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                />
-              )}
-            />
-          )}
-        />
-
-        <Controller
-          name="status"
-          control={control}
-          rules={{ required: 'Status is required' }}
-          render={({ field }) => (
-            <FormControl fullWidth error={!!errors.status}>
-              <InputLabel>Status *</InputLabel>
-              <Select {...field} label="Status *">
-                <MenuItem value="WANT_TO_READ">Want to Read</MenuItem>
-                <MenuItem value="READING">Reading</MenuItem>
-                <MenuItem value="FINISHED">Finished</MenuItem>
-              </Select>
-              {errors.status && <FormHelperText>{errors.status.message}</FormHelperText>}
-            </FormControl>
-          )}
-        />
-
+      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+        {/* Cover */}
         <Controller
           name="cover"
           control={control}
           render={({ field }) => (
-            <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Cover (optional)
-              </Typography>
+            <Box sx={{ mb: 3 }}>
               <CoverUpload
                 value={field.value}
                 onChange={field.onChange}
@@ -201,13 +132,200 @@ export function AddEditBookPage() {
           )}
         />
 
-        <Stack direction="row" spacing={2} justifyContent="flex-end">
-          <Button onClick={() => navigate(-1)}>Cancel</Button>
-          <Button type="submit" variant="contained" disabled={isSubmitting}>
-            {isEditMode ? 'Save Changes' : 'Add Book'}
+        <Stack spacing={2.5}>
+          {/* Title */}
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
+              TÍTULO DEL LIBRO
+            </Typography>
+            <Controller
+              name="title"
+              control={control}
+              rules={{ required: 'El título es obligatorio' }}
+              render={({ field }) => (
+                <Autocomplete
+                  freeSolo
+                  options={titleSuggestions}
+                  getOptionLabel={o => (typeof o === 'string' ? o : o.title)}
+                  filterOptions={x => x}
+                  loading={titleLoading}
+                  inputValue={field.value ?? ''}
+                  onInputChange={(_, value) => { field.onChange(value); setTitleInput(value); }}
+                  onChange={(_, value) => {
+                    if (value && typeof value !== 'string') {
+                      field.onChange(value.title);
+                      setTitleInput(value.title);
+                      if (!getValues('author')) { setValue('author', value.author); setAuthorInput(value.author); }
+                    }
+                  }}
+                  renderOption={(props, option) => (
+                    <li {...props} key={`${option.title}-${option.author}`}>
+                      <Box>
+                        <Typography variant="body2">{option.title}</Typography>
+                        {option.author && <Typography variant="caption" color="text.secondary">{option.author}</Typography>}
+                      </Box>
+                    </li>
+                  )}
+                  renderInput={params => (
+                    <TextField
+                      {...params}
+                      fullWidth
+                      size="small"
+                      error={!!errors.title}
+                      helperText={errors.title?.message}
+                      InputProps={{ ...params.InputProps, endAdornment: <>{titleLoading && <CircularProgress size={16} />}{params.InputProps.endAdornment}</> }}
+                    />
+                  )}
+                />
+              )}
+            />
+          </Box>
+
+          {/* Author + Year */}
+          <Stack direction="row" spacing={1.5}>
+            <Box sx={{ flex: 2 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
+                AUTOR
+              </Typography>
+              <Controller
+                name="author"
+                control={control}
+                rules={{ required: 'El autor es obligatorio' }}
+                render={({ field }) => (
+                  <Autocomplete
+                    freeSolo
+                    options={authorSuggestions}
+                    filterOptions={x => x}
+                    loading={authorLoading}
+                    inputValue={field.value ?? ''}
+                    onInputChange={(_, value) => { field.onChange(value); setAuthorInput(value); }}
+                    renderInput={params => (
+                      <TextField
+                        {...params}
+                        fullWidth
+                        size="small"
+                        error={!!errors.author}
+                        helperText={errors.author?.message}
+                        InputProps={{ ...params.InputProps, endAdornment: <>{authorLoading && <CircularProgress size={16} />}{params.InputProps.endAdornment}</> }}
+                      />
+                    )}
+                  />
+                )}
+              />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
+                AÑO
+              </Typography>
+              <Controller
+                name="year"
+                control={control}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth size="small" type="number" inputProps={{ min: 1000, max: new Date().getFullYear() }} />
+                )}
+              />
+            </Box>
+          </Stack>
+
+          {/* Status chips */}
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block', letterSpacing: 1 }}>
+              ESTADO
+            </Typography>
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                  {STATUS_OPTIONS.map(opt => (
+                    <Chip
+                      key={opt.value}
+                      label={`${opt.emoji} ${opt.label}`}
+                      onClick={() => field.onChange(opt.value)}
+                      color={field.value === opt.value ? 'primary' : 'default'}
+                      variant={field.value === opt.value ? 'filled' : 'outlined'}
+                      clickable
+                    />
+                  ))}
+                </Stack>
+              )}
+            />
+          </Box>
+
+          {/* Total pages + Current page */}
+          <Stack direction="row" spacing={1.5}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
+                TOTAL PÁGINAS
+              </Typography>
+              <Controller
+                name="totalPages"
+                control={control}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth size="small" type="number" inputProps={{ min: 1 }} />
+                )}
+              />
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
+                PÁGINA ACTUAL
+              </Typography>
+              <Controller
+                name="currentPage"
+                control={control}
+                render={({ field }) => (
+                  <TextField {...field} fullWidth size="small" type="number" inputProps={{ min: 0 }} />
+                )}
+              />
+            </Box>
+          </Stack>
+
+          {/* Genre chips */}
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block', letterSpacing: 1 }}>
+              GÉNERO
+            </Typography>
+            <Controller
+              name="genres"
+              control={control}
+              render={({ field }) => (
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {GENRES.map(genre => {
+                    const selected = (field.value ?? []).includes(genre);
+                    return (
+                      <Chip
+                        key={genre}
+                        label={genre}
+                        onClick={() => {
+                          const current = field.value ?? [];
+                          field.onChange(selected ? current.filter(g => g !== genre) : [...current, genre]);
+                        }}
+                        color={selected ? 'primary' : 'default'}
+                        variant={selected ? 'filled' : 'outlined'}
+                        clickable
+                        size="small"
+                      />
+                    );
+                  })}
+                </Stack>
+              )}
+            />
+          </Box>
+
+          {/* Save button */}
+          <Button
+            type="submit"
+            variant="contained"
+            size="large"
+            fullWidth
+            disabled={isSubmitting}
+            startIcon={<CheckCircle />}
+            sx={{ mt: 1, py: 1.5, fontWeight: 700 }}
+          >
+            {isEditMode ? 'Guardar cambios' : 'Guardar libro'}
           </Button>
         </Stack>
-      </Stack>
+      </Box>
     </Box>
   );
 }

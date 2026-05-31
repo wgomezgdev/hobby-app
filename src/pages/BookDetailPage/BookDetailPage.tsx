@@ -1,14 +1,16 @@
-import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, Skeleton, Snackbar, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Button, Card, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid, IconButton, Skeleton, Snackbar, Tab, Tabs, Typography } from '@mui/material';
 import { ArrowBack, DeleteOutlined, Edit } from '@mui/icons-material';
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useBook } from '../../hooks/useBooks';
+import { useSessionsForBook } from '../../hooks/useSessions';
 import { deleteBook } from '../../repositories/bookRepository';
 import { ProgressBar } from '../../components/ProgressBar/ProgressBar';
 import { ProgressTab } from './tabs/ProgressTab';
 import { SessionsTab } from './tabs/SessionsTab';
 import { QuotesTab } from './tabs/QuotesTab';
 import { RatingTab } from './tabs/RatingTab';
+import { calcPaceStats, formatDate } from '../../utils/readingPace';
 
 const VALID_TABS = ['progress', 'sessions', 'quotes', 'rating'] as const;
 type TabValue = typeof VALID_TABS[number];
@@ -28,6 +30,7 @@ export function BookDetailPage() {
   const { id } = useParams<{ id: string }>();
   const bookId = parseInt(id!, 10);
   const book = useBook(bookId);
+  const sessions = useSessionsForBook(bookId);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -97,24 +100,57 @@ export function BookDetailPage() {
           ) : (
             <Box
               sx={{
-                width: 80, height: 110, borderRadius: 1, bgcolor: 'grey.100',
+                width: 80, height: 110, borderRadius: 1, bgcolor: 'background.paper',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}
             />
           )}
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            {book.genres && book.genres.length > 0 && (
+              <Chip label={book.genres[0].toUpperCase()} size="small" color="primary" sx={{ mb: 0.5, fontSize: '0.65rem' }} />
+            )}
             <Typography variant="h6" noWrap>{book.title}</Typography>
-            <Typography variant="body2" color="text.secondary">{book.author}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {book.author}{book.year ? ` · ${book.year}` : ''}
+            </Typography>
             <Chip
               label={STATUS_LABELS[book.status]}
               color={STATUS_COLORS[book.status]}
               size="small"
               sx={{ mt: 0.5, mb: 1 }}
             />
+            {book.currentPage != null && book.totalPages ? (
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                Pág {book.currentPage} de {book.totalPages}
+              </Typography>
+            ) : null}
             <ProgressBar value={book.currentProgress} />
           </Box>
         </Box>
       )}
+
+      {/* Pace stats grid */}
+      {book && sessions && sessions.length > 0 && (book.currentPage != null || book.totalPages) && (() => {
+        const pace = calcPaceStats(sessions, book);
+        const stats = [
+          { icon: '📅', value: pace.startDate ? formatDate(pace.startDate) : '—', label: 'Inicio de lectura' },
+          { icon: '⏱', value: pace.daysReading > 0 ? `${pace.daysReading} días` : '—', label: 'Tiempo leyendo' },
+          { icon: '🔥', value: pace.avgPacePerDay > 0 ? `${pace.avgPacePerDay} pág/día` : '—', label: 'Ritmo promedio' },
+          { icon: '🎯', value: pace.daysToFinish != null ? `${pace.daysToFinish} días` : '—', label: 'Para terminar' },
+        ];
+        return (
+          <Grid container spacing={1.5} sx={{ mb: 2 }}>
+            {stats.map(s => (
+              <Grid item xs={6} key={s.label}>
+                <Card sx={{ p: 1.5 }}>
+                  <Typography variant="body2">{s.icon} <strong>{s.value}</strong></Typography>
+                  <Typography variant="caption" color="text.secondary">{s.label}</Typography>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        );
+      })()}
 
       <Tabs value={tab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
         <Tab label="Progress" value="progress" />

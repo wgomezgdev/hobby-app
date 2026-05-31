@@ -15,6 +15,10 @@ export class ReadingPalDB extends Dexie {
       quotes: '++id, bookId, isFavorite, *tags',
       ratings: 'bookId',
     });
+    // v2: adds *genres multi-entry index; year/totalPages/currentPage are plain fields
+    this.version(2).stores({
+      books: '++id, status, title, author, createdAt, *genres',
+    });
   }
 }
 
