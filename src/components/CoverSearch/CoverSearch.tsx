@@ -12,16 +12,40 @@ interface Props {
   onSelect: (url: string) => void;
 }
 
-interface OLDoc {
-  cover_i?: number;
-  title?: string;
+interface BookResult {
+  id: string;
+  title: string;
+  thumbnail: string;
+  fullUrl: string;
+}
+
+function parseGoogleBooksResults(data: { items?: unknown[] }): BookResult[] {
+  if (!Array.isArray(data.items)) return [];
+  return data.items
+    .filter((item): item is { id: string; volumeInfo: { title?: string; imageLinks?: { thumbnail?: string } } } => {
+      const v = (item as { volumeInfo?: { imageLinks?: { thumbnail?: string } } }).volumeInfo;
+      return !!v?.imageLinks?.thumbnail;
+    })
+    .map(item => {
+      const raw = item.volumeInfo.imageLinks!.thumbnail!
+        .replace('http://', 'https://');
+      const full = raw
+        .replace('zoom=1', 'zoom=0')
+        .replace('&edge=curl', '');
+      return {
+        id: item.id,
+        title: item.volumeInfo.title ?? '',
+        thumbnail: raw,
+        fullUrl: full,
+      };
+    });
 }
 
 export function CoverSearch({ title, author, onSelect }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<OLDoc[]>([]);
+  const [results, setResults] = useState<BookResult[]>([]);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState(false);
 
@@ -42,12 +66,12 @@ export function CoverSearch({ title, author, onSelect }: Props) {
     setError(false);
     setResults([]);
     try {
-      const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query.trim())}&fields=cover_i,title&limit=20`;
+      const q = encodeURIComponent(query.trim());
+      const url = `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=20&printType=books&orderBy=relevance`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      const withCovers = (data.docs as OLDoc[]).filter(d => d.cover_i);
-      setResults(withCovers);
+      setResults(parseGoogleBooksResults(data));
     } catch (e) {
       console.error('[CoverSearch] fetch failed:', e);
       setError(true);
@@ -55,11 +79,6 @@ export function CoverSearch({ title, author, onSelect }: Props) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSelect = (coverId: number) => {
-    onSelect(`https://covers.openlibrary.org/b/id/${coverId}-L.jpg`);
-    handleClose();
   };
 
   return (
@@ -126,8 +145,8 @@ export function CoverSearch({ title, author, onSelect }: Props) {
             <ImageList cols={3} gap={8}>
               {results.map(r => (
                 <ImageListItem
-                  key={r.cover_i}
-                  onClick={() => handleSelect(r.cover_i!)}
+                  key={r.id}
+                  onClick={() => { onSelect(r.fullUrl); handleClose(); }}
                   sx={{
                     cursor: 'pointer',
                     borderRadius: 1,
@@ -137,8 +156,8 @@ export function CoverSearch({ title, author, onSelect }: Props) {
                   }}
                 >
                   <img
-                    src={`https://covers.openlibrary.org/b/id/${r.cover_i}-M.jpg`}
-                    alt={r.title ?? 'Book cover'}
+                    src={r.thumbnail}
+                    alt={r.title}
                     loading="lazy"
                     style={{ display: 'block', width: '100%' }}
                   />

@@ -31,10 +31,10 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/covers\.openlibrary\.org\//,
+            urlPattern: /^https:\/\/books\.google\.com\/books\/content/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'ol-covers',
+              cacheName: 'gbooks-covers',
               expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
