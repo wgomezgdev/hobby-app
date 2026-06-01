@@ -251,11 +251,11 @@ Import the snapshot. Verify all books, sessions, and quotes are restored exactly
 
 ### Design Language
 
-- **Theme**: Dark (deep navy background), no light mode in scope.
-- **Accent color**: Cyan/teal for primary CTAs, active states, FAB, and progress bars.
-- **Typography**: Clean sans-serif; large bold numbers for stats; uppercase small labels for form field captions.
+- **Theme**: Light warm — cream background (`#FFF8F2`), white paper surfaces (`#FFFFFF`).
+- **Accent color**: Terracotta-orange (`#E07940`) for primary CTAs, active states, FAB, and progress bars. Soft peach (`#F4A261`) for secondary elements.
+- **Typography**: Clean sans-serif; large bold numbers for stats; uppercase small labels for form field captions. Primary text `#2D1600`, secondary text `#7B5E3E`.
 - **Icons**: Material Icons (Google Fonts) throughout — `home`, `menu_book`, `bar_chart`, `person`, `add`, `check_circle`, `edit`, `share`, `arrow_back`, `more_vert`, `trending_up`, `photo_alt`.
-- **Cards**: Rounded corners, subtle elevation on dark surface; stat cards with teal-accent borders.
+- **Cards**: Rounded corners (12 px radius), warm shadow `rgba(120,60,0,0.08)`; bottom nav uses white background with top border `#F0E0D0`.
 
 ### Navigation Structure
 
@@ -263,63 +263,63 @@ Five-tab bottom navigation bar, always visible:
 
 | Tab | Icon | Label |
 |-----|------|-------|
-| 1 | `home` | Inicio |
-| 2 | `menu_book` | Biblioteca |
+| 1 | `home` | Home |
+| 2 | `menu_book` | Library |
 | 3 | `add` (FAB) | — |
 | 4 | `bar_chart` | Stats |
-| 5 | `person` | Perfil |
+| 5 | `person` | Profile |
 
-The center tab is a raised FAB (teal circle with white `add` icon) that opens the Add Book screen.
+The center tab is a raised FAB (terracotta circle with white `add` icon) that opens the Add Book screen. App version is displayed in a small caption above the nav bar.
 
-### Screen 1 — Home (`Inicio`)
+### Screen 1 — Home
 
-- **Header**: Personalized time-of-day greeting ("Buenos días, [Name] 👋") + "Mi Biblioteca" title + user avatar initials chip (top right).
-- **Stats row**: Three mini-cards side by side — Leídos (finished count), En progreso (reading count), Pendientes (want-to-read count).
-- **"Leyendo ahora" section**: Full-width card for the active book showing cover thumbnail, `● ACTIVO` badge, title, author, "Pág X de Y", and a teal progress bar with percentage.
-- **"Completados" section**: Horizontal scrollable row of finished book cover cards with title, author, and star rating below each. "Ver todo →" link navigates to a filtered library view.
+- **Header**: Personalized time-of-day greeting ("Good morning/afternoon/evening 👋") derived from local time.
+- **Stats row**: Three mini-cards side by side — Read (finished count), In Progress (reading count), Pending (want-to-read count).
+- **"Currently Reading" section**: Full-width card for the active book showing cover thumbnail, `● ACTIVE` badge, title, author, "Page X of Y", and a terracotta progress bar with percentage. When no active book, a "Start reading →" CTA links to the Library.
+- **"Completed" section**: Horizontal scrollable row of finished book cover cards with title and star rating below each. "See all →" link navigates to the Library filtered to Finished books. Section is hidden when no books are finished.
 
-### Screen 2 — Add / Edit Book (`Agregar Libro`)
+### Screen 2 — Add / Edit Book
 
 - **Header**: Back arrow (`arrow_back`) + screen title.
-- **Cover area**: Centered dashed-border rectangle with `photo_alt` icon and "Agregar portada" label; tapping opens camera/file picker.
+- **Cover area**: Centered dashed-border rectangle with `photo_alt` icon and "Add cover" label; tapping opens camera/file picker. Buttons row: Upload · Camera · Search online · Remove.
 - **Form fields** (in order):
-  1. TÍTULO DEL LIBRO — full-width text input.
-  2. AUTOR + AÑO — two-column row (text + 4-digit numeric).
-  3. ESTADO — single-select toggle chips: `📖 Leyendo` / `✅ Leído` / `⏳ Pendiente`.
-  4. TOTAL PÁGINAS + PÁGINA ACTUAL — two-column numeric row.
-  5. TU CALIFICACIÓN — 5-star interactive rating (tap a star to set 1–5).
-  6. GÉNERO — multi-select chips: Fantasía · Aventura · Ciencia Ficción · Romance · Thriller.
-- **Save button**: Full-width teal button "check_circle Guardar libro" pinned to the bottom.
+  1. BOOK TITLE — full-width text input.
+  2. AUTHOR + YEAR — two-column row (text + 4-digit numeric).
+  3. STATUS — single-select toggle chips: `📖 Reading` / `✅ Read` / `⏳ Pending`.
+  4. TOTAL PAGES + CURRENT PAGE — two-column numeric row.
+  5. GENRE — multi-select chips: Fantasy · Adventure · Science Fiction · Romance · Thriller.
+- **Save button**: Full-width terracotta button "check_circle Save Book" pinned to the bottom.
 
-### Screen 3 — Stats (`Estadísticas`)
+### Screen 3 — Stats
 
-- **Header**: "Estadísticas" title + "Tu progreso lector" subtitle.
-- **Year filter**: Row of pill buttons — current year (selected/teal), prior years, and "Todo".
-- **Libros leídos card**: Large bold count + "Meta anual · N libros" sub-label + `trending_up` badge with YoY change.
-- **Libros por mes chart**: Monthly bar chart (Jan–Dec); average per month shown top-right.
+- **Header**: "Statistics" title + "Your reading progress" subtitle.
+- **Year filter**: Row of pill chips — current year (selected/filled), prior years, and "All".
+- **Books read card**: Large bold count + "Books read · Annual goal: 50" sub-label + `trending_up` badge with YoY change percentage.
+- **Books per month chart**: Monthly bar chart (Jan–Dec, terracotta bars); average per month shown top-right.
 - **Side-by-side summary row**:
-  - Left: Genre donut chart with legend (Fantasía, Ciencia, Ficción, Otro with percentages).
-  - Right (stacked): PÁGINAS LEÍDAS large number + "este año"; MEJOR MES text + book count.
+  - Left: Genre donut chart with legend (genre name + percentage, up to 4 entries).
+  - Right (stacked): PAGES READ large number + time scope label; BEST MONTH name + book count.
 
 ### Screen 4 — Book Detail
 
-- **Header**: Back arrow + `share` + `more_vert` (kebab) icons.
+- **Header**: Back arrow + delete icon (top-right) + edit icon.
 - **Cover hero**: Book cover image, full-width.
-- **Metadata**: Genre badge chip, title (large bold), "Author · Year", star display with numeric value (e.g., ★★★★☆ 4.0).
-- **PROGRESO DE LECTURA section**: Large percentage + "Pág X de Y" + teal progress bar + "edit Actualizar progreso" button.
-- **Reading stats 2×2 grid**:
-  - 📅 Start date — Inicio de lectura
-  - ⏱ Days reading — Tiempo leyendo
-  - 🔥 Daily page pace — Ritmo promedio
-  - 🎯 Days to finish — Para terminar
-- **Mis Notas section**: Saved quotes listed with "PÁG. N" label and quoted text.
+- **Metadata**: Genre badge chip, title (large bold), "Author · Year" subtitle, star display with numeric value.
+- **Progress section**: Terracotta LinearProgress bar + "Page X of Y" text.
+- **Reading pace stats 2×2 grid** (shown when sessions exist):
+  - 📅 Started reading — date of first session
+  - ⏱ Days reading — count of unique reading days
+  - 🔥 Avg pace — pages per day
+  - 🎯 To finish — estimated days remaining
+- **Tabs**: Progress · Sessions · Quotes · Rating
 
 ### Design Decisions
 
-- Progress is tracked **by page** (current page + total pages), displayed as both "Pág X de Y" and a derived percentage. This supersedes the earlier assumption that progress is percentage-only.
-- Genre is a **multi-select chip field** (predefined values: Fantasía, Aventura, Ciencia Ficción, Romance, Thriller).
-- **Year (Año)** is a metadata field on the book alongside title, author, status, and cover.
-- The **Home screen** is the app's default landing screen and is distinct from the Biblioteca screen.
+- Progress is tracked **by page** (current page + total pages), displayed as both "Page X of Y" and a derived percentage. This supersedes the earlier assumption that progress is percentage-only.
+- Genre is a **multi-select chip field** (predefined values: Fantasy, Adventure, Science Fiction, Romance, Thriller).
+- **Year** is a metadata field on the book alongside title, author, status, and cover.
+- The **Home screen** is the app's default landing screen (`/`) and is distinct from the Library screen (`/library`).
+- All UI text is in **English**. The warm light theme (cream + terracotta) replaced the originally planned dark theme during implementation.
 
 ---
 
@@ -372,16 +372,16 @@ The center tab is a raised FAB (teal circle with white `add` icon) that opens th
   deleted in the same operation.
 - **FR-027**: The system MUST show a confirmation dialog before executing a delete, clearly
   warning that all associated data will also be removed.
-- **FR-028**: The Home screen MUST show a personalized greeting, a stats summary row
-  (finished / reading / want-to-read counts), a "Leyendo ahora" card for the active book,
-  and a horizontal "Completados" scroll row with a "Ver todo" link.
-- **FR-029**: Books MUST support a multi-select Genre field. Predefined values: Fantasía,
-  Aventura, Ciencia Ficción, Romance, Thriller.
+- **FR-028**: The Home screen MUST show a personalized time-of-day greeting, a stats summary
+  row (finished / reading / want-to-read counts), a "Currently Reading" card for the active
+  book, and a horizontal "Completed" scroll row with a "See all" link.
+- **FR-029**: Books MUST support a multi-select Genre field. Predefined values: Fantasy,
+  Adventure, Science Fiction, Romance, Thriller.
 - **FR-030**: Books MUST store a total-page count and a current-page number. Progress
   percentage is derived from these two values (currentPage / totalPages × 100).
 - **FR-031**: The Book Detail screen MUST display derived reading-pace stats: start date,
   total days reading, average pages per day, and estimated days to finish.
-- **FR-032**: The Stats screen MUST support a year filter (individual years + "Todo") and
+- **FR-032**: The Stats screen MUST support a year filter (individual years + "All") and
   display: total books read vs. annual goal, monthly bar chart, genre donut chart,
   total pages read, and best reading month.
 
@@ -426,8 +426,9 @@ The center tab is a raised FAB (teal circle with white `add` icon) that opens th
 - The app is used by a single person on a single browser — no multi-user or multi-device
   sync is required.
 - The browser's local storage is not cleared between sessions (normal browser behavior).
-- Cover images are provided by the user as photo files from their device; no automatic
-  image lookup is in scope.
+- Cover images can be uploaded from the device or searched via the Open Library API by
+  title and author (FR-021–FR-024). Covers fetched online are stored as URLs; uploaded
+  covers are stored as base64 data URIs. Both render identically via `<img src>`.
 - Reading progress is tracked by current page and total pages; the percentage is derived
   and displayed alongside the raw page fraction ("Pág X de Y").
 - A book can only have one rating; updating the rating replaces the previous one.

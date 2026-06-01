@@ -606,6 +606,11 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Phase 11 — Deployment (Vercel) | T083–T090 | 5 of 8 | ✅ done |
 | Phase 17 — UX Polish (high impact) | T121–T124 | 4 of 4 | ✅ done |
 | Phase 18 — Bug Fix: Ranking finished books | T125 | 1 of 1 | ✅ done |
+| Phase 19 — Warm Light Theme | T126–T128 | 3 of 3 | ✅ done |
+| Phase 20 — Book Model Updates | T129–T134 | 6 of 6 | ✅ done |
+| Phase 21 — Home Screen | T135–T137 | 3 of 3 | ✅ done |
+| Phase 22 — Pace Stats | T138–T139 | 2 of 2 | ✅ done |
+| Phase 23 — Stats Screen | T140–T146 | 7 of 7 | ✅ done |
 | Phase 14 — AI Cover Scan (Gemini) | T097–T106 | 4 of 10 | ⏳ planned |
 | Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ planned |
 | Phase 16 — Supabase Cloud Sync | T112–T120 | 5 of 9 | ⏳ planned |
@@ -748,57 +753,57 @@ queue and sync when reconnected; data survives a full browser storage clear.
 
 ---
 
-## Phase 19: Dark Theme — Visual Overhaul
+## Phase 19: Warm Light Theme — Visual Overhaul ✅ DONE
 
-**Goal**: Restyle the entire app to match the dark-navy + cyan design from the UI mockups.
-All screens inherit the new palette automatically through MUI's theming system.
+**Goal**: Restyle the entire app with a warm light palette. All screens inherit the new
+palette automatically through MUI's theming system.
 
-**Reference**: `misc/ui-design/` screens (all 4 screens share the same dark theme).
+**Reference**: `misc/ui-design/` screens (all 4 screens show the warm light theme).
 
-**Independent Test**: Launch app → confirm dark background on every screen → confirm cyan
-accent on buttons, FABs, progress bars, active chips → confirm no white surfaces remain.
+**Note**: Originally planned as dark-navy + cyan; pivoted to warm light (cream + terracotta)
+during implementation.
 
-- [ ] T126 Create `src/theme/theme.ts` with MUI `createTheme`: `palette.mode = 'dark'`,
-  `primary.main = '#00BCD4'` (cyan), `background.default = '#0D1117'`,
-  `background.paper = '#161B22'`; export as `appTheme`
-- [ ] T127 Wrap `App.tsx` with `<ThemeProvider theme={appTheme}>` and `<CssBaseline />`
-- [ ] T128 Replace the top `AppBar` in `Layout.tsx` with MUI `BottomNavigation` +
-  `BottomNavigationAction` pinned at the bottom (5 tabs: Inicio/Biblioteca/—/Stats/Perfil);
-  overlay a centered `Fab` (cyan, `add` icon) for the middle slot using negative `marginTop`
-  trick; update `App.tsx` routes: `/` → `HomePage`, `/library` → `LibraryPage` (existing root
-  route moves to `/library`)
+- [x] T126 Create `src/theme/theme.ts` with MUI `createTheme`: `palette.mode = 'light'`,
+  `primary.main = '#E07940'` (terracotta), `background.default = '#FFF8F2'` (cream),
+  `background.paper = '#FFFFFF'`; export as `appTheme`
+- [x] T127 Wrap `App.tsx` with `<ThemeProvider theme={appTheme}>` and `<CssBaseline />`
+- [x] T128 Replace the top `AppBar` in `Layout.tsx` with MUI `BottomNavigation` +
+  `BottomNavigationAction` pinned at the bottom (5 tabs: Home/Library/—/Stats/Profile);
+  overlay a centered `Fab` (terracotta, `add` icon) for the middle slot; display app version
+  caption above the nav panel; update `App.tsx` routes: `/` → `HomePage`, `/library` →
+  `LibraryPage`
 
-**Checkpoint**: Dark theme on all screens, bottom nav functional, FAB opens Add Book.
+**Checkpoint**: Warm light theme on all screens, bottom nav functional, FAB opens Add Book.
 
 ---
 
-## Phase 20: Book Model Updates (FR-029, FR-030)
+## Phase 20: Book Model Updates (FR-029, FR-030) ✅ DONE
 
 **Goal**: Books gain publication year, page tracking (total + current), and genre tags.
 Forms updated to match the Add Book mockup (Screen 2).
 
 **Independent Test**: Add a book with Year = 2007, Total Pages = 662, Current Page = 512,
-Genres = [Fantasía, Aventura] → save → open detail → confirm "Pág 512 de 662" shown →
+Genres = [Fantasy, Adventure] → save → open detail → confirm "Page 512 of 662" shown →
 confirm 77% progress → edit the book → confirm all fields pre-filled correctly.
 
-- [ ] T129 Update `Book` interface in `src/types/entities.ts` — add `year?: number`,
+- [x] T129 Update `Book` interface in `src/types/entities.ts` — add `year?: number`,
   `totalPages?: number`, `currentPage?: number`, `genres: string[]`; add `Genre` type
-- [ ] T130 Bump Dexie schema to version 2 in `src/db/db.ts` — add `*genres` multi-entry
+- [x] T130 Bump Dexie schema to version 2 in `src/db/db.ts` — add `*genres` multi-entry
   index on `books` table; existing books get `genres: []` on migration
-- [ ] T131 Update `bookRepository.ts` `addBook` / `updateBook` to:
+- [x] T131 Update `bookRepository.ts` `addBook` / `updateBook` to:
   - Accept and persist the new fields
   - When `currentPage` and `totalPages` are both set and `> 0`, derive and store
     `currentProgress = Math.round((currentPage / totalPages) * 100)` (capped at 100)
-- [ ] T132 Update `AddEditBookPage` form to match Screen 2 mockup:
-  - Add AÑO field (numeric, 4-digit, optional) beside AUTOR in a two-column row
-  - Add TOTAL PÁGINAS + PÁGINA ACTUAL side-by-side numeric row
-  - Add GÉNERO multi-select chips (Fantasía, Aventura, Ciencia Ficción, Romance, Thriller)
-    using MUI `Chip` toggle pattern (selected = filled cyan, unselected = outlined)
+- [x] T132 Update `AddEditBookPage` form to match Screen 2 mockup:
+  - Add YEAR field (numeric, 4-digit, optional) beside AUTHOR in a two-column row
+  - Add TOTAL PAGES + CURRENT PAGE side-by-side numeric row
+  - Add GENRE multi-select chips (Fantasy, Adventure, Science Fiction, Romance, Thriller)
+    using MUI `Chip` toggle pattern (selected = filled terracotta, unselected = outlined)
   - Wire all new fields through React Hook Form `Controller`
-- [ ] T133 [P] Update `BookCard` to display page progress when available:
-  `currentPage` and `totalPages` set → show "Pág X de Y" below title; fall back to
+- [x] T133 [P] Update `BookCard` to display page progress when available:
+  `currentPage` and `totalPages` set → show "Page X of Y" below title; fall back to
   "X%" (existing) when page data absent
-- [ ] T134 [P] Update `BookDetailPage` header to show genre badge chip and "Author · Year"
+- [x] T134 [P] Update `BookDetailPage` header to show genre badge chip and "Author · Year"
   subtitle when year is set
 
 **Checkpoint**: Add Book form has all new fields, saved books show page progress and genre
@@ -806,7 +811,7 @@ on cards and detail page, older books without page data still display correctly.
 
 ---
 
-## Phase 21: Home Screen (FR-028)
+## Phase 21: Home Screen (FR-028) ✅ DONE
 
 **Goal**: A dedicated Home dashboard replaces the library as the app's landing screen.
 Shows greeting, stats row, currently-reading card, and a completed-books scroll.
@@ -815,36 +820,34 @@ Shows greeting, stats row, currently-reading card, and a completed-books scroll.
 
 **Independent Test**: Open app → confirm Home screen loads (not Library) → confirm greeting
 changes by time of day → confirm stats row counts match actual book statuses → confirm
-"Leyendo ahora" card shows the active book with progress → tap "Ver todo →" → confirm
+"Currently Reading" card shows the active book with progress → tap "See all →" → confirm
 Library filtered to Finished books.
 
-- [ ] T135 Create `src/hooks/useHomeData.ts` using `useLiveQuery`:
+- [x] T135 Create `src/hooks/useHomeData.ts` using `useLiveQuery`:
   - `readingCount`: books where `status === 'READING'`
   - `finishedCount`: books where `status === 'FINISHED'`
   - `pendingCount`: books where `status === 'WANT_TO_READ'`
   - `currentBook`: first book where `status === 'READING'` (or `undefined`)
   - `recentlyFinished`: up to 8 books where `status === 'FINISHED'` ordered by `updatedAt desc`
-- [ ] T136 Create `src/pages/HomePage/HomePage.tsx`:
-  - **Header**: time-of-day greeting ("Buenos días/tardes/noches, [name] 👋") + "Mi
-    Biblioteca" title + user initials `Avatar` (teal, top right — derive initials from
-    first book's author as placeholder until a Profile screen exists)
-  - **Stats row**: three `Card` components side by side — Leídos / En progreso / Pendientes
+- [x] T136 Create `src/pages/HomePage/HomePage.tsx`:
+  - **Header**: time-of-day greeting ("Good morning/afternoon/evening 👋") derived from local time
+  - **Stats row**: three `Card` components side by side — Read / In Progress / Pending
     with large count number and label
-  - **"Leyendo ahora" section**: when `currentBook` is set, show full-width card with
-    cover thumbnail, `● ACTIVO` chip, title, author, "Pág X de Y" or "X%", teal
-    `LinearProgress`; when no active book, show a CTA chip "Empieza a leer →" linking to Library
-  - **"Completados" section**: "Completados" label + "Ver todo →" `Link` (routes to
+  - **"Currently Reading" section**: when `currentBook` is set, show full-width card with
+    cover thumbnail, `● ACTIVE` chip, title, author, "Page X of Y" or "X%", terracotta
+    `LinearProgress`; when no active book, show a CTA chip linking to Library
+  - **"Completed" section**: "Completed" label + "See all →" `Link` (routes to
     `/library?status=finished`); horizontal `Box` with `overflow-x: auto` rendering
-    `recentlyFinished` as small `BookCard` chips (cover + title + stars); empty state hidden
-    (section omitted when `finishedCount === 0`)
-- [ ] T137 [P] Register `HomePage` at `/` in `App.tsx`; move `LibraryPage` to `/library`
+    `recentlyFinished` as small `BookCard` chips (cover + title + stars); section omitted
+    when `finishedCount === 0`
+- [x] T137 [P] Register `HomePage` at `/` in `App.tsx`; move `LibraryPage` to `/library`
   (update all internal `navigate('/')` calls that mean "go to library" to `navigate('/library')`)
 
 **Checkpoint**: Home screen is the app entry point with live stats and currently-reading card.
 
 ---
 
-## Phase 22: Reading Pace Stats on Book Detail (FR-031)
+## Phase 22: Reading Pace Stats on Book Detail (FR-031) ✅ DONE
 
 **Goal**: The Book Detail screen shows a 2×2 stats grid with start date, days reading,
 daily pace, and estimated days to finish.
@@ -855,7 +858,7 @@ daily pace, and estimated days to finish.
 confirm start date matches first session date → confirm days reading count → confirm pace
 (pages/day) and ETA (days to finish) are reasonable numbers.
 
-- [ ] T138 Create `src/utils/readingPace.ts` with pure functions (no DB calls):
+- [x] T138 Create `src/utils/readingPace.ts` with pure functions (no DB calls):
   ```typescript
   interface PaceStats {
     startDate: Date | null;       // date of first session
@@ -864,12 +867,13 @@ confirm start date matches first session date → confirm days reading count →
     daysToFinish: number | null;  // (totalPages - currentPage) / avgPace (null if no pace)
   }
   export function calcPaceStats(sessions: ReadingSession[], book: Book): PaceStats
+  export function formatDate(date: Date): string   // returns "D MMM" via en-US locale
   ```
-- [ ] T139 Add 2×2 stats grid to `BookDetailPage` below the progress section:
-  - 📅 Start date (formatted "D MMM")
-  - ⏱ Days reading ("N días")
-  - 🔥 Daily pace ("N pág/día")
-  - 🎯 Days to finish ("N días" or "—" when not calculable)
+- [x] T139 Add 2×2 stats grid to `BookDetailPage` below the progress section:
+  - 📅 Started reading (formatted date of first session)
+  - ⏱ Days reading (unique calendar days count)
+  - 🔥 Avg pace (pages/day)
+  - 🎯 To finish (estimated days or "—" when not calculable)
   - Use MUI `Grid` 2-column layout; each cell: icon + bold number + muted label
   - Only render section when `sessions.length > 0` and at least one of `totalPages`/`currentPage` is set
 
@@ -877,7 +881,7 @@ confirm start date matches first session date → confirm days reading count →
 
 ---
 
-## Phase 23: Stats Screen (FR-032)
+## Phase 23: Stats Screen (FR-032) ✅ DONE
 
 **Goal**: A dedicated Stats screen shows reading progress over time — books read, monthly
 bar chart, genre breakdown, pages read, and best month.
@@ -889,32 +893,34 @@ open Stats → confirm books-read count matches → confirm monthly bar chart sh
 months with activity → confirm genre donut reflects book genres → switch year filter → confirm
 counts update.
 
-- [ ] T140 Install `recharts`: `npm install recharts @types/recharts` — lightweight charting
-  library; no heavy dependencies
-- [ ] T141 Create `src/stores/statsUiStore.ts` (Zustand): `selectedYear: number | 'all'`
+- [x] T140 Install `recharts`: `npm install recharts` — lightweight charting library
+- [x] T141 Create `src/stores/statsUiStore.ts` (Zustand): `selectedYear: number | 'all'`
   defaulting to current year; `setYear` action
-- [ ] T142 Create `src/utils/statsAggregations.ts` with pure functions:
+- [x] T142 Create `src/utils/statsAggregations.ts` with pure functions:
   - `getBooksReadByYear(books, year)` → count of FINISHED books (filter by `updatedAt`)
   - `getBooksByMonth(books, year)` → `{ month: string; count: number }[]` (Jan–Dec)
+  - `getAvgPerMonth(books, year)` → average finished books per month (number)
   - `getGenreBreakdown(books)` → `{ genre: string; count: number; pct: number }[]`
-  - `getTotalPagesRead(books, sessions, year)` → sum of `progressDelta` * `totalPages/100` for sessions in year
+  - `getTotalPagesRead(books, year)` → sum of `totalPages` for FINISHED books in year
   - `getBestMonth(books, year)` → `{ month: string; count: number }` — month with most finished books
-- [ ] T143 Create `src/hooks/useStats.ts` with `useLiveQuery` wrappers calling the
+  - `getYoyChange(books, year)` → percentage change vs prior year (number | null)
+  - `getAvailableYears(books)` → sorted unique years from FINISHED books' `updatedAt`
+- [x] T143 Create `src/hooks/useStats.ts` with `useLiveQuery` wrappers calling the
   aggregation utils; depends on `selectedYear` from `statsUiStore`
-- [ ] T144 Create `src/pages/StatsPage/StatsPage.tsx`:
-  - **Header**: "Estadísticas" title + "Tu progreso lector" subtitle
-  - **Year filter**: row of MUI `Chip` buttons for available years + "Todo"; active = filled cyan
-  - **Libros leídos card**: large count + "Meta anual · 50 libros" + `TrendingUp` badge with
+- [x] T144 Create `src/pages/StatsPage/StatsPage.tsx`:
+  - **Header**: "Statistics" title + "Your reading progress" subtitle
+  - **Year filter**: row of MUI `Chip` buttons for available years + "All"; active = filled terracotta
+  - **Books read card**: large count + "Books read · Annual goal: 50" + `TrendingUp` badge with
     YoY change percentage (compare current year vs prior year)
-  - **Libros por mes**: `recharts` `BarChart` (responsive, dark grid, cyan bars); show average
-    per month in top-right corner
+  - **Books per month**: `recharts` `BarChart` (responsive, warm colors, terracotta bars for
+    non-zero months); show average per month in top-right corner
   - **Bottom row** (two cards side by side):
     - Left: Genre donut (`recharts` `PieChart` with `innerRadius`) + legend list with percentage
-    - Right (stacked): PÁGINAS LEÍDAS count; MEJOR MES month name + fire emoji
+    - Right (stacked): PAGES READ count; BEST MONTH name + fire emoji
   - Show skeleton placeholders while `useLiveQuery` is `undefined`
-  - Empty state when no finished books: "Termina tu primer libro para ver estadísticas"
-- [ ] T145 [P] Register `StatsPage` at `/stats` in `App.tsx`; wire Stats tab in `BottomNav`
-- [ ] T146 [P] Update `BottomNav` active tab detection to highlight correctly for `/`,
+  - Empty state when no finished books: "Finish your first book to see statistics"
+- [x] T145 [P] Register `StatsPage` at `/stats` in `App.tsx`; wire Stats tab in `BottomNav`
+- [x] T146 [P] Update `BottomNav` active tab detection to highlight correctly for `/`,
   `/library`, `/stats`, and `/books/…` routes
 
 **Checkpoint**: Stats screen shows correct aggregations, charts render, year filter changes
@@ -926,11 +932,11 @@ data, empty state shown when no books are finished.
 
 | Phase | Tasks | Status |
 |-------|-------|--------|
-| Phase 19 — Dark Theme | T126–T128 | ⏳ planned |
-| Phase 20 — Book Model Updates | T129–T134 | ⏳ planned |
-| Phase 21 — Home Screen | T135–T137 | ⏳ planned |
-| Phase 22 — Pace Stats | T138–T139 | ⏳ planned |
-| Phase 23 — Stats Screen | T140–T146 | ⏳ planned |
+| Phase 19 — Warm Light Theme | T126–T128 | ✅ done |
+| Phase 20 — Book Model Updates | T129–T134 | ✅ done |
+| Phase 21 — Home Screen | T135–T137 | ✅ done |
+| Phase 22 — Pace Stats | T138–T139 | ✅ done |
+| Phase 23 — Stats Screen | T140–T146 | ✅ done |
 
 ### Execution Order
 
