@@ -1,6 +1,6 @@
 # Implementation Plan: Reading Pal — UI Design Phase
 
-**Branch**: `docs/ui-design-spec` | **Date**: 2026-05-30 | **Spec**: [spec.md](spec.md)
+**Branch**: `feat/ui-redesign` | **Date**: 2026-05-30 | **Spec**: [spec.md](spec.md)
 
 **Input**: Feature specification from `specs/002-reading-pal-app/spec.md`
 
@@ -8,10 +8,10 @@
 
 ## Summary
 
-The Reading Pal web SPA (v0.4.0) has a complete core feature set (FR-001–FR-027, US1–US9).
-This plan covers the next increment: implementing the UI design reference screens added in
-the spec (FR-028–FR-032) — a dark-theme visual overhaul, Home dashboard screen, page-based
-progress tracking, genre tagging, reading-pace stats on the detail screen, and a Stats screen.
+The Reading Pal web SPA (v0.5.0) has a complete core feature set (FR-001–FR-032, US1–US9).
+This plan covers the increment that shipped FR-028–FR-032 — a warm light theme visual overhaul
+(cream `#FFF8F2` + terracotta `#E07940`), Home dashboard screen, page-based progress tracking,
+genre tagging, reading-pace stats on the detail screen, and a Stats screen.
 All work stays within the existing Vite + React + MUI + Dexie stack.
 
 ---
@@ -108,7 +108,7 @@ src/
 ├── stores/
 │   └── statsUiStore.ts    ← NEW: year filter state for StatsPage
 ├── theme/
-│   └── theme.ts           ← NEW (or update): dark theme with cyan accent
+│   └── theme.ts           ← NEW: warm light theme (cream + terracotta)
 ├── types/
 │   └── entities.ts        ← update: Book + new fields
 └── db/
@@ -130,7 +130,7 @@ All architectural decisions for the new phases resolved from existing context:
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Charting library | `recharts` | Lightweight, React-first, tree-shakeable; avoids heavy Chart.js. Already used in similar MUI apps. |
-| Dark theme | MUI `createTheme({ palette: { mode: 'dark' } })` + cyan primary | Zero new dependency; MUI dark mode flips all surface colours automatically. Cyan accent: `primary.main = #00BCD4`. |
+| Warm light theme | MUI `createTheme({ palette: { mode: 'light' } })` + terracotta primary | Zero new dependency; warm cream background `#FFF8F2`, terracotta accent `primary.main = #E07940`, dark-brown text `#2D1600`. Originally planned as dark/cyan; pivoted to warm light during implementation. |
 | Progress tracking | Keep `currentProgress: number` (0–100); add `totalPages` + `currentPage` as optional; derive percentage | Backward compat with all v1 books; forms that don't fill page fields still work. |
 | Genres storage | `genres: string[]` multi-entry index in Dexie | Same pattern as `Quote.tags`; enables future filter-by-genre without schema change. |
 | Pace stats | Compute from `sessions` array in a hook; no extra DB columns | Start date = `sessions[0].startedAt`, days reading = unique session dates count, avg pace = `currentPage / daysSinceStart`, ETA = `(totalPages - currentPage) / avgPace`. |
