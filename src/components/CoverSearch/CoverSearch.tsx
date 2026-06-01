@@ -71,12 +71,10 @@ function parseOpenLibrary(data: { docs?: OLDoc[] }): BookResult[] {
     });
 }
 
-async function fetchOpenLibrary(title: string, author: string): Promise<BookResult[]> {
-  const params = new URLSearchParams({ fields: 'cover_i,title', limit: '20' });
-  if (title) params.set('title', title);
-  if (author) params.set('author', author);
-  if (!title && !author) params.set('q', title + ' ' + author);
-  const res = await fetch(`https://openlibrary.org/search.json?${params}`);
+// Uses plain string URL to avoid URLSearchParams encoding commas in field names
+async function fetchOpenLibrary(query: string): Promise<BookResult[]> {
+  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&fields=cover_i,title&limit=20`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`ol:${res.status}`);
   return parseOpenLibrary(await res.json());
 }
@@ -102,19 +100,30 @@ export function CoverSearch({ title, author, onSelect }: Props) {
   const handleClose = () => setOpen(false);
 
   const search = async () => {
-    if (!query.trim()) return;
+    const q = query.trim();
+    if (!q) return;
     setLoading(true);
     setSearched(true);
     setError(false);
     setResults([]);
+
+    // Try Google Books; on any failure fall through to Open Library
     try {
-      let books = await fetchGoogleBooks(query.trim()).catch(() => null);
-      if (!books || books.length === 0) {
-        books = await fetchOpenLibrary(title, author);
+      const books = await fetchGoogleBooks(q);
+      if (books.length > 0) {
+        setResults(books);
+        setLoading(false);
+        return;
       }
-      setResults(books);
+    } catch {
+      // quota / network — continue to fallback
+    }
+
+    // Open Library fallback — uses the same query the user typed
+    try {
+      setResults(await fetchOpenLibrary(q));
     } catch (e) {
-      console.error('[CoverSearch]', e);
+      console.error('[CoverSearch] both sources failed:', e);
       setError(true);
     } finally {
       setLoading(false);
