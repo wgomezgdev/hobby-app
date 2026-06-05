@@ -384,6 +384,17 @@ The center tab is a raised FAB (terracotta circle with white `add` icon) that op
 - **FR-032**: The Stats screen MUST support a year filter (individual years + "All") and
   display: total books read vs. annual goal, monthly bar chart, genre donut chart,
   total pages read, and best reading month.
+- **FR-033**: The Settings screen MUST provide an "Import from Goodreads" option that accepts
+  a Goodreads profile URL (e.g. `https://www.goodreads.com/user/show/12345678`) or a bare
+  user ID and fetches the user's read, currently-reading, and to-read shelves.
+- **FR-034**: The system MUST proxy Goodreads RSS requests through a Vercel Edge Function
+  (`/api/goodreads`) to avoid CORS restrictions in the browser.
+- **FR-035**: Before importing, the app MUST display a preview summary showing total books
+  found by status and how many are already in the library (will be skipped).
+- **FR-036**: The import MUST be additive only — books matched by title + author (case-insensitive)
+  MUST be skipped; no existing data is overwritten.
+- **FR-037**: For books imported from the "read" shelf that carry a Goodreads star rating (1–5),
+  the system MUST also create a corresponding Rating record.
 
 ### Key Entities
 
@@ -435,6 +446,49 @@ The center tab is a raised FAB (terracotta circle with white `add` icon) that op
 - The snapshot export/import is the only mechanism for moving data between browsers or
   devices.
 - Internet connectivity is never assumed or required.
+
+---
+
+---
+
+### User Story 13 — Goodreads Library Import (Priority: P2)
+
+A reader who already uses Goodreads wants to seed their Reading Pal library with all their
+existing books without re-entering them one by one — by simply pasting their public Goodreads
+profile URL.
+
+**Why this feature**: Manual entry of a large existing library is a significant barrier to
+adoption. A one-click import removes that friction and makes the app immediately useful for
+readers who have curated their Goodreads shelves over years.
+
+**Technology**: Goodreads public RSS feeds (still available despite the API shutdown).
+A Vercel Edge Function proxies the requests to avoid browser CORS restrictions.
+- Read shelf: `https://www.goodreads.com/review/list_rss/{userId}?shelf=read`
+- Currently reading: `https://www.goodreads.com/review/list_rss/{userId}?shelf=currently-reading`
+- To-read: `https://www.goodreads.com/review/list_rss/{userId}?shelf=to-read`
+
+**Acceptance Scenarios**:
+
+1. **Given** the user opens Settings, **When** they tap "Import from Goodreads", **Then** a
+   dialog opens with a text field for their Goodreads profile URL or user ID.
+2. **Given** the user enters a valid Goodreads URL or user ID and taps "Load Books",
+   **When** the app fetches all three shelves, **Then** a preview summary shows total books
+   found broken down by status (read / currently reading / to-read) and the number of books
+   that are already in the library (which will be skipped).
+3. **Given** the preview is shown, **When** the user taps "Import", **Then** all new books
+   are added to the library with correct statuses, page counts, publication years, cover
+   images, and ratings (for read books with a Goodreads star rating).
+4. **Given** a book in the Goodreads export already exists in the library (same title and
+   author), **When** the import runs, **Then** that book is silently skipped and existing
+   data is not overwritten.
+5. **Given** the Goodreads user ID is invalid or the profile is private, **When** the fetch
+   fails, **Then** a clear error message is shown and no data is changed.
+6. **Given** the preview is shown, **When** the user taps "Cancel", **Then** the dialog
+   closes with no data changed.
+
+**Independent Test**: Enter `https://www.goodreads.com/user/show/34364419` → tap "Load Books"
+→ confirm preview shows correct counts → tap "Import" → confirm books appear in the library
+with correct statuses → re-run import → confirm "X books already in library" and 0 new books.
 
 ---
 

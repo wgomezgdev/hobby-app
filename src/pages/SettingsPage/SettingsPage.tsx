@@ -3,12 +3,14 @@ import {
   Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText,
   DialogTitle, Divider, Snackbar, Stack, Typography,
 } from '@mui/material';
-import { Download, Upload } from '@mui/icons-material';
+import { AutoStories, Download, Upload } from '@mui/icons-material';
 import { exportSnapshot, importSnapshot } from '../../utils/snapshot';
+import { GoodreadsImport } from '../../components/GoodreadsImport/GoodreadsImport';
 
 export function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [goodreadsOpen, setGoodreadsOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
 
   const handleExport = async () => {
@@ -59,6 +61,24 @@ export function SettingsPage() {
         <Divider />
 
         <Box>
+          <Typography variant="h6" sx={{ mb: 1 }}>Import from Goodreads</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Seed your library from your public Goodreads profile. Paste your profile URL or
+            user ID to import all shelves (read, currently reading, to-read). Existing books
+            are never overwritten.
+          </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<AutoStories />}
+            onClick={() => setGoodreadsOpen(true)}
+          >
+            Import from Goodreads
+          </Button>
+        </Box>
+
+        <Divider />
+
+        <Box>
           <Typography variant="h6" sx={{ mb: 1 }}>Import Backup</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Restore data from a previously exported JSON file. This will replace all current data.
@@ -79,6 +99,8 @@ export function SettingsPage() {
           />
         </Box>
       </Stack>
+
+      <GoodreadsImport open={goodreadsOpen} onClose={() => setGoodreadsOpen(false)} />
 
       <Dialog
         open={!!pendingFile}

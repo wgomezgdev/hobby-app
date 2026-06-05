@@ -614,6 +614,79 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Phase 14 — AI Cover Scan (Gemini) | T097–T106 | 4 of 10 | ⏳ planned |
 | Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ planned |
 | Phase 16 — Supabase Cloud Sync | T112–T120 | 5 of 9 | ⏳ planned |
+| Phase 24 — Goodreads Library Import | T147–T151 | 4 of 5 | ✅ done |
+
+---
+
+## Phase 24: User Story 13 — Goodreads Library Import ✅ DONE
+
+**Goal**: Users can import their entire Goodreads library (read, currently reading, to-read)
+by pasting their public profile URL, via a Vercel Edge Function that proxies the RSS feeds
+to avoid CORS.
+
+**Prerequisites**: App is deployed on Vercel (already done, Phase 11 ✅).
+
+**Architecture**:
+- `api/goodreads.ts` — Vercel Edge Function; accepts `?userId=<id>&shelf=<shelf>`, fetches
+  the corresponding Goodreads RSS, and returns XML with CORS headers. No external dependencies.
+- `src/utils/goodreadsParser.ts` — browser-side parser; uses `DOMParser` + `document.createElement`
+  to extract title, author, pages, year, rating, cover URL, and status from each RSS item.
+- `src/components/GoodreadsImport/GoodreadsImport.tsx` — MUI Dialog; three phases:
+  (1) URL input, (2) preview with counts + duplicate count, (3) import progress.
+- `SettingsPage` update — new "Import from Goodreads" section below Export/Import backup.
+
+**Data mapping**:
+
+| Goodreads RSS field | App field |
+|---|---|
+| `name` (in description) | `title` |
+| `author` (in description) | `author` |
+| `num_pages` (in description) | `totalPages` |
+| `rating` (in description) | `Rating.stars` (only when > 0) |
+| `book published` (in description) | `year` |
+| cover `<img>` in description | `cover` (URL) |
+| shelf param | `status` (read→FINISHED, currently-reading→READING, to-read→WANT_TO_READ) |
+
+**Duplicate detection**: title + author lower-cased string match against existing books.
+
+**Independent Test**: Paste `https://www.goodreads.com/user/show/34364419` → load books
+→ preview shows counts → import → verify books in library → import again → 0 new books,
+all skipped.
+
+- [x] T147 Create `api/goodreads.ts` Vercel Edge Function: accepts `?userId` + `?shelf`,
+  validates inputs (userId digits-only, shelf one of `read|currently-reading|to-read`),
+  fetches `https://www.goodreads.com/review/list_rss/{userId}?shelf={shelf}` with a
+  browser-like `User-Agent`, returns XML with `Access-Control-Allow-Origin: *` and
+  `Cache-Control: public, max-age=300`; returns 400 on bad params, 502 on upstream failure
+- [x] T148 Create `src/utils/goodreadsParser.ts`:
+  - `parseRSSShelf(xml: string, shelf: string): GoodreadsBookRaw[]` — uses `DOMParser` to
+    parse the XML; for each `<item>` creates a temp `<div>` via `document.createElement` to
+    parse the CDATA description HTML; extracts `name`, `author`, `rating`, `num_pages`,
+    `book published`, cover `<img>` src via labeled `key: value<br>` lines in the description
+  - `extractUserId(input: string): string | null` — handles both full profile URLs and bare
+    numeric IDs
+  - Export `GoodreadsBookRaw` interface: `{ title, author, isbn, status, totalPages?,
+    year?, cover?, userRating?, shelves[] }`
+- [x] T149 [P] Create `src/components/GoodreadsImport/GoodreadsImport.tsx` MUI Dialog:
+  - **idle phase**: URL/ID text input + "Load Books" button; shows hint text
+  - **loading phase**: `CircularProgress` while fetching all 3 shelves in parallel
+  - **preview phase**: counts grid (Read / Reading / To Read / Skipped duplicates) +
+    "Import X books" primary button + "Cancel" secondary button
+  - **importing phase**: `LinearProgress` + "Importing book X of Y…" label
+  - **done phase**: success message; dialog closes automatically after 1.5 s
+  - **error**: `Alert` with message; user can retry
+  - Deduplication: loads `getAllBooks()` before showing preview; skips title+author matches
+  - For each imported book: calls `addBook(...)`; if `userRating > 0`, also calls
+    `saveRating({ bookId, stars: userRating, ratedAt: Date.now() })`
+  - FINISHED books get `currentPage = totalPages` and `currentProgress = 100`
+- [x] T150 Update `src/pages/SettingsPage/SettingsPage.tsx`: add "Import from Goodreads"
+  section (new `<Divider>` + heading + description text + `BookOutlined`-icon button that
+  opens `<GoodreadsImport>` dialog)
+- [x] T151 [P] Bump `package.json` version to `0.6.0` (minor bump for new feature)
+
+**Checkpoint**: Settings has "Import from Goodreads" button; pasting a Goodreads profile
+URL fetches all 3 shelves; preview shows correct counts; import inserts books + ratings;
+re-running import skips all existing books.
 
 ---
 
