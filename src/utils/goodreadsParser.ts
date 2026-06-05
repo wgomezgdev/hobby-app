@@ -20,58 +20,69 @@ const STATUS_MAP: Record<string, BookStatus> = {
 
 export function extractUserId(input: string): string | null {
   const trimmed = input.trim();
-  // bare numeric ID
   if (/^\d+$/.test(trimmed)) return trimmed;
-  // profile URL: /user/show/12345678
   const match = trimmed.match(/\/user\/show\/(\d+)/);
   return match?.[1] ?? null;
 }
 
 export function parseRSSShelf(xml: string, shelf: string): GoodreadsBookRaw[] {
   const status: BookStatus = STATUS_MAP[shelf] ?? 'WANT_TO_READ';
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xml, 'application/xml');
 
-  if (doc.querySelector('parsererror')) return [];
+  // Use regex to extract <item> blocks — avoids strict XML parser failures
+  // caused by encoding issues or imperfect well-formedness in Goodreads RSS.
+  const blocks: string[] = [];
+  const re = /<item>([\s\S]*?)<\/item>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(xml)) !== null) {
+    blocks.push(m[1]);
+  }
 
-  return Array.from(doc.querySelectorAll('item')).map(item =>
-    parseItem(item, status)
-  );
+  return blocks.map(b => parseItemBlock(b, status)).filter(b => b.title.length > 0);
 }
 
-function parseItem(item: Element, status: BookStatus): GoodreadsBookRaw {
-  const descCdata = item.querySelector('description')?.textContent ?? '';
-  const fields = parseDescriptionHtml(descCdata);
+// Extract the text content of an XML element, handling CDATA and plain text.
+function getField(block: string, tag: string): string {
+  const cdata = block.match(
+    new RegExp(`<${tag}[^>]*>\\s*<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>\\s*<\\/${tag}>`, 'i')
+  );
+  if (cdata) return cdata[1].trim();
+  const plain = block.match(new RegExp(`<${tag}[^>]*>([^<]*)<\\/${tag}>`, 'i'));
+  if (plain) return plain[1].trim();
+  return '';
+}
 
-  // Title: prefer the "name" label from description; fall back to <title> minus " by Author"
+function parseItemBlock(block: string, status: BookStatus): GoodreadsBookRaw {
+  const descHtml = getField(block, 'description');
+  const fields = parseDescriptionHtml(descHtml);
+
   let title = fields['name'] ?? '';
   let author = fields['author'] ?? '';
 
   if (!title) {
-    const rawTitle = item.querySelector('title')?.textContent?.trim() ?? '';
-    const byIdx = rawTitle.lastIndexOf(' by ');
+    const raw = getField(block, 'title');
+    const byIdx = raw.lastIndexOf(' by ');
     if (byIdx !== -1) {
-      title = rawTitle.slice(0, byIdx).trim();
-      if (!author) author = rawTitle.slice(byIdx + 4).trim();
+      title = raw.slice(0, byIdx).trim();
+      if (!author) author = raw.slice(byIdx + 4).trim();
     } else {
-      title = rawTitle;
+      title = raw;
     }
   }
 
-  const isbn = fields['isbn13'] ?? fields['isbn'] ?? '';
+  const isbn = fields['isbn13'] || fields['isbn'] || '';
 
   const pagesRaw = parseInt(fields['num_pages'] ?? fields['number of pages'] ?? '', 10);
   const totalPages = !isNaN(pagesRaw) && pagesRaw > 0 ? pagesRaw : undefined;
 
   const yearRaw = parseInt(fields['book published'] ?? '', 10);
-  const year = !isNaN(yearRaw) && yearRaw > 1000 && yearRaw <= new Date().getFullYear() + 1
-    ? yearRaw
-    : undefined;
+  const year =
+    !isNaN(yearRaw) && yearRaw > 1000 && yearRaw <= new Date().getFullYear() + 1
+      ? yearRaw
+      : undefined;
 
   const ratingRaw = parseInt(fields['rating'] ?? '0', 10);
-  const userRating = !isNaN(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5
-    ? ratingRaw
-    : undefined;
+  const userRating =
+    !isNaN(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : undefined;
 
   const cover = fields['__cover__'] || undefined;
 
@@ -96,8 +107,7 @@ function parseDescriptionHtml(html: string): Record<string, string> {
     if (src) fields['__cover__'] = src;
   }
 
-  // Each data line looks like: "key: value<br>" or "key: value<br/>"
-  // We split by <br> tags in the raw HTML and parse each line
+  // Description lines look like: "key: value<br>" (one per field)
   const lines = tmp.innerHTML.split(/<br\s*\/?>/i);
   for (const line of lines) {
     const text = line.replace(/<[^>]+>/g, '').trim();
