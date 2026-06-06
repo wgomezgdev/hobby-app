@@ -384,6 +384,17 @@ The center tab is a raised FAB (terracotta circle with white `add` icon) that op
 - **FR-032**: The Stats screen MUST support a year filter (individual years + "All") and
   display: total books read vs. annual goal, monthly bar chart, genre donut chart,
   total pages read, and best reading month.
+- **FR-033**: The Settings screen MUST provide an "Import from Goodreads" option that accepts
+  a Goodreads library CSV export file (downloaded from goodreads.com → My Books → Import and
+  Export → Export Library) and imports the user's read, currently-reading, and to-read shelves.
+- **FR-034**: The import dialog MUST display step-by-step instructions guiding the user to
+  export their library CSV from Goodreads before choosing the file.
+- **FR-035**: Before importing, the app MUST display a preview summary showing total books
+  found by status and how many are already in the library (will be skipped).
+- **FR-036**: The import MUST be additive only — books matched by title + author (case-insensitive)
+  MUST be skipped; no existing data is overwritten.
+- **FR-037**: For books imported from the "read" shelf that carry a Goodreads star rating (1–5),
+  the system MUST also create a corresponding Rating record.
 
 ### Key Entities
 
@@ -435,6 +446,48 @@ The center tab is a raised FAB (terracotta circle with white `add` icon) that op
 - The snapshot export/import is the only mechanism for moving data between browsers or
   devices.
 - Internet connectivity is never assumed or required.
+
+---
+
+---
+
+### User Story 13 — Goodreads Library Import (Priority: P2)
+
+A reader who already uses Goodreads wants to seed their Reading Pal library with all their
+existing books without re-entering them one by one — by simply pasting their public Goodreads
+profile URL.
+
+**Why this feature**: Manual entry of a large existing library is a significant barrier to
+adoption. A one-click import removes that friction and makes the app immediately useful for
+readers who have curated their Goodreads shelves over years.
+
+**Technology**: Goodreads CSV export (goodreads.com → My Books → Import and Export →
+Export Library). All parsing happens entirely in the browser — no proxy or external service
+required. The CSV is parsed client-side using a custom RFC-4180-compliant parser that handles
+Goodreads' `="ISBN"` quoting convention.
+
+**Acceptance Scenarios**:
+
+1. **Given** the user opens Settings, **When** they tap "Import from Goodreads", **Then** a
+   dialog opens showing step-by-step instructions to export the CSV and a "Choose CSV File"
+   button.
+2. **Given** the user picks a valid Goodreads CSV export file, **When** the file is parsed,
+   **Then** a preview summary shows total books found broken down by status (read / currently
+   reading / to-read) and the number of books already in the library (which will be skipped).
+3. **Given** the preview is shown, **When** the user taps "Import", **Then** all new books
+   are added to the library with correct statuses, page counts, publication years, and ratings
+   (for read books with a Goodreads star rating ≥ 1).
+4. **Given** a book in the CSV already exists in the library (same title and author,
+   case-insensitive), **When** the import runs, **Then** that book is silently skipped and
+   existing data is not overwritten.
+5. **Given** the CSV file is empty or has no recognised header row, **When** parsing
+   completes, **Then** a clear error message is shown and no data is changed.
+6. **Given** the preview is shown, **When** the user taps "Cancel", **Then** the dialog
+   closes with no data changed.
+
+**Independent Test**: Export library CSV from goodreads.com → choose the file → confirm
+preview shows correct counts → tap "Import" → confirm books appear in the library with correct
+statuses → re-run import → confirm "X books already in library" and 0 new books.
 
 ---
 

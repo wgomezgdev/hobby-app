@@ -614,6 +614,69 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Phase 14 — AI Cover Scan (Gemini) | T097–T106 | 4 of 10 | ⏳ planned |
 | Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ planned |
 | Phase 16 — Supabase Cloud Sync | T112–T120 | 5 of 9 | ⏳ planned |
+| Phase 24 — Goodreads Library Import | T147–T151 | 4 of 5 | ✅ done |
+
+---
+
+## Phase 24: User Story 13 — Goodreads Library Import ✅ DONE
+
+**Goal**: Users can import their entire Goodreads library (read, currently reading, to-read)
+by uploading a Goodreads CSV export file. All parsing is done client-side — no proxy needed.
+
+**Prerequisites**: None beyond the existing app.
+
+**Architecture**:
+- `src/utils/goodreadsParser.ts` — `parseGoodreadsCSV(csvText: string): GoodreadsBookRaw[]`;
+  a custom RFC-4180-compliant CSV parser that handles Goodreads' `="ISBN"` quoting and
+  maps `Exclusive Shelf` to `BookStatus`.
+- `src/components/GoodreadsImport/GoodreadsImport.tsx` — MUI Dialog with four phases:
+  (1) instructions + file picker, (2) preview with counts + duplicate count,
+  (3) import progress, (4) done.
+- `SettingsPage` — "Import from Goodreads" section with `AutoStories`-icon button.
+
+**Data mapping**:
+
+| Goodreads CSV column | App field |
+|---|---|
+| `Title` | `title` |
+| `Author` | `author` |
+| `ISBN13` / `ISBN` | `isbn` |
+| `Number of Pages` | `totalPages` |
+| `My Rating` | `Rating.stars` (only when 1–5) |
+| `Original Publication Year` | `year` |
+| `Exclusive Shelf` | `status` (read→FINISHED, currently-reading→READING, to-read→WANT_TO_READ) |
+
+**Duplicate detection**: title + author lower-cased string match against existing books.
+
+**Independent Test**: Export CSV from goodreads.com → choose file → preview shows correct
+counts → import → verify books in library → import again → 0 new books, all skipped.
+
+- [x] T147 ~~Create `api/goodreads.ts` Vercel Edge Function~~ — removed; approach replaced
+  by client-side CSV import (RSS proxy was blocked by Goodreads server-side IP filtering)
+- [x] T148 Create `src/utils/goodreadsParser.ts`:
+  - `parseGoodreadsCSV(csvText: string): GoodreadsBookRaw[]` — RFC-4180 CSV parser;
+    handles quoted fields, escaped quotes, and Goodreads `="value"` ISBN columns
+  - Export `GoodreadsBookRaw` interface: `{ title, author, isbn, status, totalPages?,
+    year?, cover?, userRating?, shelves[] }`
+- [x] T149 [P] Create `src/components/GoodreadsImport/GoodreadsImport.tsx` MUI Dialog:
+  - **idle phase**: numbered instructions + "Choose CSV File" button (hidden file input)
+  - **preview phase**: counts grid (Read / Reading / To Read / Skipped duplicates) +
+    "Import X books" primary button + "Cancel" secondary button
+  - **importing phase**: `LinearProgress` + "Importing book X of Y…" label
+  - **done phase**: success message; dialog closes automatically after 2 s
+  - **error**: `Alert` with message; user can retry
+  - Deduplication: loads `getAllBooks()` before showing preview; skips title+author matches
+  - For each imported book: calls `addBook(...)`; if `userRating >= 1`, also calls
+    `saveRating({ bookId, stars: userRating, ratedAt: Date.now() })`
+  - FINISHED books get `currentPage = totalPages` and `currentProgress = 100`
+- [x] T150 Update `src/pages/SettingsPage/SettingsPage.tsx`: add "Import from Goodreads"
+  section (new `<Divider>` + heading + description text + `AutoStories`-icon button that
+  opens `<GoodreadsImport>` dialog)
+- [x] T151 [P] Bump `package.json` version to `0.6.0` (minor bump for new feature)
+
+**Checkpoint**: Settings has "Import from Goodreads" button; choosing a Goodreads CSV
+export parses all books; preview shows correct counts; import inserts books + ratings;
+re-running import skips all existing books.
 
 ---
 
