@@ -17,6 +17,7 @@ import { AutoStories, FileUpload } from '@mui/icons-material';
 import { getAllBooks, addBook } from '../../repositories/bookRepository';
 import { saveRating } from '../../repositories/ratingRepository';
 import { parseGoodreadsCSV, type GoodreadsBookRaw } from '../../utils/goodreadsParser';
+import { fetchBookCover } from '../../utils/coverSearch';
 
 interface ImportPreview {
   books: GoodreadsBookRaw[];
@@ -99,11 +100,12 @@ export function GoodreadsImport({ open, onClose }: Props) {
     let count = 0;
     for (const book of preview.books) {
       const isFinished = book.status === 'FINISHED';
+      const cover = book.cover ?? (await fetchBookCover(book.title, book.author)) ?? undefined;
       const bookId = await addBook({
         title: book.title,
         author: book.author,
         status: book.status,
-        cover: book.cover,
+        cover,
         currentProgress: isFinished ? 100 : 0,
         year: book.year,
         totalPages: book.totalPages,
@@ -189,7 +191,7 @@ export function GoodreadsImport({ open, onClose }: Props) {
         ) : phase === 'importing' ? (
           <Stack spacing={2} sx={{ pt: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              Importing book {importedCount} of {totalToImport}…
+              Importing book {importedCount} of {totalToImport} (searching covers)…
             </Typography>
             <LinearProgress
               variant="determinate"
