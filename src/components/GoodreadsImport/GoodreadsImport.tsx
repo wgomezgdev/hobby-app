@@ -1,23 +1,22 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   LinearProgress,
+  List,
+  ListItem,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
-import { AutoStories } from '@mui/icons-material';
-import { getAllBooks } from '../../repositories/bookRepository';
-import { addBook } from '../../repositories/bookRepository';
+import { AutoStories, FileUpload } from '@mui/icons-material';
+import { getAllBooks, addBook } from '../../repositories/bookRepository';
 import { saveRating } from '../../repositories/ratingRepository';
-import { parseRSSShelf, extractUserId, type GoodreadsBookRaw } from '../../utils/goodreadsParser';
+import { parseGoodreadsCSV, type GoodreadsBookRaw } from '../../utils/goodreadsParser';
 
 interface ImportPreview {
   books: GoodreadsBookRaw[];
@@ -33,25 +32,8 @@ interface Props {
   onClose: () => void;
 }
 
-async function fetchShelf(userId: string, shelf: string): Promise<string> {
-  const res = await fetch(`/api/goodreads?userId=${userId}&shelf=${encodeURIComponent(shelf)}`);
-  if (!res.ok) {
-    const msg = await res.text();
-    throw new Error(msg || `Failed to fetch "${shelf}" shelf`);
-  }
-  const text = await res.text();
-  // If Vite dev server serves index.html instead of XML, the API is not available locally.
-  if (text.trimStart().toLowerCase().startsWith('<!doctype') ||
-      text.trimStart().toLowerCase().startsWith('<html')) {
-    throw new Error(
-      'Goodreads import requires the deployed app. Run `vercel dev` locally or use the production URL.'
-    );
-  }
-  return text;
-}
-
 export function GoodreadsImport({ open, onClose }: Props) {
-  const [urlInput, setUrlInput] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,32 +45,24 @@ export function GoodreadsImport({ open, onClose }: Props) {
     setPhase('idle');
     setPreview(null);
     setError(null);
-    setUrlInput('');
     onClose();
   };
 
-  const handleLoad = async () => {
-    const userId = extractUserId(urlInput);
-    if (!userId) {
-      setError('Enter a valid Goodreads profile URL or numeric user ID.');
-      return;
-    }
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (!file) return;
 
     setPhase('loading');
     setError(null);
 
     try {
-      const [readXml, readingXml, toReadXml] = await Promise.all([
-        fetchShelf(userId, 'read'),
-        fetchShelf(userId, 'currently-reading'),
-        fetchShelf(userId, 'to-read'),
-      ]);
+      const text = await file.text();
+      const allBooks = parseGoodreadsCSV(text).filter(b => b.title);
 
-      const allBooks: GoodreadsBookRaw[] = [
-        ...parseRSSShelf(readXml, 'read'),
-        ...parseRSSShelf(readingXml, 'currently-reading'),
-        ...parseRSSShelf(toReadXml, 'to-read'),
-      ].filter(b => b.title);
+      if (allBooks.length === 0) {
+        throw new Error('No books found in the CSV file. Make sure you exported your Goodreads library correctly.');
+      }
 
       const existing = await getAllBooks();
       const existingKeys = new Set(
@@ -111,7 +85,7 @@ export function GoodreadsImport({ open, onClose }: Props) {
       });
       setPhase('preview');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reach Goodreads. Try again.');
+      setError(err instanceof Error ? err.message : 'Failed to parse CSV. Try exporting again from Goodreads.');
       setPhase('idle');
     }
   };
@@ -165,50 +139,51 @@ export function GoodreadsImport({ open, onClose }: Props) {
       <DialogContent>
         {phase === 'idle' || phase === 'loading' ? (
           <Stack spacing={2} sx={{ pt: 1 }}>
-            <TextField
-              label="Goodreads profile URL or user ID"
-              placeholder="https://www.goodreads.com/user/show/12345678"
-              value={urlInput}
-              onChange={e => setUrlInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && phase === 'idle' && handleLoad()}
-              fullWidth
-              size="small"
+            <Typography variant="body2" color="text.secondary">
+              First, export your library from Goodreads:
+            </Typography>
+            <List dense disablePadding sx={{ pl: 1 }}>
+              {[
+                <>Go to <strong>goodreads.com → My Books</strong></>,
+                <>Click <strong>Import and Export</strong> (bottom-left sidebar)</>,
+                <>Click <strong>Export Library</strong> to download the CSV</>,
+              ].map((step, i) => (
+                <ListItem key={i} disableGutters sx={{ py: 0.25 }}>
+                  <Typography variant="body2">{i + 1}. {step}</Typography>
+                </ListItem>
+              ))}
+            </List>
+            <Button
+              variant="outlined"
+              startIcon={<FileUpload />}
+              onClick={() => fileInputRef.current?.click()}
               disabled={phase === 'loading'}
-              helperText="Your profile must be public"
+            >
+              Choose CSV File
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              hidden
+              onChange={handleFileChange}
             />
             {error && <Alert severity="error">{error}</Alert>}
-            {phase === 'loading' && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <CircularProgress size={20} />
-                <Typography variant="body2" color="text.secondary">
-                  Fetching your Goodreads shelves…
-                </Typography>
-              </Box>
-            )}
           </Stack>
         ) : phase === 'preview' && preview ? (
           <Stack spacing={2} sx={{ pt: 1 }}>
-            {preview.totalFound === 0 ? (
-              <Alert severity="warning">
-                No books found. Check that your user ID is correct and your Goodreads profile
-                is set to public.
-              </Alert>
-            ) : (
-              <>
-                <Typography variant="body2">
-                  Found <strong>{preview.totalFound}</strong> book
-                  {preview.totalFound !== 1 ? 's' : ''} on your Goodreads shelves.
-                </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-                  <StatChip label="Read" count={preview.byStatus.read} />
-                  <StatChip label="Reading" count={preview.byStatus.reading} />
-                  <StatChip label="To Read" count={preview.byStatus.toRead} />
-                  <StatChip label="Already in library" count={preview.duplicates} muted />
-                </Box>
-                {preview.books.length === 0 && preview.duplicates > 0 && (
-                  <Alert severity="info">All books are already in your library.</Alert>
-                )}
-              </>
+            <Typography variant="body2">
+              Found <strong>{preview.totalFound}</strong> book
+              {preview.totalFound !== 1 ? 's' : ''} in your Goodreads library.
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+              <StatChip label="Read" count={preview.byStatus.read} />
+              <StatChip label="Reading" count={preview.byStatus.reading} />
+              <StatChip label="To Read" count={preview.byStatus.toRead} />
+              <StatChip label="Already in library" count={preview.duplicates} muted />
+            </Box>
+            {preview.books.length === 0 && preview.duplicates > 0 && (
+              <Alert severity="info">All books are already in your library.</Alert>
             )}
           </Stack>
         ) : phase === 'importing' ? (
@@ -230,18 +205,9 @@ export function GoodreadsImport({ open, onClose }: Props) {
 
       <DialogActions>
         {(phase === 'idle' || phase === 'loading') && (
-          <>
-            <Button onClick={handleClose} disabled={phase === 'loading'}>
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleLoad}
-              disabled={phase === 'loading' || !urlInput.trim()}
-            >
-              Load Books
-            </Button>
-          </>
+          <Button onClick={handleClose} disabled={phase === 'loading'}>
+            Cancel
+          </Button>
         )}
         {phase === 'preview' && preview && (
           <>

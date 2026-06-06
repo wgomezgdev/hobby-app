@@ -385,10 +385,10 @@ The center tab is a raised FAB (terracotta circle with white `add` icon) that op
   display: total books read vs. annual goal, monthly bar chart, genre donut chart,
   total pages read, and best reading month.
 - **FR-033**: The Settings screen MUST provide an "Import from Goodreads" option that accepts
-  a Goodreads profile URL (e.g. `https://www.goodreads.com/user/show/12345678`) or a bare
-  user ID and fetches the user's read, currently-reading, and to-read shelves.
-- **FR-034**: The system MUST proxy Goodreads RSS requests through a Vercel Edge Function
-  (`/api/goodreads`) to avoid CORS restrictions in the browser.
+  a Goodreads library CSV export file (downloaded from goodreads.com → My Books → Import and
+  Export → Export Library) and imports the user's read, currently-reading, and to-read shelves.
+- **FR-034**: The import dialog MUST display step-by-step instructions guiding the user to
+  export their library CSV from Goodreads before choosing the file.
 - **FR-035**: Before importing, the app MUST display a preview summary showing total books
   found by status and how many are already in the library (will be skipped).
 - **FR-036**: The import MUST be additive only — books matched by title + author (case-insensitive)
@@ -461,34 +461,33 @@ profile URL.
 adoption. A one-click import removes that friction and makes the app immediately useful for
 readers who have curated their Goodreads shelves over years.
 
-**Technology**: Goodreads public RSS feeds (still available despite the API shutdown).
-A Vercel Edge Function proxies the requests to avoid browser CORS restrictions.
-- Read shelf: `https://www.goodreads.com/review/list_rss/{userId}?shelf=read`
-- Currently reading: `https://www.goodreads.com/review/list_rss/{userId}?shelf=currently-reading`
-- To-read: `https://www.goodreads.com/review/list_rss/{userId}?shelf=to-read`
+**Technology**: Goodreads CSV export (goodreads.com → My Books → Import and Export →
+Export Library). All parsing happens entirely in the browser — no proxy or external service
+required. The CSV is parsed client-side using a custom RFC-4180-compliant parser that handles
+Goodreads' `="ISBN"` quoting convention.
 
 **Acceptance Scenarios**:
 
 1. **Given** the user opens Settings, **When** they tap "Import from Goodreads", **Then** a
-   dialog opens with a text field for their Goodreads profile URL or user ID.
-2. **Given** the user enters a valid Goodreads URL or user ID and taps "Load Books",
-   **When** the app fetches all three shelves, **Then** a preview summary shows total books
-   found broken down by status (read / currently reading / to-read) and the number of books
-   that are already in the library (which will be skipped).
+   dialog opens showing step-by-step instructions to export the CSV and a "Choose CSV File"
+   button.
+2. **Given** the user picks a valid Goodreads CSV export file, **When** the file is parsed,
+   **Then** a preview summary shows total books found broken down by status (read / currently
+   reading / to-read) and the number of books already in the library (which will be skipped).
 3. **Given** the preview is shown, **When** the user taps "Import", **Then** all new books
-   are added to the library with correct statuses, page counts, publication years, cover
-   images, and ratings (for read books with a Goodreads star rating).
-4. **Given** a book in the Goodreads export already exists in the library (same title and
-   author), **When** the import runs, **Then** that book is silently skipped and existing
-   data is not overwritten.
-5. **Given** the Goodreads user ID is invalid or the profile is private, **When** the fetch
-   fails, **Then** a clear error message is shown and no data is changed.
+   are added to the library with correct statuses, page counts, publication years, and ratings
+   (for read books with a Goodreads star rating ≥ 1).
+4. **Given** a book in the CSV already exists in the library (same title and author,
+   case-insensitive), **When** the import runs, **Then** that book is silently skipped and
+   existing data is not overwritten.
+5. **Given** the CSV file is empty or has no recognised header row, **When** parsing
+   completes, **Then** a clear error message is shown and no data is changed.
 6. **Given** the preview is shown, **When** the user taps "Cancel", **Then** the dialog
    closes with no data changed.
 
-**Independent Test**: Enter `https://www.goodreads.com/user/show/34364419` → tap "Load Books"
-→ confirm preview shows correct counts → tap "Import" → confirm books appear in the library
-with correct statuses → re-run import → confirm "X books already in library" and 0 new books.
+**Independent Test**: Export library CSV from goodreads.com → choose the file → confirm
+preview shows correct counts → tap "Import" → confirm books appear in the library with correct
+statuses → re-run import → confirm "X books already in library" and 0 new books.
 
 ---
 

@@ -18,107 +18,119 @@ const STATUS_MAP: Record<string, BookStatus> = {
   'to-read': 'WANT_TO_READ',
 };
 
-export function extractUserId(input: string): string | null {
-  const trimmed = input.trim();
-  if (/^\d+$/.test(trimmed)) return trimmed;
-  const match = trimmed.match(/\/user\/show\/(\d+)/);
-  return match?.[1] ?? null;
-}
+export function parseGoodreadsCSV(csvText: string): GoodreadsBookRaw[] {
+  const lines = splitCSVLines(csvText);
+  if (lines.length < 2) return [];
 
-export function parseRSSShelf(xml: string, shelf: string): GoodreadsBookRaw[] {
-  const status: BookStatus = STATUS_MAP[shelf] ?? 'WANT_TO_READ';
+  const headers = parseCSVRow(lines[0]).map(h => h.trim().toLowerCase());
 
-  // Use regex to extract <item> blocks — avoids strict XML parser failures
-  // caused by encoding issues or imperfect well-formedness in Goodreads RSS.
-  const blocks: string[] = [];
-  const re = /<item>([\s\S]*?)<\/item>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(xml)) !== null) {
-    blocks.push(m[1]);
+  const idx = (name: string) => headers.indexOf(name);
+  const titleIdx = idx('title');
+  const authorIdx = idx('author');
+  const isbn13Idx = idx('isbn13');
+  const isbn10Idx = idx('isbn');
+  const ratingIdx = idx('my rating');
+  const pagesIdx = idx('number of pages');
+  const origYearIdx = idx('original publication year');
+  const pubYearIdx = idx('year published');
+  const shelfIdx = idx('exclusive shelf');
+  const bookshelvesIdx = idx('bookshelves');
+
+  if (titleIdx === -1 || shelfIdx === -1) return [];
+
+  const books: GoodreadsBookRaw[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const row = parseCSVRow(lines[i]);
+    const title = row[titleIdx]?.trim() ?? '';
+    if (!title) continue;
+
+    const shelf = row[shelfIdx]?.trim() ?? '';
+    const status: BookStatus = STATUS_MAP[shelf] ?? 'WANT_TO_READ';
+
+    const author = authorIdx !== -1 ? (row[authorIdx]?.trim() ?? '') : '';
+
+    const rawIsbn13 = isbn13Idx !== -1 ? cleanIsbn(row[isbn13Idx]) : '';
+    const rawIsbn10 = isbn10Idx !== -1 ? cleanIsbn(row[isbn10Idx]) : '';
+    const isbn = rawIsbn13 || rawIsbn10;
+
+    const ratingRaw = ratingIdx !== -1 ? parseInt(row[ratingIdx] ?? '0', 10) : 0;
+    const userRating = ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : undefined;
+
+    const pagesRaw = pagesIdx !== -1 ? parseInt(row[pagesIdx] ?? '', 10) : NaN;
+    const totalPages = !isNaN(pagesRaw) && pagesRaw > 0 ? pagesRaw : undefined;
+
+    const yearRaw = origYearIdx !== -1
+      ? parseInt(row[origYearIdx] ?? '', 10)
+      : pubYearIdx !== -1 ? parseInt(row[pubYearIdx] ?? '', 10) : NaN;
+    const year =
+      !isNaN(yearRaw) && yearRaw > 1000 && yearRaw <= new Date().getFullYear() + 1
+        ? yearRaw
+        : undefined;
+
+    const shelvesRaw = bookshelvesIdx !== -1 ? (row[bookshelvesIdx]?.trim() ?? '') : '';
+    const shelves = shelvesRaw ? shelvesRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    books.push({ title, author, isbn, status, totalPages, year, cover: undefined, userRating, shelves });
   }
 
-  return blocks.map(b => parseItemBlock(b, status)).filter(b => b.title.length > 0);
+  return books;
 }
 
-// Extract the text content of an XML element, handling CDATA and plain text.
-function getField(block: string, tag: string): string {
-  const cdata = block.match(
-    new RegExp(`<${tag}[^>]*>\\s*<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>\\s*<\\/${tag}>`, 'i')
-  );
-  if (cdata) return cdata[1].trim();
-  const plain = block.match(new RegExp(`<${tag}[^>]*>([^<]*)<\\/${tag}>`, 'i'));
-  if (plain) return plain[1].trim();
-  return '';
+// Goodreads exports ISBNs as ="1234567890" to prevent Excel from mangling them.
+function cleanIsbn(raw: string | undefined): string {
+  if (!raw) return '';
+  return raw.replace(/[^0-9X]/gi, '');
 }
 
-function parseItemBlock(block: string, status: BookStatus): GoodreadsBookRaw {
-  const descHtml = getField(block, 'description');
-  const fields = parseDescriptionHtml(descHtml);
+function splitCSVLines(text: string): string[] {
+  const lines: string[] = [];
+  let current = '';
+  let inQuotes = false;
 
-  let title = fields['name'] ?? '';
-  let author = fields['author'] ?? '';
-
-  if (!title) {
-    const raw = getField(block, 'title');
-    const byIdx = raw.lastIndexOf(' by ');
-    if (byIdx !== -1) {
-      title = raw.slice(0, byIdx).trim();
-      if (!author) author = raw.slice(byIdx + 4).trim();
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      if (inQuotes && text[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+        current += ch;
+      }
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      if (current.trim()) lines.push(current);
+      current = '';
     } else {
-      title = raw;
+      current += ch;
     }
   }
-
-  const isbn = fields['isbn13'] || fields['isbn'] || '';
-
-  const pagesRaw = parseInt(fields['num_pages'] ?? fields['number of pages'] ?? '', 10);
-  const totalPages = !isNaN(pagesRaw) && pagesRaw > 0 ? pagesRaw : undefined;
-
-  const yearRaw = parseInt(fields['book published'] ?? '', 10);
-  const year =
-    !isNaN(yearRaw) && yearRaw > 1000 && yearRaw <= new Date().getFullYear() + 1
-      ? yearRaw
-      : undefined;
-
-  const ratingRaw = parseInt(fields['rating'] ?? '0', 10);
-  const userRating =
-    !isNaN(ratingRaw) && ratingRaw >= 1 && ratingRaw <= 5 ? ratingRaw : undefined;
-
-  const cover = fields['__cover__'] || undefined;
-
-  const shelvesRaw = fields['shelves'] ?? '';
-  const shelves = shelvesRaw
-    ? shelvesRaw.split(/[,\s]+/).map(s => s.trim()).filter(Boolean)
-    : [];
-
-  return { title, author, isbn, status, totalPages, year, cover, userRating, shelves };
+  if (current.trim()) lines.push(current);
+  return lines;
 }
 
-function parseDescriptionHtml(html: string): Record<string, string> {
-  const fields: Record<string, string> = {};
-  if (!html) return fields;
+function parseCSVRow(line: string): string[] {
+  const fields: string[] = [];
+  let current = '';
+  let inQuotes = false;
 
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
-
-  const img = tmp.querySelector('img');
-  if (img) {
-    const src = img.getAttribute('src');
-    if (src) fields['__cover__'] = src;
-  }
-
-  // Description lines look like: "key: value<br>" (one per field)
-  const lines = tmp.innerHTML.split(/<br\s*\/?>/i);
-  for (const line of lines) {
-    const text = line.replace(/<[^>]+>/g, '').trim();
-    const colonIdx = text.indexOf(':');
-    if (colonIdx <= 0) continue;
-    const key = text.slice(0, colonIdx).trim().toLowerCase();
-    const value = text.slice(colonIdx + 1).trim();
-    if (key && value && key.length < 40) {
-      fields[key] = value;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      fields.push(current);
+      current = '';
+    } else {
+      current += ch;
     }
   }
-
+  fields.push(current);
   return fields;
 }
