@@ -611,7 +611,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Phase 21 — Home Screen | T135–T137 | 3 of 3 | ✅ done |
 | Phase 22 — Pace Stats | T138–T139 | 2 of 2 | ✅ done |
 | Phase 23 — Stats Screen | T140–T146 | 7 of 7 | ✅ done |
-| Phase 14 — AI Cover Scan (Gemini) | T097–T106 | 4 of 10 | ⏳ planned |
+| Phase 14 — AI Cover Scan (Gemini) | T097–T106 | 7 of 10 | ✅ done |
 | Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ planned |
 | Phase 16 — Supabase Cloud Sync | T112–T120 | 5 of 9 | ⏳ planned |
 | Phase 24 — Goodreads Library Import | T147–T151 | 4 of 5 | ✅ done |
@@ -680,7 +680,7 @@ re-running import skips all existing books.
 
 ---
 
-## Phase 14: User Story 10 — AI Book Cover Scan ⏳ PLANNED
+## Phase 14: User Story 10 — AI Book Cover Scan ✅ DONE
 
 **Goal**: User takes a photo of a book's front cover; Gemini Flash extracts the title and
 author and fills the form fields automatically.
@@ -716,34 +716,30 @@ confirm title and author fill in → save → confirm book appears correctly in 
 
 ### Implementation
 
-- [ ] T100 Create `src/hooks/useCoverScan.ts`:
-  - Input: `imageBase64: string` (data URL from camera)
+- [x] T100 Create `src/hooks/useCoverScan.ts`:
+  - Input: `dataUrl: string` (data URL from camera/file input)
   - Strips `data:image/...;base64,` prefix before sending to API
   - Sends multipart request with image + prompt to Gemini Flash endpoint
-  - Returns `{ title: string; author: string; loading: boolean; error: string | null }`
+  - Returns `{ scan, loading, error, clearError }`; scan returns `ScanResult | null`
   - Handles quota exceeded (HTTP 429) with a clear message
   - Handles unreadable image (Gemini returns "Unknown" for both fields)
 
-- [ ] T101 Add "Scan cover" `IconButton` (use `AutoFixHigh` or `DocumentScanner` MUI icon)
-  to the cover section in `src/pages/AddEditBookPage/AddEditBookPage.tsx`:
+- [x] T101 Add "Scan cover" Button (DocumentScanner icon) to the cover section in
+  `src/pages/AddEditBookPage/AddEditBookPage.tsx`:
   - Triggers a hidden `<input type="file" accept="image/*" capture="environment">`
-  - On photo taken: calls `useCoverScan` with the captured base64 image
-  - Shows `CircularProgress` while loading
+  - On photo taken: reads as base64 data URL, calls `useCoverScan`
+  - Shows `CircularProgress` inside button while loading
 
-- [ ] T102 On successful scan result in `AddEditBookPage`:
-  - If Title field is empty: fill automatically
-  - If Title field already has a value: show a confirmation snackbar
-    ("Scan found «{title}». Replace current title?") with Accept / Keep buttons
-  - Same logic for Author field
+- [x] T102 On successful scan result in `AddEditBookPage`:
+  - If Title/Author field is empty: fill automatically
+  - If field already has a value: show a confirmation Snackbar with Apply / Keep buttons
   - If Gemini returns "Unknown" for a field: leave that field unchanged
 
-- [ ] T103 Error states in `AddEditBookPage`:
-  - API key missing (`import.meta.env.VITE_GEMINI_API_KEY` is undefined): show
-    `Alert` with message "AI scan not configured. Add VITE_GEMINI_API_KEY to enable."
-  - Quota exceeded (HTTP 429): show `Alert` "Daily scan limit reached. Try again tomorrow."
-  - Network error: show `Alert` "Could not reach AI service. Check your connection."
-  - Unreadable image (both fields "Unknown"): show `Alert` "Cover not recognized.
-    Try a clearer photo or fill in the fields manually."
+- [x] T103 Error states shown as closeable `Alert` below cover section:
+  - API key missing → "AI scan not configured. Add VITE_GEMINI_API_KEY to enable."
+  - Quota exceeded (HTTP 429) → "Daily scan limit reached. Try again tomorrow."
+  - Network error → "Could not reach AI service. Check your connection."
+  - Unreadable image (both "Unknown") → "Cover not recognized. Try a clearer photo or fill in the fields manually."
 
 - [ ] T104 [P] Verify scan works end-to-end on mobile: take a clear photo → fields fill
 - [ ] T105 [P] Verify blurry/non-book photo shows the "not recognized" error gracefully
