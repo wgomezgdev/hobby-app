@@ -46,6 +46,10 @@ export function useCoverScan() {
         setError('Daily scan limit reached. Try again tomorrow.');
         return null;
       }
+      if (res.status === 400 || res.status === 401 || res.status === 403) {
+        setError('Invalid API key. Check your VITE_GEMINI_API_KEY.');
+        return null;
+      }
       if (!res.ok) {
         setError('Could not reach AI service. Check your connection.');
         return null;
