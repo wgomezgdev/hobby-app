@@ -1,12 +1,13 @@
-import { BottomNavigation, BottomNavigationAction, Box, Fab, Paper, Typography } from '@mui/material';
-import { Add, BarChart, Home, MenuBook, Person } from '@mui/icons-material';
+import { Avatar, BottomNavigation, BottomNavigationAction, Box, Fab, Paper, Typography } from '@mui/material';
+import { Add, BarChart, Home, MenuBook } from '@mui/icons-material';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
 function getActiveTab(pathname: string): string {
   if (pathname === '/') return '/';
   if (pathname.startsWith('/library') || pathname.startsWith('/books') || pathname === '/ranking') return '/library';
   if (pathname === '/stats') return '/stats';
-  if (pathname === '/settings') return '/settings';
+  if (pathname === '/profile' || pathname === '/settings') return '/profile';
   return '/';
 }
 
@@ -14,6 +15,7 @@ export function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const activeTab = getActiveTab(location.pathname);
+  const { user } = useAuth();
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', pb: '72px' }}>
@@ -41,7 +43,17 @@ export function Layout() {
             {/* placeholder slot for the center FAB */}
             <BottomNavigationAction sx={{ visibility: 'hidden', pointerEvents: 'none' }} value="" />
             <BottomNavigationAction label="Stats" value="/stats" icon={<BarChart />} />
-            <BottomNavigationAction label="Profile" value="/settings" icon={<Person />} />
+            <BottomNavigationAction
+              label="Profile"
+              value="/profile"
+              icon={
+                user?.photoURL
+                  ? <Avatar src={user.photoURL} sx={{ width: 24, height: 24 }} />
+                  : <Avatar sx={{ width: 24, height: 24, bgcolor: 'primary.main', fontSize: 12 }}>
+                      {user?.displayName?.[0] ?? 'P'}
+                    </Avatar>
+              }
+            />
           </BottomNavigation>
 
           <Fab
