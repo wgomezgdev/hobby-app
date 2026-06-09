@@ -615,6 +615,30 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ planned |
 | Phase 16 — Supabase Cloud Sync | T112–T120 | 5 of 9 | ⏳ planned |
 | Phase 24 — Goodreads Library Import | T147–T151 | 4 of 5 | ✅ done |
+| Phase 25 — Stats: Session Activity + Genre Year Fix | T152–T155 | 4 of 4 | ✅ done |
+
+---
+
+## Phase 25: Stats — Session Activity & Genre Year Fix ✅ DONE
+
+**Goal**: Fill all sections of the Stats screen with live data. Add a Reading Activity card
+(sessions count, total time read, day streak) sourced from `ReadingSession` records. Fix the
+genre donut so it respects the selected year filter instead of always showing all-time genres.
+
+- [x] T152 Export `finishedInYear` from `src/utils/statsAggregations.ts` and add three new
+  pure functions: `getTotalReadingMinutes(sessions, year)`, `getTotalSessions(sessions, year)`,
+  `getReadingStreak(sessions)` (consecutive days back from today with ≥1 session)
+- [x] T153 Update `src/hooks/useStats.ts` to query `db.sessions` via `useLiveQuery`; pass
+  year-filtered finished books to `getGenreBreakdown` (fixes genre year filter bug); return
+  `totalReadingMinutes`, `totalSessions`, `readingStreak`
+- [x] T154 Add "Reading Activity" card to `src/pages/StatsPage/StatsPage.tsx`: three equal
+  columns — Sessions count, Time read (`formatHours`), Day streak with 🔥; always shown when
+  any session exists, independent of finished-book requirement; hide monthly chart + genre/pages
+  bottom row when `booksRead === 0` so the empty-book state is clean
+- [x] T155 Bump `package.json` version to `0.9.0`
+
+**Checkpoint**: Stats screen shows Reading Activity card as soon as first session is logged;
+genre donut updates when year filter changes; pages-read shows "—" + hint when no page data.
 
 ---
 

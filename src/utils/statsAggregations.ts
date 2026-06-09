@@ -1,10 +1,10 @@
-import type { Book } from '../types/entities';
+import type { Book, ReadingSession } from '../types/entities';
 
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTH_FULL = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
 
-function finishedInYear(books: Book[], year: number | 'all'): Book[] {
+export function finishedInYear(books: Book[], year: number | 'all'): Book[] {
   return books.filter(b => {
     if (b.status !== 'FINISHED') return false;
     if (year === 'all') return true;
@@ -67,4 +67,34 @@ export function getAvailableYears(books: Book[]): number[] {
     books.filter(b => b.status === 'FINISHED').map(b => new Date(b.updatedAt).getFullYear())
   );
   return Array.from(years).sort((a, b) => b - a);
+}
+
+function sessionsInYear(sessions: ReadingSession[], year: number | 'all'): ReadingSession[] {
+  if (year === 'all') return sessions;
+  return sessions.filter(s => new Date(s.startedAt).getFullYear() === year);
+}
+
+export function getTotalReadingMinutes(sessions: ReadingSession[], year: number | 'all'): number {
+  return sessionsInYear(sessions, year).reduce((sum, s) => sum + s.durationMinutes, 0);
+}
+
+export function getTotalSessions(sessions: ReadingSession[], year: number | 'all'): number {
+  return sessionsInYear(sessions, year).length;
+}
+
+export function getReadingStreak(sessions: ReadingSession[]): number {
+  if (sessions.length === 0) return 0;
+  const dayKey = (ts: number) => {
+    const d = new Date(ts);
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  };
+  const days = new Set(sessions.map(s => dayKey(s.startedAt)));
+  let streak = 0;
+  const check = new Date();
+  check.setHours(0, 0, 0, 0);
+  while (days.has(dayKey(check.getTime()))) {
+    streak++;
+    check.setDate(check.getDate() - 1);
+  }
+  return streak;
 }
