@@ -49,6 +49,7 @@ interface GoogleBooksItem {
 export function useTitleSuggestions(query: string) {
   const [suggestions, setSuggestions] = useState<TitleSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -59,16 +60,18 @@ export function useTitleSuggestions(query: string) {
     if (query.length < MIN_LENGTH) {
       setSuggestions([]);
       setLoading(false);
+      setSearchError(null);
       return;
     }
 
     setLoading(true);
+    setSearchError(null);
 
     timerRef.current = setTimeout(async () => {
       const controller = new AbortController();
       abortRef.current = controller;
       try {
-        const url = `https://www.googleapis.com/books/v1/volumes?q=intitle:${encodeURIComponent(query)}&maxResults=8&printType=books`;
+        const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=8&printType=books`;
         const res = await fetch(url, { signal: controller.signal });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -89,7 +92,10 @@ export function useTitleSuggestions(query: string) {
               };
             })
         );
-      } catch {
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          setSearchError((err as Error).message ?? 'Search failed');
+        }
         setSuggestions([]);
       } finally {
         setLoading(false);
@@ -102,5 +108,5 @@ export function useTitleSuggestions(query: string) {
     };
   }, [query]);
 
-  return { suggestions, loading };
+  return { suggestions, loading, searchError };
 }

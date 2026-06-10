@@ -56,7 +56,7 @@ export function AddEditBookPage() {
   const [pendingScan, setPendingScan] = useState<ScanResult | null>(null);
   const scanInputRef = useRef<HTMLInputElement>(null);
   const { scan, loading: scanLoading, error: scanError, clearError: clearScanError } = useCoverScan();
-  const { suggestions: titleSuggestions, loading: titleLoading } = useTitleSuggestions(titleInput);
+  const { suggestions: titleSuggestions, loading: titleLoading, searchError: titleSearchError } = useTitleSuggestions(titleInput);
   const { suggestions: authorSuggestions, loading: authorLoading } = useAuthorSuggestions(authorInput);
 
   useEffect(() => {
@@ -265,6 +265,10 @@ export function AddEditBookPage() {
               )}
             />
           </Box>
+
+          {titleSearchError && (
+            <Alert severity="warning" sx={{ mt: -1.5 }}>{titleSearchError}</Alert>
+          )}
 
           {/* Author + Year */}
           <Stack direction="row" spacing={1.5}>
