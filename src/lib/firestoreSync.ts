@@ -17,10 +17,18 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   return result;
 }
 
+function stripUndefined<T extends object>(obj: T): T {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined)
+  ) as T;
+}
+
 async function batchWrite(uid: string, table: string, items: { id: string; data: object }[]) {
   for (const chunk of chunkArray(items, BATCH_CHUNK)) {
     const batch = writeBatch(firestoreDb!);
-    chunk.forEach(({ id, data }) => batch.set(doc(userCol(uid, table), id), data));
+    chunk.forEach(({ id, data }) =>
+      batch.set(doc(userCol(uid, table), id), stripUndefined(data))
+    );
     await batch.commit();
   }
 }
