@@ -25,7 +25,7 @@ export function useCoverScan() {
       const mimeType = dataUrl.split(';')[0].slice(5);
 
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -51,7 +51,7 @@ export function useCoverScan() {
         return null;
       }
       if (!res.ok) {
-        setError('Could not reach AI service. Check your connection.');
+        setError(`AI service error (HTTP ${res.status}). Try again.`);
         return null;
       }
 
@@ -70,8 +70,9 @@ export function useCoverScan() {
       }
 
       return { title, author };
-    } catch {
-      setError('Could not reach AI service. Check your connection.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Network error: ${msg}`);
       return null;
     } finally {
       setLoading(false);
