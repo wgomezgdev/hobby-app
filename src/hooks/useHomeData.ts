@@ -4,14 +4,15 @@ import { db } from '../db/db';
 export function useHomeData() {
   return useLiveQuery(async () => {
     const books = await db.books.toArray();
-    const readingCount = books.filter(b => b.status === 'READING').length;
-    const finishedCount = books.filter(b => b.status === 'FINISHED').length;
-    const pendingCount = books.filter(b => b.status === 'WANT_TO_READ').length;
-    const currentBook = books.find(b => b.status === 'READING');
-    const recentlyFinished = books
+    const readingBooks = books
+      .filter(b => b.status === 'READING')
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+    const finishedBooks = books
       .filter(b => b.status === 'FINISHED')
-      .sort((a, b) => b.updatedAt - a.updatedAt)
-      .slice(0, 8);
-    return { readingCount, finishedCount, pendingCount, currentBook, recentlyFinished };
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+    const readingCount = readingBooks.length;
+    const finishedCount = finishedBooks.length;
+    const pendingCount = books.filter(b => b.status === 'WANT_TO_READ').length;
+    return { readingCount, finishedCount, pendingCount, readingBooks, finishedBooks };
   });
 }

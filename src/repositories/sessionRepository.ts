@@ -13,7 +13,7 @@ export async function saveSession(session: Omit<ReadingSession, 'id'>): Promise<
     await db.sessions.add(session);
     await db.books.update(session.bookId, {
       currentProgress: newProgress,
-      status: newProgress >= 100 ? 'FINISHED' : book.status,
+      status: newProgress >= 100 ? 'FINISHED' : book.status === 'WANT_TO_READ' ? 'READING' : book.status,
       updatedAt: Date.now(),
     });
   });

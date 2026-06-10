@@ -48,7 +48,7 @@ export function AddEditBookPage() {
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<BookFormData>({
-    defaultValues: { status: 'READING', genres: [], year: '', totalPages: '', currentPage: '' },
+    defaultValues: { status: 'WANT_TO_READ', genres: [], year: '', totalPages: '', currentPage: '' },
   });
 
   const [titleInput, setTitleInput] = useState('');
