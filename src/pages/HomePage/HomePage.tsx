@@ -5,12 +5,51 @@ import { useHomeData } from '../../hooks/useHomeData';
 import { useAllRatings } from '../../hooks/useRatings';
 import { StarRating } from '../../components/StarRating/StarRating';
 import { useAuth } from '../../hooks/useAuth';
+import type { Book } from '../../types/entities';
 
 function greeting(): string {
   const h = new Date().getHours();
   if (h >= 5 && h < 12) return 'Good morning';
   if (h >= 12 && h < 20) return 'Good afternoon';
   return 'Good evening';
+}
+
+function BookRow({ book, onClick, badge }: { book: Book; onClick: () => void; badge?: React.ReactNode }) {
+  return (
+    <Card sx={{ mb: 1.5 }}>
+      <CardActionArea onClick={onClick} sx={{ p: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+          {book.cover ? (
+            <Box
+              component="img"
+              src={book.cover}
+              alt={book.title}
+              sx={{ width: 48, height: 68, objectFit: 'cover', borderRadius: 1, flexShrink: 0 }}
+            />
+          ) : (
+            <Box sx={{ width: 48, height: 68, bgcolor: 'background.default', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <AutoStories sx={{ color: 'text.disabled', fontSize: 20 }} />
+            </Box>
+          )}
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            {badge}
+            <Typography variant="subtitle2" fontWeight={700} noWrap>{book.title}</Typography>
+            <Typography variant="caption" color="text.secondary" noWrap display="block">{book.author}</Typography>
+            {book.status === 'READING' && (
+              <Box sx={{ mt: 0.5 }}>
+                <Typography variant="caption" color="text.secondary">
+                  {book.currentPage && book.totalPages
+                    ? `Page ${book.currentPage} of ${book.totalPages}`
+                    : `${book.currentProgress}%`}
+                </Typography>
+                <LinearProgress variant="determinate" value={book.currentProgress} sx={{ mt: 0.5, borderRadius: 1, height: 4 }} />
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </CardActionArea>
+    </Card>
+  );
 }
 
 export function HomePage() {
@@ -34,16 +73,14 @@ export function HomePage() {
     );
   }
 
-  const { readingCount, finishedCount, pendingCount, currentBook, recentlyFinished } = data;
+  const { readingCount, finishedCount, pendingCount, readingBooks, finishedBooks } = data;
 
   return (
     <Box sx={{ pb: 2 }}>
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
         <Box>
-          <Typography variant="body2" color="text.secondary">
-            {greeting()} 👋
-          </Typography>
+          <Typography variant="body2" color="text.secondary">{greeting()} 👋</Typography>
           <Typography variant="h5" fontWeight={700}>
             My <Box component="span" color="primary.main">Library</Box>
           </Typography>
@@ -72,108 +109,47 @@ export function HomePage() {
       </Box>
 
       {/* Currently reading */}
-      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
-        Currently Reading
-      </Typography>
-      {currentBook ? (
-        <Card sx={{ mb: 3 }}>
-          <CardActionArea onClick={() => navigate(`/books/${currentBook.id}`)} sx={{ p: 2 }}>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-              {currentBook.cover ? (
-                <Box
-                  component="img"
-                  src={currentBook.cover}
-                  alt={currentBook.title}
-                  sx={{ width: 56, height: 80, objectFit: 'cover', borderRadius: 1, flexShrink: 0 }}
-                />
-              ) : (
-                <Box sx={{ width: 56, height: 80, bgcolor: 'background.default', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <AutoStories sx={{ color: 'text.disabled' }} />
-                </Box>
-              )}
-              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                <Chip label="● ACTIVE" size="small" color="primary" sx={{ mb: 0.5, fontSize: '0.65rem', height: 20 }} />
-                <Typography variant="subtitle2" fontWeight={700} noWrap>{currentBook.title}</Typography>
-                <Typography variant="caption" color="text.secondary">{currentBook.author}</Typography>
-                <Box sx={{ mt: 1 }}>
-                  {currentBook.currentPage != null && currentBook.totalPages ? (
-                    <Typography variant="caption" color="text.secondary">
-                      Page {currentBook.currentPage} of {currentBook.totalPages}
-                    </Typography>
-                  ) : (
-                    <Typography variant="caption" color="text.secondary">
-                      {currentBook.currentProgress}%
-                    </Typography>
-                  )}
-                  <LinearProgress
-                    variant="determinate"
-                    value={currentBook.currentProgress}
-                    sx={{ mt: 0.5, borderRadius: 1 }}
-                  />
-                </Box>
-              </Box>
-            </Box>
-          </CardActionArea>
-        </Card>
+      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Currently Reading</Typography>
+      {readingBooks.length > 0 ? (
+        <Box sx={{ mb: 3 }}>
+          {readingBooks.map(book => (
+            <BookRow
+              key={book.id}
+              book={book}
+              onClick={() => navigate(`/books/${book.id}`)}
+              badge={<Chip label="● ACTIVE" size="small" color="primary" sx={{ mb: 0.5, fontSize: '0.65rem', height: 20 }} />}
+            />
+          ))}
+        </Box>
       ) : (
         <Card sx={{ mb: 3, p: 2, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
             You are not reading anything right now
           </Typography>
-          <Chip
-            label="Start reading →"
-            color="primary"
-            onClick={() => navigate('/library')}
-            clickable
-          />
+          <Chip label="Start reading →" color="primary" onClick={() => navigate('/library')} clickable />
         </Card>
       )}
 
-      {/* Completados */}
-      {recentlyFinished.length > 0 && (
+      {/* Completed */}
+      {finishedBooks.length > 0 && (
         <>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-            <Typography variant="subtitle1" fontWeight={700}>Completed</Typography>
-            <Typography
-              variant="body2"
-              color="primary.main"
-              sx={{ cursor: 'pointer' }}
-              onClick={() => navigate('/library?status=FINISHED')}
-            >
-              See all →
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
-            {recentlyFinished.map(book => (
-              <Box
-                key={book.id}
-                onClick={() => navigate(`/books/${book.id}`)}
-                sx={{ flexShrink: 0, width: 90, cursor: 'pointer' }}
-              >
-                {book.cover ? (
-                  <Box
-                    component="img"
-                    src={book.cover}
-                    alt={book.title}
-                    sx={{ width: 90, height: 130, objectFit: 'cover', borderRadius: 1.5, display: 'block' }}
-                  />
-                ) : (
-                  <Box sx={{ width: 90, height: 130, bgcolor: 'background.paper', borderRadius: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <AutoStories sx={{ color: 'text.disabled', fontSize: 32 }} />
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+            Completed ({finishedCount})
+          </Typography>
+          {finishedBooks.map(book => (
+            <BookRow
+              key={book.id}
+              book={book}
+              onClick={() => navigate(`/books/${book.id}`)}
+              badge={
+                ratingsMap.has(book.id!) ? (
+                  <Box sx={{ mb: 0.5 }}>
+                    <StarRating value={ratingsMap.get(book.id!) ?? null} readOnly />
                   </Box>
-                )}
-                <Typography variant="caption" noWrap display="block" sx={{ mt: 0.5, fontWeight: 600 }}>
-                  {book.title}
-                </Typography>
-                <Typography variant="caption" noWrap display="block" color="text.secondary">
-                  {book.author}
-                </Typography>
-                {ratingsMap.has(book.id!) && (
-                  <StarRating value={ratingsMap.get(book.id!) ?? null} readOnly />
-                )}
-              </Box>
-            ))}
-          </Box>
+                ) : undefined
+              }
+            />
+          ))}
         </>
       )}
     </Box>
