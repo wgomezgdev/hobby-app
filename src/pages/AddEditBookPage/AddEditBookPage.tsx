@@ -218,14 +218,36 @@ export function AddEditBookPage() {
                     if (value && typeof value !== 'string') {
                       field.onChange(value.title);
                       setTitleInput(value.title);
-                      if (!getValues('author')) { setValue('author', value.author); setAuthorInput(value.author); }
+                      setValue('author', value.author);
+                      setAuthorInput(value.author);
+                      if (value.year) setValue('year', String(value.year));
+                      if (value.totalPages) setValue('totalPages', String(value.totalPages));
+                      if (value.cover) setValue('cover', value.cover);
+                      if (value.genres.length > 0) setValue('genres', value.genres);
                     }
                   }}
                   renderOption={(props, option) => (
-                    <li {...props} key={`${option.title}-${option.author}`}>
-                      <Box>
-                        <Typography variant="body2">{option.title}</Typography>
-                        {option.author && <Typography variant="caption" color="text.secondary">{option.author}</Typography>}
+                    <li {...props} key={`${option.title}-${option.author}-${option.year}`}>
+                      <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', width: '100%', py: 0.5 }}>
+                        {option.cover ? (
+                          <Box
+                            component="img"
+                            src={option.cover}
+                            alt={option.title}
+                            sx={{ width: 32, height: 46, objectFit: 'cover', borderRadius: 0.5, flexShrink: 0 }}
+                          />
+                        ) : (
+                          <Box sx={{ width: 32, height: 46, bgcolor: 'grey.100', borderRadius: 0.5, flexShrink: 0 }} />
+                        )}
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="body2" noWrap fontWeight={600}>{option.title}</Typography>
+                          <Typography variant="caption" color="text.secondary" noWrap display="block">
+                            {[option.author, option.year].filter(Boolean).join(' · ')}
+                          </Typography>
+                          {option.totalPages && (
+                            <Typography variant="caption" color="text.disabled">{option.totalPages} pages</Typography>
+                          )}
+                        </Box>
                       </Box>
                     </li>
                   )}
