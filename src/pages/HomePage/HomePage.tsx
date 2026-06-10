@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useHomeData } from '../../hooks/useHomeData';
 import { useAllRatings } from '../../hooks/useRatings';
 import { StarRating } from '../../components/StarRating/StarRating';
+import { useAuth } from '../../hooks/useAuth';
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -16,6 +17,7 @@ export function HomePage() {
   const navigate = useNavigate();
   const data = useHomeData();
   const ratings = useAllRatings();
+  const { user } = useAuth();
 
   const ratingsMap = new Map((ratings ?? []).map(r => [r.bookId, r.stars]));
 
@@ -46,7 +48,13 @@ export function HomePage() {
             My <Box component="span" color="primary.main">Library</Box>
           </Typography>
         </Box>
-        <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40, fontWeight: 700 }}>RP</Avatar>
+        <Avatar
+          src={user?.photoURL ?? undefined}
+          onClick={() => navigate('/profile')}
+          sx={{ bgcolor: 'primary.main', width: 40, height: 40, fontWeight: 700, cursor: 'pointer' }}
+        >
+          {user?.displayName?.[0] ?? 'RP'}
+        </Avatar>
       </Box>
 
       {/* Stats row */}

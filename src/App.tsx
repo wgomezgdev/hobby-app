@@ -10,6 +10,7 @@ import { LogSessionPage } from './pages/LogSessionPage/LogSessionPage';
 import { RankingPage } from './pages/RankingPage/RankingPage';
 import { SettingsPage } from './pages/SettingsPage/SettingsPage';
 import { StatsPage } from './pages/StatsPage/StatsPage';
+import { ProfilePage } from './pages/ProfilePage/ProfilePage';
 
 function NotFound() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="/ranking" element={<RankingPage />} />
             <Route path="/stats" element={<StatsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

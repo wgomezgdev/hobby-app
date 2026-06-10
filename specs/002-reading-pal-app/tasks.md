@@ -613,9 +613,60 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Phase 23 — Stats Screen | T140–T146 | 7 of 7 | ✅ done |
 | Phase 14 — AI Cover Scan (Gemini) | T097–T106 | 7 of 10 | ✅ done |
 | Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ planned |
-| Phase 16 — Supabase Cloud Sync | T112–T120 | 5 of 9 | ⏳ planned |
+| Phase 16 — Supabase Cloud Sync | T112–T120 | 5 of 9 | ⏳ deferred (replaced by Phase 26) |
 | Phase 24 — Goodreads Library Import | T147–T151 | 4 of 5 | ✅ done |
 | Phase 25 — Stats: Session Activity + Genre Year Fix | T152–T155 | 4 of 4 | ✅ done |
+| Phase 26 — Firebase Auth + Firestore Sync | T156–T162 | 7 of 7 | ✅ done |
+
+---
+
+## Phase 26: Firebase Auth + Firestore Cloud Sync ✅ DONE
+
+**Goal**: Google Sign-In via Firebase Auth. Profile tab shows user photo, name, and email.
+All app data (books, sessions, quotes, ratings) syncs to Firestore under `users/{uid}/`.
+Replaces the deferred Supabase Phase 16.
+
+**Prerequisites**: Firebase project with Authentication (Google provider enabled) + Firestore.
+
+**Env vars required** (Vercel + `.env.local`):
+```
+VITE_FIREBASE_API_KEY
+VITE_FIREBASE_AUTH_DOMAIN
+VITE_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET
+VITE_FIREBASE_MESSAGING_SENDER_ID
+VITE_FIREBASE_APP_ID
+```
+
+**Architecture**:
+- `src/lib/firebase.ts` — conditional init (no-op when env vars absent)
+- `src/lib/firestoreSync.ts` — `pushToFirestore`, `pullFromFirestore`, `autoSyncOnSignIn`
+  (batch-chunked at 400 writes; stores `lastSyncedAt` in localStorage)
+- `src/hooks/useAuth.ts` — reactive auth state; triggers `autoSyncOnSignIn` on first sign-in
+- `src/pages/ProfilePage/ProfilePage.tsx` — user photo/name/email; Sync + Restore buttons;
+  link to Settings (data management); Sign out
+
+**Sync strategy (V1)**:
+- On sign-in: if local Dexie empty → pull from Firestore; else → push to Firestore
+- "Sync to cloud": manual push, overwrites Firestore with current local data
+- "Restore from cloud": manual pull with confirmation, replaces local data
+
+- [x] T156 Create `src/lib/firebase.ts`: conditional Firebase init guarded by env vars;
+  export `auth`, `firestoreDb`, `googleProvider`, `isFirebaseConfigured`
+- [x] T157 Create `src/lib/firestoreSync.ts`: `pushToFirestore`, `pullFromFirestore`,
+  `autoSyncOnSignIn`, `getLastSyncedAt`; batch writes chunked at 400 ops
+- [x] T158 Create `src/hooks/useAuth.ts`: reactive auth state via `onAuthStateChanged`;
+  calls `autoSyncOnSignIn` on first sign-in; exposes `signIn`, `signOut`
+- [x] T159 Create `src/pages/ProfilePage/ProfilePage.tsx`: Google photo avatar, name, email;
+  Sync / Restore buttons with loading states and Snackbar feedback; Settings link; Sign out
+- [x] T160 Add `/profile` route to `App.tsx`; update `Layout.tsx` bottom nav Profile tab
+  to route to `/profile` and show Google user avatar when signed in
+- [x] T161 Update `HomePage.tsx` avatar to show Google user photo (tappable → `/profile`)
+- [x] T162 Add `firebase ^10.14.0` to `package.json`; bump version to `0.10.0`; add
+  Firebase env var declarations to `src/vite-env.d.ts`
+
+**Checkpoint**: Profile tab shows Google Sign-In; after sign-in shows photo + name; Sync
+uploads local data to Firestore; Restore pulls it back; avatar on Home shows Google photo.
 
 ---
 
