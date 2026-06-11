@@ -1159,3 +1159,129 @@ Return result to user
 - When Firebase is not configured (local dev without env vars), cache is silently skipped
 - Google Books fallback (T166) uses existing quota — only fires when Open Library returns nothing
 - No Dexie schema change needed — cache lives in Firestore only
+
+---
+
+## Phase 28: Internationalisation — English / Spanish (i18n) ⏳ PLANNED
+
+**Goal**: The app UI language follows the device/browser locale automatically. Users with a
+Spanish locale see all labels, messages, and UI text in Spanish; English otherwise. No manual
+toggle needed — locale is detected at startup.
+
+**Motivation**: The original spec was drafted in Spanish and the primary user base is
+Spanish-speaking. Supporting both languages with zero configuration friction makes the app
+feel native on any device.
+
+---
+
+### Approach
+
+Use **`react-i18next`** + **`i18next`** (industry standard, lightweight, tree-shakeable).
+Language is detected from `navigator.language` (e.g. `es`, `es-MX`, `en-US`) at startup.
+All UI strings are extracted into two JSON translation files:
+- `src/locales/en.json` — English (fallback)
+- `src/locales/es.json` — Spanish
+
+No backend required — translation files are bundled at build time.
+
+**Library**: `i18next` + `react-i18next` + `i18next-browser-languagedetector`
+
+---
+
+### Strings to translate
+
+Every user-visible string in the app:
+- Page titles, section labels, button text, chip labels
+- Empty state messages, error messages, confirmation dialogs
+- Form field labels, helper text, validation errors
+- Status values (Reading, Finished, Want to Read)
+- Genre names (Fiction, Classics, Novel, Fantasy, Adventure, Science Fiction, Romance, Thriller)
+- Stats labels (Books read, Sessions, Time read, Day streak, Pages read, Best month, etc.)
+- Navigation labels (Home, Library, Stats, Profile)
+- Settings page labels and descriptions
+- Snackbar / toast messages
+
+---
+
+### Tasks
+
+| ID | Task | Notes |
+|----|------|-------|
+| T168 | Install `i18next`, `react-i18next`, `i18next-browser-languagedetector` | `npm install i18next react-i18next i18next-browser-languagedetector` |
+| T169 | Create `src/i18n.ts` — init i18next with language detector, `en` fallback, load both JSON files | Detect from `navigator.language`; supported: `['en', 'es']` |
+| T170 | Create `src/locales/en.json` with all English strings | Flat key-value: `"library.empty": "Your library is empty"` etc. |
+| T171 | Create `src/locales/es.json` with all Spanish translations | Mirror of `en.json` with Spanish values |
+| T172 | Import and init `src/i18n.ts` in `src/main.tsx` before `ReactDOM.render` | Must run before any component renders |
+| T173 | Replace hardcoded strings in all page components with `useTranslation` hook | `const { t } = useTranslation(); ... t('library.empty')` |
+| T174 | Replace hardcoded strings in all shared components (Layout, BookCard, CoverUpload, etc.) | Same pattern |
+| T175 | Translate `STATUS_OPTIONS` labels and `GENRES` display names | Use `t()` at render time, not at definition time |
+| T176 | Translate all error/success messages in hooks and repositories | `useCoverScan`, `GoodreadsImport`, `CoverSearch`, etc. |
+| T177 | Bump version to `0.14.0` | New feature (minor bump) |
+
+---
+
+### Key design decisions
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| Library | `react-i18next` | Most widely used React i18n solution; hooks-based; no context boilerplate |
+| Language detection | `navigator.language` via `i18next-browser-languagedetector` | Zero config for user; respects system setting; works on mobile |
+| Fallback | English | Safe default for all unsupported locales |
+| No toggle | Automatic only (for now) | Simplest UX; can add manual override later if needed |
+| Translation format | Flat JSON with dot-notation keys | Simple to maintain; no nesting complexity |
+| Genre names | Translated in `t()` at render time | `GENRES` array stays as canonical English keys in code |
+
+---
+
+### Translation key structure (example)
+
+```json
+{
+  "nav.home": "Home",
+  "nav.library": "Library",
+  "nav.stats": "Stats",
+  "nav.profile": "Profile",
+  "home.greeting.morning": "Good morning",
+  "home.greeting.afternoon": "Good afternoon",
+  "home.greeting.evening": "Good evening",
+  "library.empty": "Your library is empty",
+  "library.addFirst": "Add your first book",
+  "status.reading": "Reading",
+  "status.finished": "Finished",
+  "status.wantToRead": "Want to Read",
+  "genre.Fiction": "Fiction",
+  "genre.Classics": "Classics",
+  "genre.Novel": "Novel",
+  "genre.Fantasy": "Fantasy",
+  "genre.Adventure": "Adventure",
+  "genre.ScienceFiction": "Science Fiction",
+  "genre.Romance": "Romance",
+  "genre.Thriller": "Thriller",
+  "book.add": "Add Book",
+  "book.edit": "Edit Book",
+  "book.save": "Save Book",
+  "book.saveChanges": "Save Changes",
+  "book.delete": "Delete Book",
+  "book.deleteConfirm": "This will permanently delete this book and all its sessions, quotes, and rating. This cannot be undone.",
+  "stats.booksRead": "Books read",
+  "stats.sessions": "Sessions",
+  "stats.timeRead": "Time read",
+  "stats.dayStreak": "Day streak",
+  "stats.pagesRead": "Pages read",
+  "stats.bestMonth": "Best month",
+  "stats.allTime": "all time",
+  "settings.export": "Export Snapshot",
+  "settings.import": "Import Snapshot",
+  "settings.importGoodreads": "Import from Goodreads",
+  "error.coverSize": "Image must be under 1 MB. Please choose a smaller file.",
+  "error.scanNotConfigured": "AI scan not configured. Add VITE_GEMINI_API_KEY to enable."
+}
+```
+
+---
+
+### Checkpoint
+
+Device locale = `es` → all UI labels in Spanish, genre chips show Spanish names, empty states in Spanish.
+Device locale = `en` (or any other) → English throughout.
+Switching device language and reloading → UI language updates.
