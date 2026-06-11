@@ -1098,3 +1098,64 @@ T140–T146 (Stats screen)   ──┘── depends on T129 + T131 + T128
 - Cover grid responsiveness uses MUI `Grid` breakpoints, not custom CSS
 - All forms use React Hook Form — no `useState` for field values
 - All reads use `useLiveQuery` — no `useEffect` + `await` patterns
+
+---
+
+## Phase 27: Book Metadata Cache (Future / Production-Scale) ⏳ PLANNED
+
+**Goal**: Cache book search results in Firestore so repeated lookups never hit the external API.
+Reduces quota pressure, improves response time for popular titles, and future-proofs the app for
+a public launch with many concurrent users.
+
+**Motivation**: Open Library is free and unlimited today, but for a production app with thousands
+of users a caching layer decouples the app from any single third-party API. Once a book is
+looked up, it should never need to be fetched again.
+
+### Architecture
+
+```
+User types title
+      │
+      ▼
+Check Firestore `books-cache` collection  ──hit──▶  return cached result (instant)
+      │ miss
+      ▼
+Query Open Library API
+      │
+      ▼
+Write result to Firestore `books-cache/{cacheKey}`
+      │
+      ▼
+Return result to user
+```
+
+**Cache key**: `sha1(query.toLowerCase().trim())` or simply `encodeURIComponent(query.toLowerCase())` as the Firestore document ID.
+
+**Cache document schema** (`books-cache/{key}`):
+```ts
+{
+  query: string;          // original normalized query
+  fetchedAt: number;      // Date.now() — for TTL
+  results: TitleSuggestion[];
+}
+```
+
+**TTL**: 30 days — stale entries can be ignored or refreshed on next miss (no active purge needed at this scale).
+
+### Tasks
+
+| ID | Task | Notes |
+|----|------|-------|
+| T163 | Create `src/lib/bookSearchCache.ts` | `getCached(query)` / `setCached(query, results)` using Firestore; skip if `!firestoreDb` |
+| T164 | Update `useTitleSuggestions` to check cache before API call | Cache hit → set suggestions immediately, skip fetch |
+| T165 | Write cache entry after successful Open Library fetch | Fire-and-forget (`void setCached(...)`) |
+| T166 | Add fallback to Google Books if Open Library returns 0 results | Only triggered on empty response, not on error |
+| T167 | Bump version to `0.14.0` | New feature |
+
+### Notes
+
+- Cache reads/writes are **fire-and-forget** — never block the UI
+- Cache is **shared across all users** (keyed by query, not by uid) — maximises hit rate
+- When Firebase is not configured (local dev without env vars), cache is silently skipped
+- Google Books fallback (T166) uses existing quota — only fires when Open Library returns nothing
+- No Dexie schema change needed — cache lives in Firestore only
