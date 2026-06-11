@@ -10,6 +10,7 @@ interface CoverUploadProps {
 
 const MAX_DIMENSION = 500;
 const JPEG_QUALITY = 0.75;
+const MAX_FILE_BYTES = 1 * 1024 * 1024; // 1 MB
 
 function resizeAndEncode(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -46,6 +47,10 @@ export function CoverUpload({ value, onChange, extra }: CoverUploadProps) {
 
   const processFile = async (file: File) => {
     setError(null);
+    if (file.size > MAX_FILE_BYTES) {
+      setError('Image must be under 1 MB. Please choose a smaller file.');
+      return;
+    }
     try {
       const dataUrl = await resizeAndEncode(file);
       onChange(dataUrl);

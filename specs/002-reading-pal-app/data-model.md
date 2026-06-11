@@ -13,9 +13,12 @@
 export type BookStatus = 'WANT_TO_READ' | 'READING' | 'FINISHED';
 
 export type Genre =
-  | 'Fantasía'
-  | 'Aventura'
-  | 'Ciencia Ficción'
+  | 'Fiction'
+  | 'Classics'
+  | 'Novel'
+  | 'Fantasy'
+  | 'Adventure'
+  | 'Science Fiction'
   | 'Romance'
   | 'Thriller';
 

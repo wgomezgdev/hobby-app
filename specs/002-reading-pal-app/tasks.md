@@ -612,7 +612,7 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Phase 22 — Pace Stats | T138–T139 | 2 of 2 | ✅ done |
 | Phase 23 — Stats Screen | T140–T146 | 7 of 7 | ✅ done |
 | Phase 14 — AI Cover Scan (Gemini) | T097–T106 | 7 of 10 | ✅ done |
-| Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ planned |
+| Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ future |
 | Phase 16 — Supabase Cloud Sync | T112–T120 | 5 of 9 | ⏳ deferred (replaced by Phase 26) |
 | Phase 24 — Goodreads Library Import | T147–T151 | 4 of 5 | ✅ done |
 | Phase 25 — Stats: Session Activity + Genre Year Fix | T152–T155 | 4 of 4 | ✅ done |
@@ -826,7 +826,7 @@ show clear messages.
 
 ---
 
-## Phase 15: User Story 11 — AI Reading Summary ⏳ PLANNED
+## Phase 15: User Story 11 — AI Reading Summary ⏳ FUTURE (deferred)
 
 **Goal**: On the book detail page, the user can generate a 2–3 sentence AI summary of
 the book using Gemini Flash, then save it as a note on the book.
