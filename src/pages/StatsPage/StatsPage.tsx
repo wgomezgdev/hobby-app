@@ -4,6 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import { useStats } from '../../hooks/useStats';
 import { useStatsUiStore } from '../../stores/statsUiStore';
 
@@ -19,6 +20,7 @@ function formatHours(minutes: number): string {
 export function StatsPage() {
   const stats = useStats();
   const { selectedYear, setYear } = useStatsUiStore();
+  const { t } = useTranslation();
 
   if (!stats) {
     return (
@@ -44,9 +46,9 @@ export function StatsPage() {
   if (!hasAnyData && availableYears.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: 10 }}>
-        <Typography variant="h6">Statistics 📊</Typography>
+        <Typography variant="h6">{t('stats.title')}</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          Log a reading session to see statistics
+          {t('stats.empty')}
         </Typography>
       </Box>
     );
@@ -54,17 +56,15 @@ export function StatsPage() {
 
   return (
     <Box sx={{ pb: 2 }}>
-      {/* Header */}
-      <Typography variant="h5" fontWeight={700}>Statistics 📊</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Your reading progress</Typography>
+      <Typography variant="h5" fontWeight={700}>{t('stats.title')}</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{t('stats.subtitle')}</Typography>
 
-      {/* Year filter */}
       {years.length > 1 && (
         <Stack direction="row" spacing={1} sx={{ mb: 3, flexWrap: 'wrap' }}>
           {years.map(y => (
             <Chip
               key={String(y)}
-              label={y === 'all' ? 'All' : String(y)}
+              label={y === 'all' ? t('stats.yearAll') : String(y)}
               onClick={() => setYear(y)}
               color={selectedYear === y ? 'primary' : 'default'}
               variant={selectedYear === y ? 'filled' : 'outlined'}
@@ -74,17 +74,16 @@ export function StatsPage() {
         </Stack>
       )}
 
-      {/* Books read card */}
       <Card sx={{ p: 2.5, mb: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
           <Box>
             <Typography variant="h3" fontWeight={800} color="primary.main">{booksRead}</Typography>
-            <Typography variant="body2" color="text.secondary">Books read · Annual goal: 50</Typography>
+            <Typography variant="body2" color="text.secondary">{t('stats.booksRead')}</Typography>
           </Box>
           {yoyChange != null && (
             <Chip
               icon={<TrendingUp fontSize="small" />}
-              label={`${yoyChange > 0 ? '+' : ''}${yoyChange}% vs last year`}
+              label={t('stats.yoyChange', { percent: `${yoyChange > 0 ? '+' : ''}${yoyChange}` })}
               size="small"
               color={yoyChange >= 0 ? 'success' : 'error'}
               sx={{ fontSize: '0.7rem' }}
@@ -93,37 +92,35 @@ export function StatsPage() {
         </Box>
       </Card>
 
-      {/* Reading activity card */}
       <Card sx={{ p: 2.5, mb: 2 }}>
-        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>Reading Activity</Typography>
+        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>{t('stats.activity.title')}</Typography>
         <Grid container spacing={2}>
           <Grid item xs={4} sx={{ textAlign: 'center' }}>
             <Typography variant="h5" fontWeight={800} color="primary.main">
               {totalSessions}
             </Typography>
-            <Typography variant="caption" color="text.secondary">Sessions</Typography>
+            <Typography variant="caption" color="text.secondary">{t('stats.activity.sessions')}</Typography>
           </Grid>
           <Grid item xs={4} sx={{ textAlign: 'center' }}>
             <Typography variant="h5" fontWeight={800} color="primary.main">
               {formatHours(totalReadingMinutes)}
             </Typography>
-            <Typography variant="caption" color="text.secondary">Time read</Typography>
+            <Typography variant="caption" color="text.secondary">{t('stats.activity.timeRead')}</Typography>
           </Grid>
           <Grid item xs={4} sx={{ textAlign: 'center' }}>
             <Typography variant="h5" fontWeight={800} color="primary.main">
               {readingStreak}🔥
             </Typography>
-            <Typography variant="caption" color="text.secondary">Day streak</Typography>
+            <Typography variant="caption" color="text.secondary">{t('stats.activity.streak')}</Typography>
           </Grid>
         </Grid>
       </Card>
 
-      {/* Monthly bar chart */}
       {booksRead > 0 && (
         <Card sx={{ p: 2, mb: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography variant="subtitle2" fontWeight={700}>Books per month</Typography>
-            <Typography variant="caption" color="text.secondary">ø {avgPerMonth} / mo</Typography>
+            <Typography variant="subtitle2" fontWeight={700}>{t('stats.booksPerMonth')}</Typography>
+            <Typography variant="caption" color="text.secondary">{t('stats.avgPerMonth', { avg: avgPerMonth })}</Typography>
           </Box>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={booksByMonth} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
@@ -143,12 +140,11 @@ export function StatsPage() {
         </Card>
       )}
 
-      {/* Genre donut + right stats */}
       {(booksRead > 0 || genreBreakdown.length > 0 || totalPages > 0) && (
         <Grid container spacing={2}>
           <Grid item xs={6}>
             <Card sx={{ p: 2, height: '100%' }}>
-              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>Genres</Typography>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>{t('stats.genres')}</Typography>
               {genreBreakdown.length > 0 ? (
                 <>
                   <ResponsiveContainer width="100%" height={100}>
@@ -173,7 +169,9 @@ export function StatsPage() {
                       <Box key={g.genre} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: GENRE_COLORS[i % GENRE_COLORS.length] }} />
-                          <Typography variant="caption" noWrap sx={{ maxWidth: 70 }}>{g.genre}</Typography>
+                          <Typography variant="caption" noWrap sx={{ maxWidth: 70 }}>
+                            {t(`genre.${g.genre.replace(/\s/g, '_')}`)}
+                          </Typography>
                         </Box>
                         <Typography variant="caption" color="primary.main" fontWeight={700}>{g.pct}%</Typography>
                       </Box>
@@ -181,7 +179,7 @@ export function StatsPage() {
                   </Stack>
                 </>
               ) : (
-                <Typography variant="caption" color="text.secondary">No genres tagged</Typography>
+                <Typography variant="caption" color="text.secondary">{t('stats.noGenres')}</Typography>
               )}
             </Card>
           </Grid>
@@ -189,23 +187,23 @@ export function StatsPage() {
           <Grid item xs={6}>
             <Stack spacing={2} sx={{ height: '100%' }}>
               <Card sx={{ p: 2, flex: 1 }}>
-                <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 1 }}>PAGES READ</Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 1 }}>{t('stats.pagesRead')}</Typography>
                 <Typography variant="h5" fontWeight={800} color="primary.main">
-                  {totalPages > 0 ? totalPages.toLocaleString('en-US') : '—'}
+                  {totalPages > 0 ? totalPages.toLocaleString() : '—'}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {totalPages === 0 ? 'add page counts to books' : 'all time'}
+                  {totalPages === 0 ? t('stats.addPageCounts') : t('stats.allTime')}
                 </Typography>
               </Card>
               <Card sx={{ p: 2, flex: 1 }}>
-                <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 1 }}>BEST MONTH</Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 1 }}>{t('stats.bestMonth')}</Typography>
                 {bestMonth ? (
                   <>
                     <Typography variant="h6" fontWeight={800}>{bestMonth.month}</Typography>
-                    <Typography variant="caption" color="text.secondary">{bestMonth.count} books 🔥</Typography>
+                    <Typography variant="caption" color="text.secondary">{t('stats.bestMonthBooks', { count: bestMonth.count })}</Typography>
                   </>
                 ) : (
-                  <Typography variant="caption" color="text.secondary">No data</Typography>
+                  <Typography variant="caption" color="text.secondary">{t('stats.noData')}</Typography>
                 )}
               </Card>
             </Stack>

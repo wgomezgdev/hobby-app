@@ -4,6 +4,7 @@ import {
 } from '@mui/material';
 import { MenuBook } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAllRatings } from '../../hooks/useRatings';
 import { useAllBooks } from '../../hooks/useBooks';
 import { StarRating } from '../../components/StarRating/StarRating';
@@ -21,6 +22,7 @@ export function RankingPage() {
   const ratings = useAllRatings();
   const books = useAllBooks();
   const [view, setView] = useState<View>('stars');
+  const { t } = useTranslation();
 
   const ranked = useMemo((): RankedEntry[] | undefined => {
     if (!ratings || !books) return undefined;
@@ -43,9 +45,9 @@ export function RankingPage() {
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
         <Box>
-          <Typography variant="h5">Ranking</Typography>
+          <Typography variant="h5">{t('ranking.title')}</Typography>
           <Typography variant="body2" color="text.secondary">
-            {view === 'stars' ? 'Your books sorted by star rating' : 'Finished books, most recent first'}
+            {view === 'stars' ? t('ranking.subtitleStars') : t('ranking.subtitleRecent')}
           </Typography>
         </Box>
         <ToggleButtonGroup
@@ -54,8 +56,8 @@ export function RankingPage() {
           onChange={(_, v) => { if (v) setView(v); }}
           size="small"
         >
-          <ToggleButton value="stars">By Stars</ToggleButton>
-          <ToggleButton value="recent">Recently Finished</ToggleButton>
+          <ToggleButton value="stars">{t('ranking.byStars')}</ToggleButton>
+          <ToggleButton value="recent">{t('ranking.recentlyFinished')}</ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
@@ -69,10 +71,10 @@ export function RankingPage() {
         <Box sx={{ textAlign: 'center', py: 10 }}>
           <MenuBook sx={{ fontSize: 64, color: 'grey.300', mb: 2 }} />
           <Typography color="text.secondary">
-            {view === 'stars' ? 'Rate some books to see your ranking' : 'No finished books yet'}
+            {view === 'stars' ? t('ranking.emptyStars') : t('ranking.emptyRecent')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            <Link to="/">Go to your library</Link>
+            <Link to="/">{t('ranking.goToLibrary')}</Link>
           </Typography>
         </Box>
       ) : (
@@ -88,7 +90,7 @@ export function RankingPage() {
                   <Box
                     component="img"
                     src={book.cover}
-                    alt={`Cover of ${book.title}`}
+                    alt={book.title}
                     sx={{ width: '100%', height: 160, objectFit: 'cover' }}
                     loading="lazy"
                   />
@@ -104,7 +106,7 @@ export function RankingPage() {
                     </Typography>
                     {rating
                       ? <StarRating value={rating.stars} readOnly />
-                      : <Typography variant="caption" color="text.disabled">Not rated</Typography>
+                      : <Typography variant="caption" color="text.disabled">{t('rating.notRatedLabel')}</Typography>
                     }
                   </Stack>
                   <Typography variant="subtitle2" noWrap>{book.title}</Typography>

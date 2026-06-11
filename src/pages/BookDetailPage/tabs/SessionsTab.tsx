@@ -1,5 +1,6 @@
 import { Box, Button, Divider, List, ListItem, ListItemText, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useSessionsForBook } from '../../../hooks/useSessions';
 import { SkeletonCard } from '../../../components/SkeletonCard/SkeletonCard';
 
@@ -10,6 +11,7 @@ interface SessionsTabProps {
 export function SessionsTab({ bookId }: SessionsTabProps) {
   const sessions = useSessionsForBook(bookId);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   if (sessions === undefined) {
     return (
@@ -22,13 +24,13 @@ export function SessionsTab({ bookId }: SessionsTabProps) {
   if (sessions.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: 6 }}>
-        <Typography color="text.secondary">No sessions logged yet</Typography>
+        <Typography color="text.secondary">{t('session.empty')}</Typography>
         <Button
           variant="contained"
           sx={{ mt: 2 }}
           onClick={() => navigate(`/books/${bookId}/sessions/new`)}
         >
-          Log a session
+          {t('session.logCta')}
         </Button>
       </Box>
     );

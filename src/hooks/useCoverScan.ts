@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface ScanResult {
   title: string;
@@ -6,6 +7,7 @@ export interface ScanResult {
 }
 
 export function useCoverScan() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -13,7 +15,7 @@ export function useCoverScan() {
     const key = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
 
     if (!key) {
-      setError('AI scan not configured. Add VITE_GEMINI_API_KEY to enable.');
+      setError(t('scan.notConfigured'));
       return null;
     }
 
@@ -43,15 +45,15 @@ export function useCoverScan() {
       );
 
       if (res.status === 429) {
-        setError('Daily scan limit reached. Try again tomorrow.');
+        setError(t('scan.limitReached'));
         return null;
       }
       if (res.status === 400 || res.status === 401 || res.status === 403) {
-        setError('Invalid API key. Check your VITE_GEMINI_API_KEY.');
+        setError(t('scan.invalidKey'));
         return null;
       }
       if (!res.ok) {
-        setError(`AI service error (HTTP ${res.status}). Try again.`);
+        setError(t('scan.serviceError', { status: res.status }));
         return null;
       }
 
@@ -65,14 +67,14 @@ export function useCoverScan() {
       const author = authorLine === 'Unknown' ? '' : authorLine;
 
       if (!title && !author) {
-        setError('Cover not recognized. Try a clearer photo or fill in the fields manually.');
+        setError(t('scan.notRecognized'));
         return null;
       }
 
       return { title, author };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      setError(`Network error: ${msg}`);
+      setError(t('scan.networkError', { error: msg }));
       return null;
     } finally {
       setLoading(false);

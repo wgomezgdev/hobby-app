@@ -4,6 +4,7 @@ import {
   DialogTitle, Divider, Snackbar, Stack, Typography,
 } from '@mui/material';
 import { AutoStories, Download, Upload } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { exportSnapshot, importSnapshot } from '../../utils/snapshot';
 import { GoodreadsImport } from '../../components/GoodreadsImport/GoodreadsImport';
 
@@ -12,13 +13,14 @@ export function SettingsPage() {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [goodreadsOpen, setGoodreadsOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{ message: string; severity: 'success' | 'error' } | null>(null);
+  const { t } = useTranslation();
 
   const handleExport = async () => {
     try {
       await exportSnapshot();
-      setSnackbar({ message: 'Backup downloaded successfully', severity: 'success' });
+      setSnackbar({ message: t('settings.exportSuccess'), severity: 'success' });
     } catch {
-      setSnackbar({ message: 'Export failed. Please try again.', severity: 'error' });
+      setSnackbar({ message: t('settings.exportError'), severity: 'error' });
     }
   };
 
@@ -32,10 +34,10 @@ export function SettingsPage() {
     if (!pendingFile) return;
     try {
       await importSnapshot(pendingFile);
-      setSnackbar({ message: 'Data restored successfully', severity: 'success' });
+      setSnackbar({ message: t('settings.importSuccess'), severity: 'success' });
     } catch (err) {
       setSnackbar({
-        message: err instanceof Error ? err.message : 'Import failed',
+        message: err instanceof Error ? err.message : t('settings.importError'),
         severity: 'error',
       });
     } finally {
@@ -45,50 +47,48 @@ export function SettingsPage() {
 
   return (
     <Box sx={{ maxWidth: 480, mx: 'auto' }}>
-      <Typography variant="h5" sx={{ mb: 3 }}>Settings</Typography>
+      <Typography variant="h5" sx={{ mb: 3 }}>{t('settings.title')}</Typography>
 
       <Stack spacing={3}>
         <Box>
-          <Typography variant="h6" sx={{ mb: 1 }}>Export Backup</Typography>
+          <Typography variant="h6" sx={{ mb: 1 }}>{t('settings.exportTitle')}</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Download all your books, sessions, quotes, and ratings as a JSON file.
+            {t('settings.exportDesc')}
           </Typography>
           <Button variant="contained" startIcon={<Download />} onClick={handleExport}>
-            Export Snapshot
+            {t('settings.exportButton')}
           </Button>
         </Box>
 
         <Divider />
 
         <Box>
-          <Typography variant="h6" sx={{ mb: 1 }}>Import from Goodreads</Typography>
+          <Typography variant="h6" sx={{ mb: 1 }}>{t('settings.goodreadsTitle')}</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Seed your library from your public Goodreads profile. Paste your profile URL or
-            user ID to import all shelves (read, currently reading, to-read). Existing books
-            are never overwritten.
+            {t('settings.goodreadsDesc')}
           </Typography>
           <Button
             variant="outlined"
             startIcon={<AutoStories />}
             onClick={() => setGoodreadsOpen(true)}
           >
-            Import from Goodreads
+            {t('settings.goodreadsButton')}
           </Button>
         </Box>
 
         <Divider />
 
         <Box>
-          <Typography variant="h6" sx={{ mb: 1 }}>Import Backup</Typography>
+          <Typography variant="h6" sx={{ mb: 1 }}>{t('settings.importTitle')}</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Restore data from a previously exported JSON file. This will replace all current data.
+            {t('settings.importDesc')}
           </Typography>
           <Button
             variant="outlined"
             startIcon={<Upload />}
             onClick={() => fileInputRef.current?.click()}
           >
-            Choose Backup File
+            {t('settings.importButton')}
           </Button>
           <input
             ref={fileInputRef}
@@ -108,17 +108,16 @@ export function SettingsPage() {
         aria-labelledby="import-confirm-title"
         aria-describedby="import-confirm-desc"
       >
-        <DialogTitle id="import-confirm-title">Replace all data?</DialogTitle>
+        <DialogTitle id="import-confirm-title">{t('settings.importConfirmTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText id="import-confirm-desc">
-            This will replace all current data with the contents of{' '}
-            <strong>{pendingFile?.name}</strong>. This action cannot be undone.
+            {t('settings.importConfirmContent', { filename: pendingFile?.name })}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPendingFile(null)} autoFocus>Cancel</Button>
+          <Button onClick={() => setPendingFile(null)} autoFocus>{t('settings.importCancel')}</Button>
           <Button onClick={handleImportConfirm} color="error" variant="contained">
-            Replace Data
+            {t('settings.importConfirm')}
           </Button>
         </DialogActions>
       </Dialog>

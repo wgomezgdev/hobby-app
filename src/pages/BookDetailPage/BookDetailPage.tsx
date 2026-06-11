@@ -2,6 +2,7 @@ import { Box, Button, Card, Chip, Dialog, DialogActions, DialogContent, DialogCo
 import { ArrowBack, DeleteOutlined, Edit } from '@mui/icons-material';
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useBook } from '../../hooks/useBooks';
 import { useSessionsForBook } from '../../hooks/useSessions';
 import { deleteBook } from '../../repositories/bookRepository';
@@ -15,11 +16,6 @@ import { calcPaceStats, formatDate } from '../../utils/readingPace';
 const VALID_TABS = ['progress', 'sessions', 'quotes', 'rating'] as const;
 type TabValue = typeof VALID_TABS[number];
 
-const STATUS_LABELS: Record<string, string> = {
-  WANT_TO_READ: 'Want to Read',
-  READING: 'Reading',
-  FINISHED: 'Finished',
-};
 const STATUS_COLORS: Record<string, 'default' | 'primary' | 'success'> = {
   WANT_TO_READ: 'default',
   READING: 'primary',
@@ -32,6 +28,7 @@ export function BookDetailPage() {
   const book = useBook(bookId);
   const sessions = useSessionsForBook(bookId);
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const rawTab = searchParams.get('tab');
@@ -54,10 +51,10 @@ export function BookDetailPage() {
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <IconButton onClick={() => navigate('/')} aria-label="Back to library">
+        <IconButton onClick={() => navigate('/')} aria-label={t('book.detail.backAria')}>
           <ArrowBack />
         </IconButton>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>Book Detail</Typography>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>{t('book.detail.title')}</Typography>
         {book && (
           <>
             <Button
@@ -65,11 +62,11 @@ export function BookDetailPage() {
               onClick={() => navigate(`/books/${bookId}/edit`)}
               size="small"
             >
-              Edit
+              {t('book.detail.edit')}
             </Button>
             <IconButton
               onClick={() => setDeleteOpen(true)}
-              aria-label="Delete book"
+              aria-label={t('book.detail.deleteAria')}
               color="error"
             >
               <DeleteOutlined />
@@ -94,7 +91,7 @@ export function BookDetailPage() {
             <Box
               component="img"
               src={book.cover}
-              alt={`Cover of ${book.title}`}
+              alt={book.title}
               sx={{ width: 80, height: 110, objectFit: 'cover', borderRadius: 1, flexShrink: 0 }}
             />
           ) : (
@@ -107,21 +104,21 @@ export function BookDetailPage() {
           )}
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             {book.genres && book.genres.length > 0 && (
-              <Chip label={book.genres[0].toUpperCase()} size="small" color="primary" sx={{ mb: 0.5, fontSize: '0.65rem' }} />
+              <Chip label={t(`genre.${book.genres[0].replace(/\s/g, '_')}`).toUpperCase()} size="small" color="primary" sx={{ mb: 0.5, fontSize: '0.65rem' }} />
             )}
             <Typography variant="h6" noWrap>{book.title}</Typography>
             <Typography variant="body2" color="text.secondary">
               {book.author}{book.year ? ` · ${book.year}` : ''}
             </Typography>
             <Chip
-              label={STATUS_LABELS[book.status]}
+              label={t(`book.status.${book.status}`)}
               color={STATUS_COLORS[book.status]}
               size="small"
               sx={{ mt: 0.5, mb: 1 }}
             />
             {book.currentPage != null && book.totalPages ? (
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
-                Page {book.currentPage} of {book.totalPages}
+                {t('book.detail.pageOf', { current: book.currentPage, total: book.totalPages })}
               </Typography>
             ) : null}
             <ProgressBar value={book.currentProgress} />
@@ -129,14 +126,13 @@ export function BookDetailPage() {
         </Box>
       )}
 
-      {/* Pace stats grid */}
       {book && sessions && sessions.length > 0 && (book.currentPage != null || book.totalPages) && (() => {
         const pace = calcPaceStats(sessions, book);
         const stats = [
-          { icon: '📅', value: pace.startDate ? formatDate(pace.startDate) : '—', label: 'Started reading' },
-          { icon: '⏱', value: pace.daysReading > 0 ? `${pace.daysReading} days` : '—', label: 'Days reading' },
-          { icon: '🔥', value: pace.avgPacePerDay > 0 ? `${pace.avgPacePerDay} pg/day` : '—', label: 'Avg pace' },
-          { icon: '🎯', value: pace.daysToFinish != null ? `${pace.daysToFinish} days` : '—', label: 'To finish' },
+          { icon: '📅', value: pace.startDate ? formatDate(pace.startDate) : '—', label: t('book.detail.pace.started') },
+          { icon: '⏱', value: pace.daysReading > 0 ? t('book.detail.pace.daysValue', { days: pace.daysReading }) : '—', label: t('book.detail.pace.daysReading') },
+          { icon: '🔥', value: pace.avgPacePerDay > 0 ? t('book.detail.pace.paceValue', { pace: pace.avgPacePerDay }) : '—', label: t('book.detail.pace.avgPace') },
+          { icon: '🎯', value: pace.daysToFinish != null ? t('book.detail.pace.daysValue', { days: pace.daysToFinish }) : '—', label: t('book.detail.pace.toFinish') },
         ];
         return (
           <Grid container spacing={1.5} sx={{ mb: 2 }}>
@@ -153,10 +149,10 @@ export function BookDetailPage() {
       })()}
 
       <Tabs value={tab} onChange={handleTabChange} sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-        <Tab label="Progress" value="progress" />
-        <Tab label="Sessions" value="sessions" />
-        <Tab label="Quotes" value="quotes" />
-        <Tab label="Rating" value="rating" />
+        <Tab label={t('book.detail.tabs.progress')} value="progress" />
+        <Tab label={t('book.detail.tabs.sessions')} value="sessions" />
+        <Tab label={t('book.detail.tabs.quotes')} value="quotes" />
+        <Tab label={t('book.detail.tabs.rating')} value="rating" />
       </Tabs>
 
       {book && (
@@ -172,22 +168,21 @@ export function BookDetailPage() {
         open={!!deletedTitle}
         autoHideDuration={1500}
         onClose={() => navigate('/')}
-        message={`"${deletedTitle}" deleted`}
+        message={t('book.delete.snackbar', { title: deletedTitle })}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
 
       <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
-        <DialogTitle>Delete book?</DialogTitle>
+        <DialogTitle>{t('book.delete.title')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            This will permanently delete <strong>{book?.title}</strong> and all its sessions,
-            quotes, and rating. This cannot be undone.
+            {t('book.delete.content', { title: book?.title })}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeleteOpen(false)}>{t('book.delete.cancel')}</Button>
           <Button onClick={handleDeleteConfirm} color="error" variant="contained">
-            Delete
+            {t('book.delete.confirm')}
           </Button>
         </DialogActions>
       </Dialog>

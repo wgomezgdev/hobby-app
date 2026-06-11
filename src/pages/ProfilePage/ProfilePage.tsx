@@ -6,26 +6,32 @@ import {
 } from '@mui/material';
 import { CloudDownload, CloudUpload, Logout, Settings } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 import { pushToFirestore, pullFromFirestore, getLastSyncedAt } from '../../lib/firestoreSync';
 
-function formatRelative(date: Date | null): string {
-  if (!date) return 'Never';
-  const diff = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (diff < 60) return 'Just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+function useFormatRelative() {
+  const { t } = useTranslation();
+  return (date: Date | null): string => {
+    if (!date) return t('profile.timeNever');
+    const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+    if (diff < 60) return t('profile.timeJustNow');
+    if (diff < 3600) return t('profile.timeMinutesAgo', { minutes: Math.floor(diff / 60) });
+    if (diff < 86400) return t('profile.timeHoursAgo', { hours: Math.floor(diff / 3600) });
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  };
 }
 
 export function ProfilePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, loading, isConfigured, signIn, signOut } = useAuth();
   const [syncing, setSyncing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{ msg: string; severity: 'success' | 'error' } | null>(null);
   const [lastSynced, setLastSynced] = useState<Date | null>(getLastSyncedAt);
+  const formatRelative = useFormatRelative();
 
   const handleSync = async () => {
     if (!user) return;
@@ -33,9 +39,9 @@ export function ProfilePage() {
     try {
       await pushToFirestore(user.uid);
       setLastSynced(getLastSyncedAt());
-      setSnackbar({ msg: 'Synced to cloud ✓', severity: 'success' });
+      setSnackbar({ msg: t('profile.syncSuccess'), severity: 'success' });
     } catch {
-      setSnackbar({ msg: 'Sync failed. Check your connection.', severity: 'error' });
+      setSnackbar({ msg: t('profile.syncError'), severity: 'error' });
     } finally {
       setSyncing(false);
     }
@@ -48,9 +54,9 @@ export function ProfilePage() {
     try {
       await pullFromFirestore(user.uid);
       setLastSynced(getLastSyncedAt());
-      setSnackbar({ msg: 'Data restored from cloud ✓', severity: 'success' });
+      setSnackbar({ msg: t('profile.restoreSuccess'), severity: 'success' });
     } catch {
-      setSnackbar({ msg: 'Restore failed. Check your connection.', severity: 'error' });
+      setSnackbar({ msg: t('profile.restoreError'), severity: 'error' });
     } finally {
       setRestoring(false);
     }
@@ -63,9 +69,9 @@ export function ProfilePage() {
   if (!isConfigured) {
     return (
       <Box sx={{ maxWidth: 480, mx: 'auto' }}>
-        <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>Profile</Typography>
+        <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>{t('profile.title')}</Typography>
         <Alert severity="info">
-          Add Firebase environment variables to enable Google Sign-In and cloud sync.
+          {t('profile.notConfigured')}
         </Alert>
       </Box>
     );
@@ -74,9 +80,9 @@ export function ProfilePage() {
   if (!user) {
     return (
       <Box sx={{ maxWidth: 480, mx: 'auto', textAlign: 'center', pt: 6 }}>
-        <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>Profile</Typography>
+        <Typography variant="h6" fontWeight={700} sx={{ mb: 1 }}>{t('profile.title')}</Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-          Sign in to back up your library and sync across devices
+          {t('profile.signInPrompt')}
         </Typography>
         <Button
           variant="contained"
@@ -84,7 +90,7 @@ export function ProfilePage() {
           onClick={signIn}
           sx={{ py: 1.5, px: 4, fontWeight: 700 }}
         >
-          Sign in with Google
+          {t('profile.signIn')}
         </Button>
       </Box>
     );
@@ -92,9 +98,8 @@ export function ProfilePage() {
 
   return (
     <Box sx={{ maxWidth: 480, mx: 'auto' }}>
-      <Typography variant="h6" fontWeight={700} sx={{ mb: 3 }}>Profile</Typography>
+      <Typography variant="h6" fontWeight={700} sx={{ mb: 3 }}>{t('profile.title')}</Typography>
 
-      {/* User info */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
         <Avatar
           src={user.photoURL ?? undefined}
@@ -108,10 +113,9 @@ export function ProfilePage() {
         </Box>
       </Box>
 
-      {/* Cloud sync */}
-      <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>Cloud Sync</Typography>
+      <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>{t('profile.cloudSync')}</Typography>
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-        Last synced: {formatRelative(lastSynced)}
+        {t('profile.lastSynced', { time: formatRelative(lastSynced) })}
       </Typography>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 4 }}>
@@ -123,7 +127,7 @@ export function ProfilePage() {
           fullWidth
           sx={{ py: 1.2 }}
         >
-          {syncing ? 'Syncing…' : 'Sync to cloud'}
+          {syncing ? t('profile.syncing') : t('profile.syncButton')}
         </Button>
         <Button
           variant="outlined"
@@ -133,7 +137,7 @@ export function ProfilePage() {
           fullWidth
           sx={{ py: 1.2 }}
         >
-          {restoring ? 'Restoring…' : 'Restore from cloud'}
+          {restoring ? t('profile.restoring') : t('profile.restoreButton')}
         </Button>
       </Box>
 
@@ -147,7 +151,7 @@ export function ProfilePage() {
           fullWidth
           sx={{ justifyContent: 'flex-start' }}
         >
-          Data Management (export / import)
+          {t('profile.dataManagement')}
         </Button>
         <Button
           variant="text"
@@ -157,22 +161,20 @@ export function ProfilePage() {
           fullWidth
           sx={{ justifyContent: 'flex-start' }}
         >
-          Sign out
+          {t('profile.signOut')}
         </Button>
       </Box>
 
-      {/* Restore confirmation */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Restore from cloud?</DialogTitle>
+        <DialogTitle>{t('profile.restoreTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            This will replace all local data with your cloud backup. Any changes made since the
-            last sync will be lost. This cannot be undone.
+            {t('profile.restoreContent')}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
-          <Button onClick={handleRestore} color="error" variant="contained">Restore</Button>
+          <Button onClick={() => setConfirmOpen(false)}>{t('profile.cancel')}</Button>
+          <Button onClick={handleRestore} color="error" variant="contained">{t('profile.restore')}</Button>
         </DialogActions>
       </Dialog>
 

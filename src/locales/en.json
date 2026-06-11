@@ -1,0 +1,299 @@
+{
+  "nav": {
+    "home": "Home",
+    "library": "Library",
+    "stats": "Stats",
+    "profile": "Profile",
+    "addBook": "Add book"
+  },
+  "home": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "myLibrary": "My Library",
+    "stats": {
+      "read": "Read",
+      "inProgress": "In progress",
+      "pending": "Pending"
+    },
+    "currentlyReading": "Currently Reading",
+    "activeBadge": "● ACTIVE",
+    "notReading": "You are not reading anything right now",
+    "startReading": "Start reading →",
+    "completed": "Completed ({{count}})",
+    "pageOf": "Page {{current}} of {{total}}"
+  },
+  "library": {
+    "filter": {
+      "all": "All",
+      "reading": "Reading",
+      "wantToRead": "Want to Read",
+      "finished": "Finished"
+    },
+    "sort": {
+      "label": "Sort",
+      "recent": "Recent",
+      "titleAZ": "Title A–Z",
+      "authorAZ": "Author A–Z"
+    },
+    "empty": {
+      "all": "Your library is empty",
+      "filtered": "No {{status}} books",
+      "action": "Add your first book to get started"
+    }
+  },
+  "book": {
+    "form": {
+      "addTitle": "Add Book",
+      "editTitle": "Edit Book",
+      "back": "Back",
+      "fields": {
+        "title": "BOOK TITLE",
+        "titleRequired": "Title is required",
+        "author": "AUTHOR",
+        "authorRequired": "Author is required",
+        "year": "YEAR",
+        "status": "STATUS",
+        "totalPages": "TOTAL PAGES",
+        "currentPage": "CURRENT PAGE",
+        "genre": "GENRE",
+        "pages": "{{count}} pages"
+      },
+      "save": "Save Book",
+      "saveChanges": "Save Changes",
+      "scan": "Scan cover",
+      "scanning": "Scanning…",
+      "scanConflict": "Scan found \"{{values}}\". Replace existing values?",
+      "scanApply": "Apply",
+      "scanKeep": "Keep"
+    },
+    "detail": {
+      "title": "Book Detail",
+      "edit": "Edit",
+      "deleteAria": "Delete book",
+      "backAria": "Back to library",
+      "pageOf": "Page {{current}} of {{total}}",
+      "pace": {
+        "started": "Started reading",
+        "daysReading": "Days reading",
+        "avgPace": "Avg pace",
+        "toFinish": "To finish",
+        "daysValue": "{{days}} days",
+        "paceValue": "{{pace}} pg/day"
+      },
+      "tabs": {
+        "progress": "Progress",
+        "sessions": "Sessions",
+        "quotes": "Quotes",
+        "rating": "Rating"
+      }
+    },
+    "delete": {
+      "title": "Delete book?",
+      "content": "This will permanently delete {{title}} and all its sessions, quotes, and rating. This cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "snackbar": "\"{{title}}\" deleted"
+    },
+    "status": {
+      "WANT_TO_READ": "Want to Read",
+      "READING": "Reading",
+      "FINISHED": "Finished"
+    }
+  },
+  "genre": {
+    "Fiction": "Fiction",
+    "Classics": "Classics",
+    "Novel": "Novel",
+    "Fantasy": "Fantasy",
+    "Adventure": "Adventure",
+    "Science_Fiction": "Science Fiction",
+    "Romance": "Romance",
+    "Thriller": "Thriller"
+  },
+  "progress": {
+    "title": "Reading Progress",
+    "finished": "Finished!",
+    "remaining": "{{percent}}% remaining",
+    "logSession": "Log Reading Session"
+  },
+  "session": {
+    "logTitle": "Log Reading Session",
+    "date": "Date",
+    "dateRequired": "Date is required",
+    "duration": "Duration (minutes)",
+    "durationRequired": "Duration is required",
+    "durationMin": "Must be at least 1 minute",
+    "progress": "Progress added (%)",
+    "progressRequired": "Progress is required",
+    "progressMin": "Must be at least 1%",
+    "progressMax": "Cannot exceed 100%",
+    "notes": "Notes (optional)",
+    "cancel": "Cancel",
+    "save": "Save Session",
+    "empty": "No sessions logged yet",
+    "logCta": "Log a session"
+  },
+  "quote": {
+    "searchPlaceholder": "Search quotes…",
+    "favorites": "Favorites",
+    "addFavorite": "Add to favorites",
+    "removeFavorite": "Remove from favorites",
+    "empty": "No quotes saved yet",
+    "emptyFiltered": "No quotes match your filters",
+    "addTitle": "Add Quote",
+    "text": "Quote text",
+    "textRequired": "Quote text is required",
+    "pageNumber": "Page number (optional)",
+    "markFavorite": "Mark as favorite",
+    "cancel": "Cancel",
+    "save": "Save Quote",
+    "addAria": "Add quote",
+    "pagePrefix": "p. "
+  },
+  "rating": {
+    "notRated": "You haven't rated this book yet",
+    "yourRating": "Your rating",
+    "review": "Review (optional)",
+    "save": "Save Rating",
+    "update": "Update Rating",
+    "validation": "Please select a rating",
+    "notRatedLabel": "Not rated"
+  },
+  "stats": {
+    "title": "Statistics 📊",
+    "subtitle": "Your reading progress",
+    "yearAll": "All",
+    "booksRead": "Books read · Annual goal: 50",
+    "yoyChange": "{{percent}}% vs last year",
+    "activity": {
+      "title": "Reading Activity",
+      "sessions": "Sessions",
+      "timeRead": "Time read",
+      "streak": "Day streak"
+    },
+    "booksPerMonth": "Books per month",
+    "avgPerMonth": "ø {{avg}} / mo",
+    "genres": "Genres",
+    "noGenres": "No genres tagged",
+    "pagesRead": "PAGES READ",
+    "allTime": "all time",
+    "addPageCounts": "add page counts to books",
+    "bestMonth": "BEST MONTH",
+    "bestMonthBooks": "{{count}} books 🔥",
+    "noData": "No data",
+    "empty": "Log a reading session to see statistics"
+  },
+  "ranking": {
+    "title": "Ranking",
+    "subtitleStars": "Your books sorted by star rating",
+    "subtitleRecent": "Finished books, most recent first",
+    "byStars": "By Stars",
+    "recentlyFinished": "Recently Finished",
+    "emptyStars": "Rate some books to see your ranking",
+    "emptyRecent": "No finished books yet",
+    "goToLibrary": "Go to your library"
+  },
+  "profile": {
+    "title": "Profile",
+    "notConfigured": "Add Firebase environment variables to enable Google Sign-In and cloud sync.",
+    "signInPrompt": "Sign in to back up your library and sync across devices",
+    "signIn": "Sign in with Google",
+    "cloudSync": "Cloud Sync",
+    "lastSynced": "Last synced: {{time}}",
+    "syncButton": "Sync to cloud",
+    "syncing": "Syncing…",
+    "restoreButton": "Restore from cloud",
+    "restoring": "Restoring…",
+    "dataManagement": "Data Management (export / import)",
+    "signOut": "Sign out",
+    "restoreTitle": "Restore from cloud?",
+    "restoreContent": "This will replace all local data with your cloud backup. Any changes made since the last sync will be lost. This cannot be undone.",
+    "cancel": "Cancel",
+    "restore": "Restore",
+    "syncSuccess": "Synced to cloud ✓",
+    "syncError": "Sync failed. Check your connection.",
+    "restoreSuccess": "Data restored from cloud ✓",
+    "restoreError": "Restore failed. Check your connection.",
+    "timeNever": "Never",
+    "timeJustNow": "Just now",
+    "timeMinutesAgo": "{{minutes}}m ago",
+    "timeHoursAgo": "{{hours}}h ago"
+  },
+  "settings": {
+    "title": "Settings",
+    "exportTitle": "Export Backup",
+    "exportDesc": "Download all your books, sessions, quotes, and ratings as a JSON file.",
+    "exportButton": "Export Snapshot",
+    "exportSuccess": "Backup downloaded successfully",
+    "exportError": "Export failed. Please try again.",
+    "goodreadsTitle": "Import from Goodreads",
+    "goodreadsDesc": "Seed your library from your public Goodreads profile. Paste your profile URL or user ID to import all shelves (read, currently reading, to-read). Existing books are never overwritten.",
+    "goodreadsButton": "Import from Goodreads",
+    "importTitle": "Import Backup",
+    "importDesc": "Restore data from a previously exported JSON file. This will replace all current data.",
+    "importButton": "Choose Backup File",
+    "importConfirmTitle": "Replace all data?",
+    "importConfirmContent": "This will replace all current data with the contents of {{filename}}. This action cannot be undone.",
+    "importCancel": "Cancel",
+    "importConfirm": "Replace Data",
+    "importSuccess": "Data restored successfully",
+    "importError": "Import failed"
+  },
+  "cover": {
+    "uploadText": "Click or drag to upload cover",
+    "uploadAria": "Upload cover image",
+    "previewAria": "Book cover preview",
+    "upload": "Upload",
+    "camera": "Camera",
+    "remove": "Remove",
+    "errorSize": "Image must be under 1 MB. Please choose a smaller file.",
+    "errorProcess": "Could not process image. Please try another.",
+    "searchButton": "Search cover online",
+    "searchTitle": "Search book cover",
+    "searchPlaceholder": "Book title or author…",
+    "searchAction": "Search",
+    "searchError": "Search failed. Check your connection and try again.",
+    "searchEmpty": "No covers found. Try a different title or author.",
+    "searchInstructions": "Enter a title or author and press Search.",
+    "closeAria": "Close"
+  },
+  "scan": {
+    "notConfigured": "AI scan not configured. Add VITE_GEMINI_API_KEY to enable.",
+    "limitReached": "Daily scan limit reached. Try again tomorrow.",
+    "invalidKey": "Invalid API key. Check your VITE_GEMINI_API_KEY.",
+    "serviceError": "AI service error (HTTP {{status}}). Try again.",
+    "notRecognized": "Cover not recognized. Try a clearer photo or fill in the fields manually.",
+    "networkError": "Network error: {{error}}"
+  },
+  "goodreads": {
+    "title": "Import from Goodreads",
+    "instructions": "First, export your library from Goodreads:",
+    "step1": "Go to goodreads.com → My Books",
+    "step2": "Click Import and Export (bottom-left sidebar)",
+    "step3": "Click Export Library to download the CSV",
+    "chooseFile": "Choose CSV File",
+    "found": "Found <1>{{count}}</1> book in your Goodreads library.",
+    "found_plural": "Found <1>{{count}}</1> books in your Goodreads library.",
+    "statusRead": "Read",
+    "statusReading": "Reading",
+    "statusToRead": "To Read",
+    "statusDuplicate": "Already in library",
+    "allDuplicate": "All books are already in your library.",
+    "importing": "Importing book {{current}} of {{total}} (searching covers)…",
+    "success": "Successfully imported {{count}} book!",
+    "success_plural": "Successfully imported {{count}} books!",
+    "cancel": "Cancel",
+    "importButton": "Import {{count}} book",
+    "importButton_plural": "Import {{count}} books",
+    "errorEmpty": "No books found in the CSV file. Make sure you exported your Goodreads library correctly.",
+    "errorParse": "Failed to parse CSV. Try exporting again from Goodreads."
+  },
+  "tags": {
+    "label": "Tags",
+    "placeholder": "Add tags...",
+    "helper": "Press Enter or comma to add a tag"
+  }
+}

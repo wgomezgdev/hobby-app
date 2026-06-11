@@ -1,6 +1,7 @@
 import { Avatar, BottomNavigation, BottomNavigationAction, Box, Fab, Paper, Typography } from '@mui/material';
 import { Add, BarChart, Home, MenuBook } from '@mui/icons-material';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 
 function getActiveTab(pathname: string): string {
@@ -16,6 +17,7 @@ export function Layout() {
   const navigate = useNavigate();
   const activeTab = getActiveTab(location.pathname);
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', pb: '72px' }}>
@@ -27,7 +29,6 @@ export function Layout() {
         elevation={8}
         sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }}
       >
-        {/* Version sits at the top of the nav panel — always visible above nav icons */}
         <Typography
           variant="caption"
           color="text.disabled"
@@ -38,13 +39,12 @@ export function Layout() {
 
         <Box sx={{ position: 'relative' }}>
           <BottomNavigation value={activeTab} onChange={(_, val) => navigate(val)}>
-            <BottomNavigationAction label="Home" value="/" icon={<Home />} />
-            <BottomNavigationAction label="Library" value="/library" icon={<MenuBook />} />
-            {/* placeholder slot for the center FAB */}
+            <BottomNavigationAction label={t('nav.home')} value="/" icon={<Home />} />
+            <BottomNavigationAction label={t('nav.library')} value="/library" icon={<MenuBook />} />
             <BottomNavigationAction sx={{ visibility: 'hidden', pointerEvents: 'none' }} value="" />
-            <BottomNavigationAction label="Stats" value="/stats" icon={<BarChart />} />
+            <BottomNavigationAction label={t('nav.stats')} value="/stats" icon={<BarChart />} />
             <BottomNavigationAction
-              label="Profile"
+              label={t('nav.profile')}
               value="/profile"
               icon={
                 user?.photoURL
@@ -58,7 +58,7 @@ export function Layout() {
 
           <Fab
             color="primary"
-            aria-label="Add book"
+            aria-label={t('nav.addBook')}
             size="medium"
             onClick={() => navigate('/books/new')}
             sx={{

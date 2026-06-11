@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { ArrowBack, CheckCircle, DocumentScanner } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthorSuggestions } from '../../hooks/useAuthorSuggestions';
 import { useTitleSuggestions } from '../../hooks/useTitleSuggestions';
 import { useBook } from '../../hooks/useBooks';
@@ -15,12 +16,6 @@ import { CoverSearch } from '../../components/CoverSearch/CoverSearch';
 import { useCoverScan, type ScanResult } from '../../hooks/useCoverScan';
 import type { BookStatus } from '../../types/entities';
 import { GENRES } from '../../types/entities';
-
-const STATUS_OPTIONS: { value: BookStatus; label: string; emoji: string }[] = [
-  { value: 'READING', label: 'Reading', emoji: '📖' },
-  { value: 'FINISHED', label: 'Finished', emoji: '✅' },
-  { value: 'WANT_TO_READ', label: 'Want to Read', emoji: '⏳' },
-];
 
 interface BookFormData {
   title: string;
@@ -39,6 +34,13 @@ export function AddEditBookPage() {
   const isEditMode = bookId !== undefined;
   const book = useBook(bookId ?? 0);
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const STATUS_OPTIONS: { value: BookStatus; label: string; emoji: string }[] = [
+    { value: 'READING', label: t('book.status.READING'), emoji: '📖' },
+    { value: 'FINISHED', label: t('book.status.FINISHED'), emoji: '✅' },
+    { value: 'WANT_TO_READ', label: t('book.status.WANT_TO_READ'), emoji: '⏳' },
+  ];
 
   const {
     handleSubmit,
@@ -138,18 +140,16 @@ export function AddEditBookPage() {
 
   return (
     <Box sx={{ maxWidth: 480, mx: 'auto', pb: 4 }}>
-      {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-        <IconButton onClick={() => navigate(-1)} aria-label="Volver">
+        <IconButton onClick={() => navigate(-1)} aria-label={t('book.form.back')}>
           <ArrowBack />
         </IconButton>
         <Typography variant="h6" fontWeight={700}>
-          {isEditMode ? 'Edit Book' : 'Add Book'}
+          {isEditMode ? t('book.form.editTitle') : t('book.form.addTitle')}
         </Typography>
       </Box>
 
       <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-        {/* Cover */}
         <Controller
           name="cover"
           control={control}
@@ -167,7 +167,7 @@ export function AddEditBookPage() {
                       onClick={() => scanInputRef.current?.click()}
                       disabled={scanLoading}
                     >
-                      {scanLoading ? 'Scanning…' : 'Scan cover'}
+                      {scanLoading ? t('book.form.scanning') : t('book.form.scan')}
                     </Button>
                     <CoverSearch
                       title={getValues('title') ?? ''}
@@ -196,15 +196,14 @@ export function AddEditBookPage() {
         )}
 
         <Stack spacing={2.5}>
-          {/* Title */}
           <Box>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
-              BOOK TITLE
+              {t('book.form.fields.title')}
             </Typography>
             <Controller
               name="title"
               control={control}
-              rules={{ required: 'Title is required' }}
+              rules={{ required: t('book.form.fields.titleRequired') }}
               render={({ field }) => (
                 <Autocomplete
                   freeSolo
@@ -245,7 +244,9 @@ export function AddEditBookPage() {
                             {[option.author, option.year].filter(Boolean).join(' · ')}
                           </Typography>
                           {option.totalPages && (
-                            <Typography variant="caption" color="text.disabled">{option.totalPages} pages</Typography>
+                            <Typography variant="caption" color="text.disabled">
+                              {t('book.form.fields.pages', { count: option.totalPages })}
+                            </Typography>
                           )}
                         </Box>
                       </Box>
@@ -270,16 +271,15 @@ export function AddEditBookPage() {
             <Alert severity="warning" sx={{ mt: -1.5 }}>{titleSearchError}</Alert>
           )}
 
-          {/* Author + Year */}
           <Stack direction="row" spacing={1.5}>
             <Box sx={{ flex: 2 }}>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
-                AUTHOR
+                {t('book.form.fields.author')}
               </Typography>
               <Controller
                 name="author"
                 control={control}
-                rules={{ required: 'Author is required' }}
+                rules={{ required: t('book.form.fields.authorRequired') }}
                 render={({ field }) => (
                   <Autocomplete
                     freeSolo
@@ -304,7 +304,7 @@ export function AddEditBookPage() {
             </Box>
             <Box sx={{ flex: 1 }}>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
-                YEAR
+                {t('book.form.fields.year')}
               </Typography>
               <Controller
                 name="year"
@@ -316,10 +316,9 @@ export function AddEditBookPage() {
             </Box>
           </Stack>
 
-          {/* Status chips */}
           <Box>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block', letterSpacing: 1 }}>
-              STATUS
+              {t('book.form.fields.status')}
             </Typography>
             <Controller
               name="status"
@@ -341,11 +340,10 @@ export function AddEditBookPage() {
             />
           </Box>
 
-          {/* Total pages + Current page */}
           <Stack direction="row" spacing={1.5}>
             <Box sx={{ flex: 1 }}>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
-                TOTAL PAGES
+                {t('book.form.fields.totalPages')}
               </Typography>
               <Controller
                 name="totalPages"
@@ -357,7 +355,7 @@ export function AddEditBookPage() {
             </Box>
             <Box sx={{ flex: 1 }}>
               <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: 'block', letterSpacing: 1 }}>
-                CURRENT PAGE
+                {t('book.form.fields.currentPage')}
               </Typography>
               <Controller
                 name="currentPage"
@@ -369,10 +367,9 @@ export function AddEditBookPage() {
             </Box>
           </Stack>
 
-          {/* Genre chips */}
           <Box>
             <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block', letterSpacing: 1 }}>
-              GENRE
+              {t('book.form.fields.genre')}
             </Typography>
             <Controller
               name="genres"
@@ -384,7 +381,7 @@ export function AddEditBookPage() {
                     return (
                       <Chip
                         key={genre}
-                        label={genre}
+                        label={t(`genre.${genre.replace(/\s/g, '_')}`)}
                         onClick={() => {
                           const current = field.value ?? [];
                           field.onChange(selected ? current.filter(g => g !== genre) : [...current, genre]);
@@ -401,7 +398,6 @@ export function AddEditBookPage() {
             />
           </Box>
 
-          {/* Save button */}
           <Button
             type="submit"
             variant="contained"
@@ -411,7 +407,7 @@ export function AddEditBookPage() {
             startIcon={<CheckCircle />}
             sx={{ mt: 1, py: 1.5, fontWeight: 700 }}
           >
-            {isEditMode ? 'Save Changes' : 'Save Book'}
+            {isEditMode ? t('book.form.saveChanges') : t('book.form.save')}
           </Button>
         </Stack>
       </Box>
@@ -421,13 +417,13 @@ export function AddEditBookPage() {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         message={
           pendingScan
-            ? `Scan found "${[pendingScan.title, pendingScan.author].filter(Boolean).join(' · ')}". Replace existing values?`
+            ? t('book.form.scanConflict', { values: [pendingScan.title, pendingScan.author].filter(Boolean).join(' · ') })
             : ''
         }
         action={
           <>
-            <Button color="inherit" size="small" onClick={applyPendingScan}>Apply</Button>
-            <Button color="inherit" size="small" onClick={() => setPendingScan(null)}>Keep</Button>
+            <Button color="inherit" size="small" onClick={applyPendingScan}>{t('book.form.scanApply')}</Button>
+            <Button color="inherit" size="small" onClick={() => setPendingScan(null)}>{t('book.form.scanKeep')}</Button>
           </>
         }
       />

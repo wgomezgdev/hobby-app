@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import { Add, Favorite, FavoriteBorder, Search } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useQuotesForBook, useTagsForBook } from '../../../hooks/useQuotes';
 import { addQuote, toggleFavorite } from '../../../repositories/quoteRepository';
 import { TagInput } from '../../../components/TagInput/TagInput';
@@ -24,6 +25,7 @@ interface QuoteFormData {
 export function QuotesTab({ bookId }: QuotesTabProps) {
   const quotes = useQuotesForBook(bookId);
   const availableTags = useTagsForBook(bookId);
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [filterFavorite, setFilterFavorite] = useState(false);
   const [filterTag, setFilterTag] = useState<string | null>(null);
@@ -62,7 +64,7 @@ export function QuotesTab({ bookId }: QuotesTabProps) {
     <Box sx={{ py: 1, pb: 8 }}>
       <Stack spacing={1} sx={{ mb: 2 }}>
         <TextField
-          placeholder="Search quotes…"
+          placeholder={t('quote.searchPlaceholder')}
           size="small"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -73,7 +75,7 @@ export function QuotesTab({ bookId }: QuotesTabProps) {
         <Stack direction="row" spacing={1} flexWrap="wrap">
           <Chip
             icon={filterFavorite ? <Favorite fontSize="small" /> : <FavoriteBorder fontSize="small" />}
-            label="Favorites"
+            label={t('quote.favorites')}
             onClick={() => setFilterFavorite((v) => !v)}
             color={filterFavorite ? 'error' : 'default'}
             variant={filterFavorite ? 'filled' : 'outlined'}
@@ -94,11 +96,11 @@ export function QuotesTab({ bookId }: QuotesTabProps) {
 
       {quotes.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 6 }}>
-          <Typography color="text.secondary">No quotes saved yet</Typography>
+          <Typography color="text.secondary">{t('quote.empty')}</Typography>
         </Box>
       ) : filtered.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography color="text.secondary">No quotes match your filters</Typography>
+          <Typography color="text.secondary">{t('quote.emptyFiltered')}</Typography>
         </Box>
       ) : (
         <Stack spacing={2}>
@@ -111,13 +113,13 @@ export function QuotesTab({ bookId }: QuotesTabProps) {
                 <IconButton
                   size="small"
                   onClick={() => toggleFavorite(q.id!)}
-                  aria-label={q.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                  aria-label={q.isFavorite ? t('quote.removeFavorite') : t('quote.addFavorite')}
                 >
                   {q.isFavorite ? <Favorite color="error" /> : <FavoriteBorder />}
                 </IconButton>
               </Box>
               {q.pageNumber && (
-                <Typography variant="caption" color="text.secondary">p. {q.pageNumber}</Typography>
+                <Typography variant="caption" color="text.secondary">{t('quote.pagePrefix')}{q.pageNumber}</Typography>
               )}
               {q.tags.length > 0 && (
                 <Stack direction="row" spacing={0.5} sx={{ mt: 1 }} flexWrap="wrap">
@@ -132,7 +134,7 @@ export function QuotesTab({ bookId }: QuotesTabProps) {
       <Fab
         color="primary"
         size="medium"
-        aria-label="Add quote"
+        aria-label={t('quote.addAria')}
         onClick={() => setDialogOpen(true)}
         sx={{ position: 'fixed', bottom: 24, right: 24 }}
       >
@@ -146,21 +148,21 @@ export function QuotesTab({ bookId }: QuotesTabProps) {
         maxWidth="sm"
         aria-labelledby="add-quote-title"
       >
-        <DialogTitle id="add-quote-title">Add Quote</DialogTitle>
+        <DialogTitle id="add-quote-title">{t('quote.addTitle')}</DialogTitle>
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
           <DialogContent>
             <Stack spacing={2}>
               <TextField
-                label="Quote text"
+                label={t('quote.text')}
                 multiline
                 rows={3}
                 fullWidth
                 required
-                {...register('text', { required: 'Quote text is required' })}
+                {...register('text', { required: t('quote.textRequired') })}
                 autoFocus
               />
               <TextField
-                label="Page number (optional)"
+                label={t('quote.pageNumber')}
                 type="number"
                 inputProps={{ min: 1 }}
                 {...register('pageNumber')}
@@ -182,7 +184,7 @@ export function QuotesTab({ bookId }: QuotesTabProps) {
                 render={({ field }) => (
                   <Chip
                     icon={field.value ? <Favorite fontSize="small" /> : <FavoriteBorder fontSize="small" />}
-                    label="Mark as favorite"
+                    label={t('quote.markFavorite')}
                     onClick={() => field.onChange(!field.value)}
                     color={field.value ? 'error' : 'default'}
                     variant={field.value ? 'filled' : 'outlined'}
@@ -193,8 +195,8 @@ export function QuotesTab({ bookId }: QuotesTabProps) {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="contained" disabled={isSubmitting}>Save Quote</Button>
+            <Button onClick={() => setDialogOpen(false)}>{t('quote.cancel')}</Button>
+            <Button type="submit" variant="contained" disabled={isSubmitting}>{t('quote.save')}</Button>
           </DialogActions>
         </Box>
       </Dialog>

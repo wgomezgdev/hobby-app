@@ -1,20 +1,15 @@
 import { Avatar, Box, Card, CardActionArea, Chip, LinearProgress, Skeleton, Typography } from '@mui/material';
 import { AutoStories } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useHomeData } from '../../hooks/useHomeData';
 import { useAllRatings } from '../../hooks/useRatings';
 import { StarRating } from '../../components/StarRating/StarRating';
 import { useAuth } from '../../hooks/useAuth';
 import type { Book } from '../../types/entities';
 
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h >= 5 && h < 12) return 'Good morning';
-  if (h >= 12 && h < 20) return 'Good afternoon';
-  return 'Good evening';
-}
-
 function BookRow({ book, onClick, badge }: { book: Book; onClick: () => void; badge?: React.ReactNode }) {
+  const { t } = useTranslation();
   return (
     <Card sx={{ mb: 1.5 }}>
       <CardActionArea onClick={onClick} sx={{ p: 2 }}>
@@ -39,7 +34,7 @@ function BookRow({ book, onClick, badge }: { book: Book; onClick: () => void; ba
               <Box sx={{ mt: 0.5 }}>
                 <Typography variant="caption" color="text.secondary">
                   {book.currentPage && book.totalPages
-                    ? `Page ${book.currentPage} of ${book.totalPages}`
+                    ? t('home.pageOf', { current: book.currentPage, total: book.totalPages })
                     : `${book.currentProgress}%`}
                 </Typography>
                 <LinearProgress variant="determinate" value={book.currentProgress} sx={{ mt: 0.5, borderRadius: 1, height: 4 }} />
@@ -54,9 +49,15 @@ function BookRow({ book, onClick, badge }: { book: Book; onClick: () => void; ba
 
 export function HomePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const data = useHomeData();
   const ratings = useAllRatings();
   const { user } = useAuth();
+
+  const h = new Date().getHours();
+  const greetingKey = h >= 5 && h < 12 ? 'home.greeting.morning'
+    : h >= 12 && h < 20 ? 'home.greeting.afternoon'
+    : 'home.greeting.evening';
 
   const ratingsMap = new Map((ratings ?? []).map(r => [r.bookId, r.stars]));
 
@@ -77,12 +78,12 @@ export function HomePage() {
 
   return (
     <Box sx={{ pb: 2 }}>
-      {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3 }}>
         <Box>
-          <Typography variant="body2" color="text.secondary">{greeting()} 👋</Typography>
+          <Typography variant="body2" color="text.secondary">{t(greetingKey)} 👋</Typography>
           <Typography variant="h5" fontWeight={700}>
-            My <Box component="span" color="primary.main">Library</Box>
+            {t('home.myLibrary').split(' ')[0]}{' '}
+            <Box component="span" color="primary.main">{t('home.myLibrary').split(' ').slice(1).join(' ')}</Box>
           </Typography>
         </Box>
         <Avatar
@@ -94,12 +95,11 @@ export function HomePage() {
         </Avatar>
       </Box>
 
-      {/* Stats row */}
       <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
         {[
-          { label: 'Read', count: finishedCount },
-          { label: 'In progress', count: readingCount },
-          { label: 'Pending', count: pendingCount },
+          { label: t('home.stats.read'), count: finishedCount },
+          { label: t('home.stats.inProgress'), count: readingCount },
+          { label: t('home.stats.pending'), count: pendingCount },
         ].map(({ label, count }) => (
           <Card key={label} sx={{ flex: 1, p: 1.5, textAlign: 'center' }}>
             <Typography variant="h5" fontWeight={800} color="primary.main">{count}</Typography>
@@ -108,8 +108,7 @@ export function HomePage() {
         ))}
       </Box>
 
-      {/* Currently reading */}
-      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Currently Reading</Typography>
+      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>{t('home.currentlyReading')}</Typography>
       {readingBooks.length > 0 ? (
         <Box sx={{ mb: 3 }}>
           {readingBooks.map(book => (
@@ -117,24 +116,23 @@ export function HomePage() {
               key={book.id}
               book={book}
               onClick={() => navigate(`/books/${book.id}`)}
-              badge={<Chip label="● ACTIVE" size="small" color="primary" sx={{ mb: 0.5, fontSize: '0.65rem', height: 20 }} />}
+              badge={<Chip label={t('home.activeBadge')} size="small" color="primary" sx={{ mb: 0.5, fontSize: '0.65rem', height: 20 }} />}
             />
           ))}
         </Box>
       ) : (
         <Card sx={{ mb: 3, p: 2, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            You are not reading anything right now
+            {t('home.notReading')}
           </Typography>
-          <Chip label="Start reading →" color="primary" onClick={() => navigate('/library')} clickable />
+          <Chip label={t('home.startReading')} color="primary" onClick={() => navigate('/library')} clickable />
         </Card>
       )}
 
-      {/* Completed */}
       {finishedBooks.length > 0 && (
         <>
           <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
-            Completed ({finishedCount})
+            {t('home.completed', { count: finishedCount })}
           </Typography>
           {finishedBooks.map(book => (
             <BookRow

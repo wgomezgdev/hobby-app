@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { Box, Button, Stack, TextField, Typography } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { saveSession } from '../../repositories/sessionRepository';
 
 interface SessionFormData {
@@ -14,6 +15,7 @@ export function LogSessionPage() {
   const { id } = useParams<{ id: string }>();
   const bookId = parseInt(id!, 10);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const {
     register,
@@ -40,48 +42,48 @@ export function LogSessionPage() {
 
   return (
     <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ maxWidth: 480, mx: 'auto' }}>
-      <Typography variant="h5" sx={{ mb: 3 }}>Log Reading Session</Typography>
+      <Typography variant="h5" sx={{ mb: 3 }}>{t('session.logTitle')}</Typography>
 
       <Stack spacing={3}>
         <TextField
-          label="Date"
+          label={t('session.date')}
           type="date"
           fullWidth
           InputLabelProps={{ shrink: true }}
-          {...register('startedAt', { required: 'Date is required' })}
+          {...register('startedAt', { required: t('session.dateRequired') })}
           error={!!errors.startedAt}
           helperText={errors.startedAt?.message}
         />
 
         <TextField
-          label="Duration (minutes)"
+          label={t('session.duration')}
           type="number"
           fullWidth
           inputProps={{ min: 1 }}
           {...register('durationMinutes', {
-            required: 'Duration is required',
-            min: { value: 1, message: 'Must be at least 1 minute' },
+            required: t('session.durationRequired'),
+            min: { value: 1, message: t('session.durationMin') },
           })}
           error={!!errors.durationMinutes}
           helperText={errors.durationMinutes?.message}
         />
 
         <TextField
-          label="Progress added (%)"
+          label={t('session.progress')}
           type="number"
           fullWidth
           inputProps={{ min: 1, max: 100 }}
           {...register('progressDelta', {
-            required: 'Progress is required',
-            min: { value: 1, message: 'Must be at least 1%' },
-            max: { value: 100, message: 'Cannot exceed 100%' },
+            required: t('session.progressRequired'),
+            min: { value: 1, message: t('session.progressMin') },
+            max: { value: 100, message: t('session.progressMax') },
           })}
           error={!!errors.progressDelta}
           helperText={errors.progressDelta?.message}
         />
 
         <TextField
-          label="Notes (optional)"
+          label={t('session.notes')}
           multiline
           rows={3}
           fullWidth
@@ -89,9 +91,9 @@ export function LogSessionPage() {
         />
 
         <Stack direction="row" spacing={2} justifyContent="flex-end">
-          <Button onClick={() => navigate(-1)}>Cancel</Button>
+          <Button onClick={() => navigate(-1)}>{t('session.cancel')}</Button>
           <Button type="submit" variant="contained" disabled={isSubmitting}>
-            Save Session
+            {t('session.save')}
           </Button>
         </Stack>
       </Stack>

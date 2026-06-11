@@ -4,18 +4,12 @@ import {
 } from '@mui/material';
 import { Add, MenuBook } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAllBooks } from '../../hooks/useBooks';
 import { useLibraryUiStore, type FilterValue, type SortValue } from '../../stores/libraryUiStore';
 import { BookCard } from '../../components/BookCard/BookCard';
 import { SkeletonCard } from '../../components/SkeletonCard/SkeletonCard';
 import type { Book } from '../../types/entities';
-
-const FILTERS: { label: string; value: FilterValue }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Reading', value: 'READING' },
-  { label: 'Want to Read', value: 'WANT_TO_READ' },
-  { label: 'Finished', value: 'FINISHED' },
-];
 
 function applyFilterAndSort(books: Book[], filter: FilterValue, sort: SortValue): Book[] {
   const filtered = filter === 'all' ? books : books.filter((b) => b.status === filter);
@@ -28,8 +22,16 @@ function applyFilterAndSort(books: Book[], filter: FilterValue, sort: SortValue)
 
 export function LibraryPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const allBooks = useAllBooks();
   const { filter, sort, setFilter, setSort } = useLibraryUiStore();
+
+  const FILTERS: { label: string; value: FilterValue }[] = [
+    { label: t('library.filter.all'), value: 'all' },
+    { label: t('library.filter.reading'), value: 'READING' },
+    { label: t('library.filter.wantToRead'), value: 'WANT_TO_READ' },
+    { label: t('library.filter.finished'), value: 'FINISHED' },
+  ];
 
   const books = useMemo(
     () => (allBooks ? applyFilterAndSort(allBooks, filter, sort) : undefined),
@@ -49,15 +51,15 @@ export function LibraryPage() {
           />
         ))}
         <FormControl size="small" sx={{ ml: 'auto', minWidth: 140 }}>
-          <InputLabel>Sort</InputLabel>
+          <InputLabel>{t('library.sort.label')}</InputLabel>
           <Select
             value={sort}
-            label="Sort"
+            label={t('library.sort.label')}
             onChange={(e) => setSort(e.target.value as SortValue)}
           >
-            <MenuItem value="recent">Recent</MenuItem>
-            <MenuItem value="title">Title A–Z</MenuItem>
-            <MenuItem value="author">Author A–Z</MenuItem>
+            <MenuItem value="recent">{t('library.sort.recent')}</MenuItem>
+            <MenuItem value="title">{t('library.sort.titleAZ')}</MenuItem>
+            <MenuItem value="author">{t('library.sort.authorAZ')}</MenuItem>
           </Select>
         </FormControl>
       </Stack>
@@ -74,11 +76,13 @@ export function LibraryPage() {
         <Box sx={{ textAlign: 'center', py: 10 }}>
           <MenuBook sx={{ fontSize: 64, color: 'grey.300', mb: 2 }} />
           <Typography variant="h6" color="text.secondary">
-            {filter === 'all' ? 'Your library is empty' : `No ${filter.toLowerCase().replace('_', ' ')} books`}
+            {filter === 'all'
+              ? t('library.empty.all')
+              : t('library.empty.filtered', { status: t(`book.status.${filter}`).toLowerCase() })}
           </Typography>
           {filter === 'all' && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Add your first book to get started
+              {t('library.empty.action')}
             </Typography>
           )}
         </Box>
@@ -94,7 +98,7 @@ export function LibraryPage() {
 
       <Fab
         color="primary"
-        aria-label="Add book"
+        aria-label={t('nav.addBook')}
         onClick={() => navigate('/books/new')}
         sx={{ position: 'fixed', bottom: 24, right: 24 }}
       >
