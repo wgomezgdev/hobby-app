@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import { AutoStories, FileUpload } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { getAllBooks, addBook } from '../../repositories/bookRepository';
 import { saveRating } from '../../repositories/ratingRepository';
 import { parseGoodreadsCSV, type GoodreadsBookRaw } from '../../utils/goodreadsParser';
@@ -34,6 +35,7 @@ interface Props {
 }
 
 export function GoodreadsImport({ open, onClose }: Props) {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [preview, setPreview] = useState<ImportPreview | null>(null);
@@ -62,7 +64,7 @@ export function GoodreadsImport({ open, onClose }: Props) {
       const allBooks = parseGoodreadsCSV(text).filter(b => b.title);
 
       if (allBooks.length === 0) {
-        throw new Error('No books found in the CSV file. Make sure you exported your Goodreads library correctly.');
+        throw new Error(t('goodreads.errorEmpty'));
       }
 
       const existing = await getAllBooks();
@@ -86,7 +88,7 @@ export function GoodreadsImport({ open, onClose }: Props) {
       });
       setPhase('preview');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to parse CSV. Try exporting again from Goodreads.');
+      setError(err instanceof Error ? err.message : t('goodreads.errorParse'));
       setPhase('idle');
     }
   };
@@ -135,21 +137,17 @@ export function GoodreadsImport({ open, onClose }: Props) {
     >
       <DialogTitle id="goodreads-import-title" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <AutoStories fontSize="small" />
-        Import from Goodreads
+        {t('goodreads.title')}
       </DialogTitle>
 
       <DialogContent>
         {phase === 'idle' || phase === 'loading' ? (
           <Stack spacing={2} sx={{ pt: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              First, export your library from Goodreads:
+              {t('goodreads.instructions')}
             </Typography>
             <List dense disablePadding sx={{ pl: 1 }}>
-              {[
-                <>Go to <strong>goodreads.com → My Books</strong></>,
-                <>Click <strong>Import and Export</strong> (bottom-left sidebar)</>,
-                <>Click <strong>Export Library</strong> to download the CSV</>,
-              ].map((step, i) => (
+              {[t('goodreads.step1'), t('goodreads.step2'), t('goodreads.step3')].map((step, i) => (
                 <ListItem key={i} disableGutters sx={{ py: 0.25 }}>
                   <Typography variant="body2">{i + 1}. {step}</Typography>
                 </ListItem>
@@ -161,7 +159,7 @@ export function GoodreadsImport({ open, onClose }: Props) {
               onClick={() => fileInputRef.current?.click()}
               disabled={phase === 'loading'}
             >
-              Choose CSV File
+              {t('goodreads.chooseFile')}
             </Button>
             <input
               ref={fileInputRef}
@@ -175,23 +173,22 @@ export function GoodreadsImport({ open, onClose }: Props) {
         ) : phase === 'preview' && preview ? (
           <Stack spacing={2} sx={{ pt: 1 }}>
             <Typography variant="body2">
-              Found <strong>{preview.totalFound}</strong> book
-              {preview.totalFound !== 1 ? 's' : ''} in your Goodreads library.
+              {t('goodreads.found', { count: preview.totalFound })}
             </Typography>
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-              <StatChip label="Read" count={preview.byStatus.read} />
-              <StatChip label="Reading" count={preview.byStatus.reading} />
-              <StatChip label="To Read" count={preview.byStatus.toRead} />
-              <StatChip label="Already in library" count={preview.duplicates} muted />
+              <StatChip label={t('goodreads.statusRead')} count={preview.byStatus.read} />
+              <StatChip label={t('goodreads.statusReading')} count={preview.byStatus.reading} />
+              <StatChip label={t('goodreads.statusToRead')} count={preview.byStatus.toRead} />
+              <StatChip label={t('goodreads.statusDuplicate')} count={preview.duplicates} muted />
             </Box>
             {preview.books.length === 0 && preview.duplicates > 0 && (
-              <Alert severity="info">All books are already in your library.</Alert>
+              <Alert severity="info">{t('goodreads.allDuplicate')}</Alert>
             )}
           </Stack>
         ) : phase === 'importing' ? (
           <Stack spacing={2} sx={{ pt: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              Importing book {importedCount} of {totalToImport} (searching covers)…
+              {t('goodreads.importing', { current: importedCount, total: totalToImport })}
             </Typography>
             <LinearProgress
               variant="determinate"
@@ -200,7 +197,7 @@ export function GoodreadsImport({ open, onClose }: Props) {
           </Stack>
         ) : phase === 'done' ? (
           <Alert severity="success">
-            Successfully imported {importedCount} book{importedCount !== 1 ? 's' : ''}!
+            {t('goodreads.success', { count: importedCount })}
           </Alert>
         ) : null}
       </DialogContent>
@@ -208,18 +205,18 @@ export function GoodreadsImport({ open, onClose }: Props) {
       <DialogActions>
         {(phase === 'idle' || phase === 'loading') && (
           <Button onClick={handleClose} disabled={phase === 'loading'}>
-            Cancel
+            {t('goodreads.cancel')}
           </Button>
         )}
         {phase === 'preview' && preview && (
           <>
-            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={handleClose}>{t('goodreads.cancel')}</Button>
             <Button
               variant="contained"
               onClick={handleImport}
               disabled={preview.books.length === 0}
             >
-              Import {preview.books.length} book{preview.books.length !== 1 ? 's' : ''}
+              {t('goodreads.importButton', { count: preview.books.length })}
             </Button>
           </>
         )}

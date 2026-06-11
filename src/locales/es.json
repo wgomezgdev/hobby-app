@@ -1,0 +1,299 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "library": "Biblioteca",
+    "stats": "Estadísticas",
+    "profile": "Perfil",
+    "addBook": "Agregar libro"
+  },
+  "home": {
+    "greeting": {
+      "morning": "Buenos días",
+      "afternoon": "Buenas tardes",
+      "evening": "Buenas noches"
+    },
+    "myLibrary": "Mi Biblioteca",
+    "stats": {
+      "read": "Leídos",
+      "inProgress": "En progreso",
+      "pending": "Pendientes"
+    },
+    "currentlyReading": "Leyendo ahora",
+    "activeBadge": "● ACTIVO",
+    "notReading": "No estás leyendo nada ahora mismo",
+    "startReading": "Comenzar a leer →",
+    "completed": "Completados ({{count}})",
+    "pageOf": "Página {{current}} de {{total}}"
+  },
+  "library": {
+    "filter": {
+      "all": "Todos",
+      "reading": "Leyendo",
+      "wantToRead": "Por leer",
+      "finished": "Terminados"
+    },
+    "sort": {
+      "label": "Ordenar",
+      "recent": "Reciente",
+      "titleAZ": "Título A–Z",
+      "authorAZ": "Autor A–Z"
+    },
+    "empty": {
+      "all": "Tu biblioteca está vacía",
+      "filtered": "Sin libros {{status}}",
+      "action": "Agrega tu primer libro para comenzar"
+    }
+  },
+  "book": {
+    "form": {
+      "addTitle": "Agregar libro",
+      "editTitle": "Editar libro",
+      "back": "Volver",
+      "fields": {
+        "title": "TÍTULO DEL LIBRO",
+        "titleRequired": "El título es requerido",
+        "author": "AUTOR",
+        "authorRequired": "El autor es requerido",
+        "year": "AÑO",
+        "status": "ESTADO",
+        "totalPages": "PÁGINAS TOTALES",
+        "currentPage": "PÁGINA ACTUAL",
+        "genre": "GÉNERO",
+        "pages": "{{count}} páginas"
+      },
+      "save": "Guardar libro",
+      "saveChanges": "Guardar cambios",
+      "scan": "Escanear portada",
+      "scanning": "Escaneando…",
+      "scanConflict": "Escaneo encontró \"{{values}}\". ¿Reemplazar los valores existentes?",
+      "scanApply": "Aplicar",
+      "scanKeep": "Mantener"
+    },
+    "detail": {
+      "title": "Detalle del libro",
+      "edit": "Editar",
+      "deleteAria": "Eliminar libro",
+      "backAria": "Volver a la biblioteca",
+      "pageOf": "Página {{current}} de {{total}}",
+      "pace": {
+        "started": "Comenzó a leer",
+        "daysReading": "Días leyendo",
+        "avgPace": "Ritmo promedio",
+        "toFinish": "Para terminar",
+        "daysValue": "{{days}} días",
+        "paceValue": "{{pace}} pág/día"
+      },
+      "tabs": {
+        "progress": "Progreso",
+        "sessions": "Sesiones",
+        "quotes": "Citas",
+        "rating": "Calificación"
+      }
+    },
+    "delete": {
+      "title": "¿Eliminar libro?",
+      "content": "Esto eliminará permanentemente {{title}} y todas sus sesiones, citas y calificación. Esta acción no se puede deshacer.",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar",
+      "snackbar": "\"{{title}}\" eliminado"
+    },
+    "status": {
+      "WANT_TO_READ": "Por leer",
+      "READING": "Leyendo",
+      "FINISHED": "Terminado"
+    }
+  },
+  "genre": {
+    "Fiction": "Ficción",
+    "Classics": "Clásicos",
+    "Novel": "Novela",
+    "Fantasy": "Fantasía",
+    "Adventure": "Aventura",
+    "Science_Fiction": "Ciencia Ficción",
+    "Romance": "Romance",
+    "Thriller": "Thriller"
+  },
+  "progress": {
+    "title": "Progreso de lectura",
+    "finished": "¡Terminado!",
+    "remaining": "{{percent}}% restante",
+    "logSession": "Registrar sesión de lectura"
+  },
+  "session": {
+    "logTitle": "Registrar sesión de lectura",
+    "date": "Fecha",
+    "dateRequired": "La fecha es requerida",
+    "duration": "Duración (minutos)",
+    "durationRequired": "La duración es requerida",
+    "durationMin": "Debe ser al menos 1 minuto",
+    "progress": "Progreso agregado (%)",
+    "progressRequired": "El progreso es requerido",
+    "progressMin": "Debe ser al menos 1%",
+    "progressMax": "No puede exceder el 100%",
+    "notes": "Notas (opcional)",
+    "cancel": "Cancelar",
+    "save": "Guardar sesión",
+    "empty": "Aún no hay sesiones registradas",
+    "logCta": "Registrar una sesión"
+  },
+  "quote": {
+    "searchPlaceholder": "Buscar citas…",
+    "favorites": "Favoritas",
+    "addFavorite": "Agregar a favoritos",
+    "removeFavorite": "Quitar de favoritos",
+    "empty": "Aún no hay citas guardadas",
+    "emptyFiltered": "Ninguna cita coincide con los filtros",
+    "addTitle": "Agregar cita",
+    "text": "Texto de la cita",
+    "textRequired": "El texto de la cita es requerido",
+    "pageNumber": "Número de página (opcional)",
+    "markFavorite": "Marcar como favorita",
+    "cancel": "Cancelar",
+    "save": "Guardar cita",
+    "addAria": "Agregar cita",
+    "pagePrefix": "p. "
+  },
+  "rating": {
+    "notRated": "Aún no has calificado este libro",
+    "yourRating": "Tu calificación",
+    "review": "Reseña (opcional)",
+    "save": "Guardar calificación",
+    "update": "Actualizar calificación",
+    "validation": "Por favor selecciona una calificación",
+    "notRatedLabel": "Sin calificación"
+  },
+  "stats": {
+    "title": "Estadísticas 📊",
+    "subtitle": "Tu progreso de lectura",
+    "yearAll": "Todos",
+    "booksRead": "Libros leídos · Meta anual: 50",
+    "yoyChange": "{{percent}}% vs el año pasado",
+    "activity": {
+      "title": "Actividad de lectura",
+      "sessions": "Sesiones",
+      "timeRead": "Tiempo leído",
+      "streak": "Racha diaria"
+    },
+    "booksPerMonth": "Libros por mes",
+    "avgPerMonth": "ø {{avg}} / mes",
+    "genres": "Géneros",
+    "noGenres": "Sin géneros etiquetados",
+    "pagesRead": "PÁGINAS LEÍDAS",
+    "allTime": "todo el tiempo",
+    "addPageCounts": "agrega conteo de páginas a los libros",
+    "bestMonth": "MEJOR MES",
+    "bestMonthBooks": "{{count}} libros 🔥",
+    "noData": "Sin datos",
+    "empty": "Registra una sesión de lectura para ver estadísticas"
+  },
+  "ranking": {
+    "title": "Clasificación",
+    "subtitleStars": "Tus libros ordenados por calificación",
+    "subtitleRecent": "Libros terminados, más recientes primero",
+    "byStars": "Por estrellas",
+    "recentlyFinished": "Terminados recientemente",
+    "emptyStars": "Califica algunos libros para ver tu clasificación",
+    "emptyRecent": "Aún no hay libros terminados",
+    "goToLibrary": "Ir a tu biblioteca"
+  },
+  "profile": {
+    "title": "Perfil",
+    "notConfigured": "Agrega las variables de entorno de Firebase para habilitar Google Sign-In y la sincronización en la nube.",
+    "signInPrompt": "Inicia sesión para respaldar tu biblioteca y sincronizar entre dispositivos",
+    "signIn": "Iniciar sesión con Google",
+    "cloudSync": "Sincronización en la nube",
+    "lastSynced": "Última sincronización: {{time}}",
+    "syncButton": "Sincronizar con la nube",
+    "syncing": "Sincronizando…",
+    "restoreButton": "Restaurar desde la nube",
+    "restoring": "Restaurando…",
+    "dataManagement": "Gestión de datos (exportar / importar)",
+    "signOut": "Cerrar sesión",
+    "restoreTitle": "¿Restaurar desde la nube?",
+    "restoreContent": "Esto reemplazará todos los datos locales con tu respaldo en la nube. Los cambios realizados desde la última sincronización se perderán. Esta acción no se puede deshacer.",
+    "cancel": "Cancelar",
+    "restore": "Restaurar",
+    "syncSuccess": "Sincronizado con la nube ✓",
+    "syncError": "Error al sincronizar. Verifica tu conexión.",
+    "restoreSuccess": "Datos restaurados desde la nube ✓",
+    "restoreError": "Error al restaurar. Verifica tu conexión.",
+    "timeNever": "Nunca",
+    "timeJustNow": "Justo ahora",
+    "timeMinutesAgo": "hace {{minutes}} min",
+    "timeHoursAgo": "hace {{hours}} h"
+  },
+  "settings": {
+    "title": "Configuración",
+    "exportTitle": "Exportar respaldo",
+    "exportDesc": "Descarga todos tus libros, sesiones, citas y calificaciones como un archivo JSON.",
+    "exportButton": "Exportar respaldo",
+    "exportSuccess": "Respaldo descargado exitosamente",
+    "exportError": "Error al exportar. Por favor intenta de nuevo.",
+    "goodreadsTitle": "Importar de Goodreads",
+    "goodreadsDesc": "Importa tu biblioteca desde Goodreads. Los libros existentes nunca se sobreescriben.",
+    "goodreadsButton": "Importar de Goodreads",
+    "importTitle": "Importar respaldo",
+    "importDesc": "Restaura datos desde un archivo JSON exportado anteriormente. Esto reemplazará todos los datos actuales.",
+    "importButton": "Elegir archivo de respaldo",
+    "importConfirmTitle": "¿Reemplazar todos los datos?",
+    "importConfirmContent": "Esto reemplazará todos los datos actuales con el contenido de {{filename}}. Esta acción no se puede deshacer.",
+    "importCancel": "Cancelar",
+    "importConfirm": "Reemplazar datos",
+    "importSuccess": "Datos restaurados exitosamente",
+    "importError": "Error al importar"
+  },
+  "cover": {
+    "uploadText": "Haz clic o arrastra para subir portada",
+    "uploadAria": "Subir imagen de portada",
+    "previewAria": "Vista previa de la portada",
+    "upload": "Subir",
+    "camera": "Cámara",
+    "remove": "Eliminar",
+    "errorSize": "La imagen debe ser menor a 1 MB. Por favor elige un archivo más pequeño.",
+    "errorProcess": "No se pudo procesar la imagen. Por favor intenta con otra.",
+    "searchButton": "Buscar portada en línea",
+    "searchTitle": "Buscar portada del libro",
+    "searchPlaceholder": "Título o autor del libro…",
+    "searchAction": "Buscar",
+    "searchError": "Error en la búsqueda. Verifica tu conexión e intenta de nuevo.",
+    "searchEmpty": "No se encontraron portadas. Prueba con un título o autor diferente.",
+    "searchInstructions": "Ingresa un título o autor y presiona Buscar.",
+    "closeAria": "Cerrar"
+  },
+  "scan": {
+    "notConfigured": "Escaneo de IA no configurado. Agrega VITE_GEMINI_API_KEY para habilitarlo.",
+    "limitReached": "Límite diario de escaneos alcanzado. Intenta mañana.",
+    "invalidKey": "Clave API inválida. Verifica tu VITE_GEMINI_API_KEY.",
+    "serviceError": "Error del servicio de IA (HTTP {{status}}). Intenta de nuevo.",
+    "notRecognized": "Portada no reconocida. Intenta con una foto más clara o llena los campos manualmente.",
+    "networkError": "Error de red: {{error}}"
+  },
+  "goodreads": {
+    "title": "Importar de Goodreads",
+    "instructions": "Primero, exporta tu biblioteca de Goodreads:",
+    "step1": "Ve a goodreads.com → Mis libros",
+    "step2": "Haz clic en Importar y exportar (barra lateral izquierda)",
+    "step3": "Haz clic en Exportar biblioteca para descargar el CSV",
+    "chooseFile": "Elegir archivo CSV",
+    "found": "Se encontró <1>{{count}}</1> libro en tu biblioteca de Goodreads.",
+    "found_plural": "Se encontraron <1>{{count}}</1> libros en tu biblioteca de Goodreads.",
+    "statusRead": "Leídos",
+    "statusReading": "Leyendo",
+    "statusToRead": "Por leer",
+    "statusDuplicate": "Ya en la biblioteca",
+    "allDuplicate": "Todos los libros ya están en tu biblioteca.",
+    "importing": "Importando libro {{current}} de {{total}} (buscando portadas)…",
+    "success": "¡Se importó {{count}} libro exitosamente!",
+    "success_plural": "¡Se importaron {{count}} libros exitosamente!",
+    "cancel": "Cancelar",
+    "importButton": "Importar {{count}} libro",
+    "importButton_plural": "Importar {{count}} libros",
+    "errorEmpty": "No se encontraron libros en el archivo CSV. Asegúrate de haber exportado tu biblioteca de Goodreads correctamente.",
+    "errorParse": "Error al analizar el CSV. Intenta exportar de nuevo desde Goodreads."
+  },
+  "tags": {
+    "label": "Etiquetas",
+    "placeholder": "Agregar etiquetas...",
+    "helper": "Presiona Enter o coma para agregar una etiqueta"
+  }
+}

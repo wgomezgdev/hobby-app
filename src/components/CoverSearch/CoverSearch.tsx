@@ -5,6 +5,7 @@ import {
   InputAdornment, TextField, Typography,
 } from '@mui/material';
 import { Close, ImageSearch, SearchOutlined } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { fetchGoogleBooks, fetchOpenLibrary } from '../../utils/coverSearch';
 
 interface Props {
@@ -20,8 +21,6 @@ interface BookResult {
   fullUrl: string;
 }
 
-// --- Component ---
-
 export function CoverSearch({ title, author, onSelect }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -29,6 +28,7 @@ export function CoverSearch({ title, author, onSelect }: Props) {
   const [results, setResults] = useState<BookResult[]>([]);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState(false);
+  const { t } = useTranslation();
 
   const handleOpen = () => {
     setQuery(`${title} ${author}`.trim());
@@ -48,7 +48,6 @@ export function CoverSearch({ title, author, onSelect }: Props) {
     setError(false);
     setResults([]);
 
-    // Try Google Books; on any failure fall through to Open Library
     try {
       const books = await fetchGoogleBooks(q);
       if (books.length > 0) {
@@ -60,7 +59,6 @@ export function CoverSearch({ title, author, onSelect }: Props) {
       // quota / network — continue to fallback
     }
 
-    // Open Library fallback — uses the same query the user typed
     try {
       setResults(await fetchOpenLibrary(q));
     } catch (e) {
@@ -74,20 +72,20 @@ export function CoverSearch({ title, author, onSelect }: Props) {
   return (
     <>
       <Button startIcon={<ImageSearch />} variant="outlined" size="small" onClick={handleOpen}>
-        Search cover online
+        {t('cover.searchButton')}
       </Button>
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          Search book cover
-          <IconButton onClick={handleClose} size="small" aria-label="Close"><Close /></IconButton>
+          {t('cover.searchTitle')}
+          <IconButton onClick={handleClose} size="small" aria-label={t('cover.closeAria')}><Close /></IconButton>
         </DialogTitle>
 
         <DialogContent>
           <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
             <TextField
               fullWidth size="small"
-              placeholder="Book title or author…"
+              placeholder={t('cover.searchPlaceholder')}
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') search(); }}
@@ -101,7 +99,7 @@ export function CoverSearch({ title, author, onSelect }: Props) {
               autoFocus
             />
             <Button variant="contained" onClick={search} disabled={!query.trim() || loading}>
-              Search
+              {t('cover.searchAction')}
             </Button>
           </Box>
 
@@ -113,13 +111,13 @@ export function CoverSearch({ title, author, onSelect }: Props) {
 
           {!loading && error && (
             <Typography color="error" textAlign="center" py={4}>
-              Search failed. Check your connection and try again.
+              {t('cover.searchError')}
             </Typography>
           )}
 
           {!loading && !error && searched && results.length === 0 && (
             <Typography color="text.secondary" textAlign="center" py={4}>
-              No covers found. Try a different title or author.
+              {t('cover.searchEmpty')}
             </Typography>
           )}
 
@@ -145,7 +143,7 @@ export function CoverSearch({ title, author, onSelect }: Props) {
 
           {!searched && (
             <Typography color="text.secondary" textAlign="center" py={4}>
-              Enter a title or author and press Search.
+              {t('cover.searchInstructions')}
             </Typography>
           )}
         </DialogContent>

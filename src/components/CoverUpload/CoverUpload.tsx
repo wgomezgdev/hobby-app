@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Box, Button, Typography, Alert } from '@mui/material';
 import { CloudUpload, CameraAlt, MenuBook } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 
 interface CoverUploadProps {
   value?: string;
@@ -44,18 +45,19 @@ export function CoverUpload({ value, onChange, extra }: CoverUploadProps) {
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
 
   const processFile = async (file: File) => {
     setError(null);
     if (file.size > MAX_FILE_BYTES) {
-      setError('Image must be under 1 MB. Please choose a smaller file.');
+      setError(t('cover.errorSize'));
       return;
     }
     try {
       const dataUrl = await resizeAndEncode(file);
       onChange(dataUrl);
     } catch {
-      setError('Could not process image. Please try another.');
+      setError(t('cover.errorProcess'));
     }
   };
 
@@ -91,21 +93,21 @@ export function CoverUpload({ value, onChange, extra }: CoverUploadProps) {
         }}
         role="button"
         tabIndex={0}
-        aria-label="Upload cover image"
+        aria-label={t('cover.uploadAria')}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click(); }}
       >
         {value ? (
           <Box
             component="img"
             src={value}
-            alt="Book cover preview"
+            alt={t('cover.previewAria')}
             sx={{ maxHeight: 160, maxWidth: '100%', objectFit: 'contain' }}
           />
         ) : (
           <Box sx={{ py: 2 }}>
             <MenuBook sx={{ fontSize: 40, color: 'grey.400' }} />
             <Typography variant="body2" color="text.secondary">
-              Click or drag to upload cover
+              {t('cover.uploadText')}
             </Typography>
           </Box>
         )}
@@ -118,15 +120,15 @@ export function CoverUpload({ value, onChange, extra }: CoverUploadProps) {
 
       <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, mt: 1 }}>
         <Button variant="outlined" size="small" startIcon={<CloudUpload />} onClick={() => inputRef.current?.click()}>
-          Upload
+          {t('cover.upload')}
         </Button>
         <Button variant="outlined" size="small" startIcon={<CameraAlt />} onClick={() => cameraRef.current?.click()}>
-          Camera
+          {t('cover.camera')}
         </Button>
         {extra}
         {value && (
           <Button size="small" color="error" onClick={() => onChange(undefined)}>
-            Remove
+            {t('cover.remove')}
           </Button>
         )}
       </Box>

@@ -1,13 +1,15 @@
 import { Autocomplete, Chip, TextField } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 interface TagInputProps {
   value: string[];
   onChange: (tags: string[]) => void;
   suggestions?: string[];
-  label?: string;
 }
 
-export function TagInput({ value, onChange, suggestions = [], label = 'Tags' }: TagInputProps) {
+export function TagInput({ value, onChange, suggestions = [] }: TagInputProps) {
+  const { t } = useTranslation();
+
   return (
     <Autocomplete
       multiple
@@ -28,9 +30,9 @@ export function TagInput({ value, onChange, suggestions = [], label = 'Tags' }: 
       renderInput={(params) => (
         <TextField
           {...params}
-          label={label}
-          placeholder={value.length === 0 ? 'Add tags...' : ''}
-          helperText="Press Enter or comma to add a tag"
+          label={t('tags.label')}
+          placeholder={value.length === 0 ? t('tags.placeholder') : ''}
+          helperText={t('tags.helper')}
         />
       )}
     />

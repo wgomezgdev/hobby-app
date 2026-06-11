@@ -1,14 +1,9 @@
 import { Card, CardActionArea, CardContent, CardMedia, Chip, Box, Typography } from '@mui/material';
 import { MenuBook } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import type { Book } from '../../types/entities';
 import { ProgressBar } from '../ProgressBar/ProgressBar';
-
-const STATUS_LABELS: Record<Book['status'], string> = {
-  WANT_TO_READ: 'Want to Read',
-  READING: 'Reading',
-  FINISHED: 'Finished',
-};
 
 const STATUS_COLORS: Record<Book['status'], 'default' | 'primary' | 'success'> = {
   WANT_TO_READ: 'default',
@@ -22,6 +17,7 @@ interface BookCardProps {
 
 export function BookCard({ book }: BookCardProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -31,7 +27,7 @@ export function BookCard({ book }: BookCardProps) {
             component="img"
             height={160}
             image={book.cover}
-            alt={`Cover of ${book.title}`}
+            alt={book.title}
             sx={{ objectFit: 'cover' }}
             loading="lazy"
           />
@@ -57,14 +53,14 @@ export function BookCard({ book }: BookCardProps) {
           </Typography>
           <Box sx={{ mt: 1, mb: 1 }}>
             <Chip
-              label={STATUS_LABELS[book.status]}
+              label={t(`book.status.${book.status}`)}
               color={STATUS_COLORS[book.status]}
               size="small"
             />
           </Box>
           {book.currentPage != null && book.totalPages ? (
             <Typography variant="caption" color="text.secondary">
-              Page {book.currentPage} of {book.totalPages}
+              {t('home.pageOf', { current: book.currentPage, total: book.totalPages })}
             </Typography>
           ) : null}
           <ProgressBar value={book.currentProgress} />
