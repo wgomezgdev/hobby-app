@@ -41,10 +41,12 @@ export function getGenreBreakdown(books: Book[]): { genre: string; count: number
     .map(([genre, count]) => ({ genre, count, pct: Math.round((count / total) * 100) }));
 }
 
-export function getTotalPagesRead(books: Book[], year: number | 'all'): number {
-  return finishedInYear(books, year)
-    .filter(b => b.totalPages)
-    .reduce((sum, b) => sum + (b.totalPages ?? 0), 0);
+export function getTotalPagesRead(books: Book[]): number {
+  return books.reduce((sum, b) => {
+    if (b.status === 'FINISHED') return sum + (b.totalPages ?? 0);
+    if (b.status === 'READING') return sum + (b.currentPage ?? 0);
+    return sum;
+  }, 0);
 }
 
 export function getBestMonth(books: Book[], year: number | 'all'): { month: string; count: number } | null {
