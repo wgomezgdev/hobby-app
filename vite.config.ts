@@ -11,20 +11,22 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icons/*.png'],
+      includeAssets: ['icons/*.png', 'icons/*.svg', 'favicon.svg'],
       manifest: {
-        name: 'My Hobbies',
-        short_name: 'My Hobbies',
-        description: 'Your personal hobby tracker',
-        theme_color: '#1976d2',
-        background_color: '#ffffff',
+        name: 'Reading Pal',
+        short_name: 'Reading Pal',
+        description: 'Your personal reading tracker',
+        theme_color: '#232A3D',
+        background_color: '#0B0E16',
         display: 'standalone',
         start_url: '/',
         icons: [
           { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icons/icon-1024x1024.png', sizes: '1024x1024', type: 'image/png' },
           { src: '/icons/icon-maskable-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
           { src: '/icons/icon-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: '/icons/icon-mono-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'monochrome' },
         ],
       },
       workbox: {
