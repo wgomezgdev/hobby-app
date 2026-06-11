@@ -6,7 +6,8 @@ import { useHomeData } from '../../hooks/useHomeData';
 import { useAllRatings } from '../../hooks/useRatings';
 import { StarRating } from '../../components/StarRating/StarRating';
 import { useAuth } from '../../hooks/useAuth';
-import type { Book } from '../../types/entities';
+import { useLibraryUiStore } from '../../stores/libraryUiStore';
+import type { Book, BookStatus } from '../../types/entities';
 
 function BookRow({ book, onClick, badge }: { book: Book; onClick: () => void; badge?: React.ReactNode }) {
   const { t } = useTranslation();
@@ -53,6 +54,7 @@ export function HomePage() {
   const data = useHomeData();
   const ratings = useAllRatings();
   const { user } = useAuth();
+  const setFilter = useLibraryUiStore(s => s.setFilter);
 
   const h = new Date().getHours();
   const greetingKey = h >= 5 && h < 12 ? 'home.greeting.morning'
@@ -97,13 +99,18 @@ export function HomePage() {
 
       <Box sx={{ display: 'flex', gap: 1.5, mb: 3 }}>
         {[
-          { label: t('home.stats.read'), count: finishedCount },
-          { label: t('home.stats.inProgress'), count: readingCount },
-          { label: t('home.stats.pending'), count: pendingCount },
-        ].map(({ label, count }) => (
-          <Card key={label} sx={{ flex: 1, p: 1.5, textAlign: 'center' }}>
-            <Typography variant="h5" fontWeight={800} color="primary.main">{count}</Typography>
-            <Typography variant="caption" color="text.secondary">{label}</Typography>
+          { label: t('home.stats.read'), count: finishedCount, filter: 'FINISHED' as BookStatus },
+          { label: t('home.stats.inProgress'), count: readingCount, filter: 'READING' as BookStatus },
+          { label: t('home.stats.pending'), count: pendingCount, filter: 'WANT_TO_READ' as BookStatus },
+        ].map(({ label, count, filter }) => (
+          <Card key={label} sx={{ flex: 1, textAlign: 'center' }}>
+            <CardActionArea
+              onClick={() => { setFilter(filter); navigate('/library'); }}
+              sx={{ p: 1.5 }}
+            >
+              <Typography variant="h5" fontWeight={800} color="primary.main">{count}</Typography>
+              <Typography variant="caption" color="text.secondary">{label}</Typography>
+            </CardActionArea>
           </Card>
         ))}
       </Box>
