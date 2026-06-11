@@ -144,7 +144,7 @@ export function StatsPage() {
       )}
 
       {/* Genre donut + right stats */}
-      {booksRead > 0 && (
+      {(booksRead > 0 || genreBreakdown.length > 0 || totalPages > 0) && (
         <Grid container spacing={2}>
           <Grid item xs={6}>
             <Card sx={{ p: 2, height: '100%' }}>
@@ -194,7 +194,7 @@ export function StatsPage() {
                   {totalPages > 0 ? totalPages.toLocaleString('en-US') : '—'}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {totalPages === 0 ? 'add page counts to books' : selectedYear === 'all' ? 'all time' : `in ${selectedYear}`}
+                  {totalPages === 0 ? 'add page counts to books' : 'all time'}
                 </Typography>
               </Card>
               <Card sx={{ p: 2, flex: 1 }}>
