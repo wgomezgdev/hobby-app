@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GENRES, type Genre } from '../types/entities';
 import { getCached, setCached } from '../lib/bookSearchCache';
 
@@ -90,7 +91,15 @@ async function fetchGoogleBooks(query: string, signal: AbortSignal): Promise<Tit
     });
 }
 
+function friendlyFetchError(err: unknown, t: (key: string) => string): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (msg.includes('429') || msg.toLowerCase().includes('rate')) return t('titleSearch.rateLimited');
+  if (msg.match(/HTTP [45]\d\d/)) return t('titleSearch.unavailable');
+  return t('titleSearch.networkError');
+}
+
 export function useTitleSuggestions(query: string) {
+  const { t } = useTranslation();
   const [suggestions, setSuggestions] = useState<TitleSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -132,7 +141,7 @@ export function useTitleSuggestions(query: string) {
         setSuggestions(results);
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
-          setSearchError((err as Error).message ?? 'Search failed');
+          setSearchError(friendlyFetchError(err, t));
         }
         setSuggestions([]);
       } finally {

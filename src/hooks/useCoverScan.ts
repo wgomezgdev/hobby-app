@@ -53,7 +53,7 @@ export function useCoverScan() {
         return null;
       }
       if (!res.ok) {
-        setError(t('scan.serviceError', { status: res.status }));
+        setError(t('scan.serviceError'));
         return null;
       }
 
@@ -73,8 +73,7 @@ export function useCoverScan() {
 
       return { title, author };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(t('scan.networkError', { error: msg }));
+      setError(t('scan.networkError'));
       return null;
     } finally {
       setLoading(false);
