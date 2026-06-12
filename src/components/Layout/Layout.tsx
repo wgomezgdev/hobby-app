@@ -20,14 +20,27 @@ export function Layout() {
   const { t } = useTranslation();
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', pb: '72px' }}>
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100vh',
+      pt: 'env(safe-area-inset-top)',
+      pb: 'calc(72px + env(safe-area-inset-bottom))',
+    }}>
       <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3 } }}>
         <Outlet />
       </Box>
 
       <Paper
         elevation={8}
-        sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100 }}
+        sx={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          pb: 'env(safe-area-inset-bottom)',
+        }}
       >
         <Typography
           variant="caption"
@@ -38,7 +51,11 @@ export function Layout() {
         </Typography>
 
         <Box sx={{ position: 'relative' }}>
-          <BottomNavigation value={activeTab} onChange={(_, val) => navigate(val)}>
+          <BottomNavigation
+            value={activeTab}
+            onChange={(_, val) => navigate(val)}
+            sx={{ height: 60 }}
+          >
             <BottomNavigationAction label={t('nav.home')} value="/" icon={<Home />} />
             <BottomNavigationAction label={t('nav.library')} value="/library" icon={<MenuBook />} />
             <BottomNavigationAction sx={{ visibility: 'hidden', pointerEvents: 'none' }} value="" />
