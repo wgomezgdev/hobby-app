@@ -260,13 +260,18 @@
     "searchInstructions": "Ingresa un título o autor y presiona Buscar.",
     "closeAria": "Cerrar"
   },
+  "titleSearch": {
+    "rateLimited": "Demasiadas solicitudes. Espera un momento e intenta de nuevo.",
+    "unavailable": "La búsqueda de libros no está disponible en este momento. Intenta más tarde.",
+    "networkError": "Sin conexión. Verifica tu internet e intenta de nuevo."
+  },
   "scan": {
     "notConfigured": "Escaneo de IA no configurado. Agrega VITE_GEMINI_API_KEY para habilitarlo.",
     "limitReached": "Límite diario de escaneos alcanzado. Intenta mañana.",
     "invalidKey": "Clave API inválida. Verifica tu VITE_GEMINI_API_KEY.",
-    "serviceError": "Error del servicio de IA (HTTP {{status}}). Intenta de nuevo.",
+    "serviceError": "El servicio de IA no está disponible en este momento. Intenta de nuevo.",
     "notRecognized": "Portada no reconocida. Intenta con una foto más clara o llena los campos manualmente.",
-    "networkError": "Error de red: {{error}}"
+    "networkError": "Sin conexión. Verifica tu internet e intenta de nuevo."
   },
   "goodreads": {
     "title": "Importar de Goodreads",
