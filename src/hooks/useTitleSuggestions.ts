@@ -98,6 +98,7 @@ function friendlyFetchError(err: unknown, t: (key: string) => string): string {
   return t('titleSearch.networkError');
 }
 
+
 export function useTitleSuggestions(query: string) {
   const { t } = useTranslation();
   const [suggestions, setSuggestions] = useState<TitleSuggestion[]>([]);
