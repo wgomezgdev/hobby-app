@@ -132,7 +132,13 @@ export function useTitleSuggestions(query: string) {
           return;
         }
 
-        let results = await fetchOpenLibrary(query, controller.signal);
+        let results: TitleSuggestion[] = [];
+        try {
+          results = await fetchOpenLibrary(query, controller.signal);
+        } catch (olErr) {
+          if ((olErr as Error).name === 'AbortError') throw olErr;
+          // Open Library failed — silently try Google Books
+        }
 
         if (results.length === 0) {
           results = await fetchGoogleBooks(query, controller.signal);
