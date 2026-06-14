@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Avatar, Box, Card, CardActionArea, Chip, LinearProgress, Skeleton, Typography } from '@mui/material';
 import { AutoStories } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -11,16 +12,18 @@ import type { Book, BookStatus } from '../../types/entities';
 
 function BookRow({ book, onClick, badge }: { book: Book; onClick: () => void; badge?: React.ReactNode }) {
   const { t } = useTranslation();
+  const [imgError, setImgError] = useState(false);
   return (
     <Card sx={{ mb: 1.5 }}>
       <CardActionArea onClick={onClick} sx={{ p: 2 }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-          {book.cover ? (
+          {book.cover && !imgError ? (
             <Box
               component="img"
               src={book.cover}
               alt={book.title}
               sx={{ width: 48, height: 68, objectFit: 'cover', borderRadius: 1, flexShrink: 0 }}
+              onError={() => setImgError(true)}
             />
           ) : (
             <Box sx={{ width: 48, height: 68, bgcolor: 'background.default', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

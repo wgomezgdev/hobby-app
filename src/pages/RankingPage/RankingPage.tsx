@@ -22,6 +22,7 @@ export function RankingPage() {
   const ratings = useAllRatings();
   const books = useAllBooks();
   const [view, setView] = useState<View>('stars');
+  const [coverErrors, setCoverErrors] = useState<Set<number>>(new Set());
   const { t } = useTranslation();
 
   const ranked = useMemo((): RankedEntry[] | undefined => {
@@ -86,13 +87,14 @@ export function RankingPage() {
                 to={`/books/${book.id}?tab=rating`}
                 sx={{ textDecoration: 'none', height: '100%', display: 'block' }}
               >
-                {book.cover ? (
+                {book.cover && !coverErrors.has(book.id!) ? (
                   <Box
                     component="img"
                     src={book.cover}
                     alt={book.title}
                     sx={{ width: '100%', height: 160, objectFit: 'cover' }}
                     loading="lazy"
+                    onError={() => setCoverErrors(prev => new Set(prev).add(book.id!))}
                   />
                 ) : (
                   <Box sx={{ height: 160, bgcolor: 'grey.100', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
