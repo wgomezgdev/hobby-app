@@ -65,23 +65,37 @@ export async function fetchOpenLibrary(query: string): Promise<BookResult[]> {
 }
 
 // Returns the first cover URL found from Google Books, then Open Library, or null.
+// Tries title+author first; if nothing found, retries with the title alone.
+// Strips Goodreads series notation "(Series Name, #1)" before searching.
 export async function fetchBookCover(title: string, author: string): Promise<string | null> {
-  const query = `${title} ${author}`.trim();
-  if (!query) return null;
+  // Remove Goodreads series suffix e.g. "(Niebla, #1)" or "(His Dark Materials, #2)"
+  const cleanTitle = title.replace(/\s*\(.*?,\s*#\d+\)\s*$/, '').trim() || title;
+  const fullQuery = `${cleanTitle} ${author}`.trim();
+  if (!fullQuery) return null;
 
+  // Attempt 1: title + author via Google Books
   try {
-    const books = await fetchGoogleBooks(query);
+    const books = await fetchGoogleBooks(fullQuery);
     if (books.length > 0) return books[0].fullUrl;
-  } catch {
-    // quota or network — fall through
-  }
+  } catch { /* quota or network — fall through */ }
 
+  // Attempt 2: title + author via Open Library
   try {
-    const books = await fetchOpenLibrary(query);
+    const books = await fetchOpenLibrary(fullQuery);
     if (books.length > 0) return books[0].fullUrl;
-  } catch {
-    // both sources failed — no cover
-  }
+  } catch { /* fall through */ }
+
+  // Attempt 3: title only via Google Books (broader match)
+  try {
+    const books = await fetchGoogleBooks(cleanTitle);
+    if (books.length > 0) return books[0].fullUrl;
+  } catch { /* fall through */ }
+
+  // Attempt 4: title only via Open Library
+  try {
+    const books = await fetchOpenLibrary(cleanTitle);
+    if (books.length > 0) return books[0].fullUrl;
+  } catch { /* fall through */ }
 
   return null;
 }
