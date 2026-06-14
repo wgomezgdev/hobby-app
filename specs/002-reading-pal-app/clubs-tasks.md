@@ -30,10 +30,14 @@ correctly for a test club document.
 
 - [ ] T200 [P1] Define all club TypeScript interfaces and enums — `src/types/clubs.ts`
   - Export: `ClubStatus`, `PostType`, `BadgeId`, `MemberRole`, `ReactionEmoji`,
-    `REACTION_DISPLAY`, `ClubMember`, `ClubPost`, `PostReaction`, `ClubDiscussionTopic`,
+    `REACTION_DISPLAY`, `POST_TYPE_DISPLAY`, `PaceStatus`, `PACE_STATUS_DISPLAY`,
+    `ClubMember`, `ClubPost`, `PostReaction`, `ClubDiscussionTopic`,
     `ClubReply`, `Club`, `ClubCapsule`, `CapsuleMemberSnapshot`
   - Exactly as specified in `clubs-data-model.md`; use `readonly` arrays where mutation
     is not expected (e.g. `badges: readonly BadgeId[]` is acceptable but not required)
+  - `ClubMember` includes `paceStatus: PaceStatus | null` and `milestonesReached: number[]`
+  - `ClubPost` includes `chapterTag?: string`, `isPinned: boolean`,
+    `vocabularyDefinition?: string`
   - Do not import from `src/types/entities.ts` — clubs types are fully independent
 
 - [ ] T201 [P1] Create `generateInviteCode` utility — `src/utils/inviteCode.ts`
@@ -49,7 +53,7 @@ correctly for a test club document.
     - Write club doc with `status: 'ACTIVE'`, `memberCount: 1`, `createdAt: Date.now()`
     - Write the moderator's own member doc at `clubs/{clubId}/members/{uid}` with
       `role: 'MODERATOR'`, `progress: 0`, `badges: []`, `quotePostCount: 0`,
-      `discoveryPostCount: 0`, `activeDays: []`
+      `discoveryPostCount: 0`, `activeDays: []`, `paceStatus: null`, `milestonesReached: []`
     - Return the new `clubId`
   - **`getClubByInviteCode(code: string): Promise<Club | null>`**
     - Query `clubs` where `inviteCode == normalizeCode(code)`
@@ -135,6 +139,14 @@ correctly for a test club document.
     - POST to Gemini Flash with the capsule prompt from `clubs-spec.md` (US21)
     - Returns the raw generated text (3–4 sentences)
     - On failure: throws a typed error; the caller falls back to the placeholder string
+  - **`getMilestonePrompt(bookTitle: string, bookAuthor: string, milestone: 25 | 50 | 75): Promise<string>`**
+    - POST to Gemini Flash with the milestone prompt from `clubs-data-model.md` (US22)
+    - Returns a single reflection question string (≤ 20 words)
+    - On failure: returns the fallback string `"What are you thinking at this point in the book?"`
+  - **`getCatchUpSummary(bookTitle: string, bookAuthor: string, startChapter: string, endChapter: string): Promise<string>`**
+    - POST to Gemini Flash with the catch-up prompt from `clubs-data-model.md` (US23)
+    - Returns a prose summary paragraph (≤ 150 words)
+    - On failure: throws a typed `GeminiError`; caller shows an error message
 
 - [ ] T209 [P1] Create real-time React hooks for club data — `src/hooks/useClub.ts`
   - **`useClub(clubId: string)`** — `onSnapshot` on `clubs/{clubId}`; returns `{ club: Club | null, loading: boolean }`
@@ -336,6 +348,145 @@ without refresh.
 
 ---
 
+## Phase 31 Addendum: Enriched Read+Share Features
+
+**Purpose**: Extend the base feed and progress flow with richer post types, chapter tagging,
+pinned posts, pace status, milestone check-in prompts, and the private catch-up summary.
+All changes are additive — no existing Phase 31 task is removed.
+
+**Prerequisite gate**: Phase 31 (T218–T226) complete.
+
+**Checkpoint**: All five post types render correctly in the feed with appropriate chips.
+A pinned post appears above the feed after moderator pins it. Crossing a progress milestone
+shows a Gemini reflection prompt. "Catch up" dialog returns a summary without writing to
+Firestore.
+
+- [ ] T249 [P1] Extend `PostType` union, `ClubPost` fields, and `ClubMember` milestone tracking — `src/types/clubs.ts`
+  - Add `'HOT_TAKE' | 'QUESTION' | 'VOCABULARY'` to the `PostType` union (extends T200)
+  - Add `POST_TYPE_DISPLAY` and `PACE_STATUS_DISPLAY` constant maps (see `clubs-data-model.md`)
+  - Add `PaceStatus` type and export `PACE_STATUS_DISPLAY`
+  - Add to `ClubPost`: `chapterTag?: string`, `isPinned: boolean`, `vocabularyDefinition?: string`
+  - Update `ClubPost.text` JSDoc comment to reflect per-type character limits
+  - Add to `ClubMember`: `paceStatus: PaceStatus | null`, `milestonesReached: number[]`
+  - Update `joinClub` in `clubRepository.ts` to include `paceStatus: null, milestonesReached: []`
+    in the initial member document (extends T202)
+
+- [ ] T250 [P1] Extend `addPost` to initialise new fields — `src/repositories/postRepository.ts`
+  (extends T204)
+  - Set `isPinned: false` on every new post document
+  - Pass through optional `chapterTag` and `vocabularyDefinition` fields if present in the input
+  - No change to badge evaluation logic
+
+- [ ] T251 [P1] Extend `ComposePostDialog` with new post types and chapter tag input — `src/components/clubs/ComposePostDialog.tsx`
+  (extends T220)
+  - Post type selector: five `ToggleButton`s — 💬 Quote / 💡 Discovery / 🌶️ Hot take /
+    ❓ Question / 📚 Word (VOCABULARY)
+  - HOT_TAKE and QUESTION: single text area, max 200 chars, character counter
+  - VOCABULARY: two fields — "Word or phrase" (max 50 chars, required) + "Your note"
+    (max 200 chars, optional; maps to `vocabularyDefinition`)
+  - All types: optional "Chapter / Section" input (max 30 chars; maps to `chapterTag`);
+    render below the main text area with a bookmark icon prefix
+  - DISCUSSION_REPLY type is not selectable in this dialog (it is posted from TopicDetailPage)
+
+- [ ] T252 [P1] Extend `ClubPostCard` to render new post types visually distinct — `src/components/clubs/ClubPostCard.tsx`
+  (extends T219)
+  - Replace the plain type chip with a chip from `POST_TYPE_DISPLAY[post.type]` (emoji + label)
+  - HOT_TAKE: render the text in italic with a left border in terracotta accent color
+  - QUESTION: render with a subtle light-blue tint background chip
+  - VOCABULARY: render as a compact "vocabulary card" — word in bold, definition below in
+    muted smaller type (if `vocabularyDefinition` is set)
+  - All types: if `chapterTag` is set, render it as a muted caption chip below the header row
+    (e.g. a small `Chip` with a `MenuBook` icon and the tag text)
+  - Pinned posts: render a 📌 icon in the top-right corner of the card
+
+- [ ] T253 [P1] Implement pinned posts in the feed — `src/pages/ClubDetailPage/tabs/FeedTab.tsx` + `src/components/clubs/ClubPostCard.tsx`
+  (extends T218)
+  - In `FeedTab`, split posts into `pinnedPosts` (filter `isPinned == true`) and `regularPosts`
+  - Render a "Pinned" section header above pinned posts; only show this section when
+    `pinnedPosts.length > 0`
+  - In `ClubPostCard`, when moderator long-presses (or taps a `MoreVert` icon button):
+    - If club is ACTIVE and current user is moderator: show "Pin" / "Unpin" option
+    - Pin action: sets `isPinned: true` on the post document via `updateDoc`; if 2 posts
+      are already pinned, the oldest pinned post is unpinned first in the same write
+    - Unpin action: sets `isPinned: false` on the post document
+
+- [ ] T254 [P2] Add pace status selector to the progress update UI — `src/pages/ClubDetailPage/tabs/MembersTab.tsx`
+  (extends T215 and T238)
+  - Below the progress slider/input, add a compact 3-button toggle for pace status:
+    📖 "Reading along" / 🐢 "Taking my time" / ✅ "Finished!"
+  - The selected value maps to `PaceStatus`; no selection maps to `null`
+  - On submit: include `paceStatus` in the same `updateDoc` call as the progress value
+  - On the member card: if `paceStatus` is set, show the emoji + label below the progress bar
+    in a muted caption style; if null, show nothing (no placeholder)
+
+- [ ] T255 [P2] Implement milestone check-in prompts — `src/hooks/useMilestonePrompt.ts` + `src/pages/ClubDetailPage/tabs/MembersTab.tsx`
+  (extends T215 and T238)
+  - Create `useMilestonePrompt(bookTitle: string, bookAuthor: string)`:
+    - Exposes `checkMilestone(oldProgress: number, newProgress: number, milestonesReached: number[]): Promise<{ milestone: number; question: string } | null>`
+    - Determines if the new progress crosses an untriggered milestone (25, 50, 75)
+    - If so: calls `getMilestonePrompt()` from `geminiClubs.ts`; returns `{ milestone, question }`
+    - If not (or all crossed milestones already in `milestonesReached`): returns `null`
+  - In `MembersTab`, after a successful progress write:
+    1. Call `checkMilestone(oldProgress, newProgress, member.milestonesReached)`
+    2. If non-null: open a MUI `Dialog` (or `BottomSheet`-style sheet) showing:
+       - "🎉 You've reached {milestone}%" headline
+       - The Gemini-generated question in a card
+       - Two actions: "Share as Hot take" (opens `ComposePostDialog` pre-filled with the
+         question) and "Dismiss"
+    3. On "Share as Hot take": close the milestone dialog and open `ComposePostDialog` with
+       `type: 'HOT_TAKE'` and `text` pre-filled
+    4. On "Dismiss": close the dialog; add the milestone value to `member.milestonesReached`
+       via `updateDoc` so it does not re-fire
+    5. On "Share": after the post is submitted, also update `milestonesReached` on the member doc
+
+- [ ] T256 [P2] Create "Catch up" AI summary dialog — `src/components/clubs/CatchUpDialog.tsx`
+  - Props: `bookTitle: string`, `bookAuthor: string`, `open: boolean`, `onClose: () => void`
+  - Form: "From chapter" text input + "To chapter" text input (both required, max 10 chars each)
+  - Submit button calls `getCatchUpSummary()` from `geminiClubs.ts`; shows `CircularProgress`
+    while loading
+  - On success: show the summary text in a scrollable `Typography` block inside the dialog
+  - On error: show MUI `Alert` with message "Summary unavailable. Try again later."
+  - Close button and clicking outside dismiss without retaining the summary
+  - Summary text is never written to any store or Firestore — local state only
+
+- [ ] T257 [P2] Wire "Catch up" button into FeedTab — `src/pages/ClubDetailPage/tabs/FeedTab.tsx`
+  (extends T218)
+  - If `currentMember.progress < 80` and club is ACTIVE, show a secondary outlined
+    button "📖 Catch up" near the top of the feed (below the pinned section, above regular posts)
+  - Tapping it opens `CatchUpDialog`
+
+- [ ] T258 [P1] Add i18n keys for enriched Read+Share features — `src/locales/en.json` + `src/locales/es.json`
+  - Post types (EN → ES):
+    - `club.post.hotTake` → "Hot take" / "Opinión"
+    - `club.post.question` → "Question" / "Pregunta"
+    - `club.post.vocabulary` → "Word" / "Palabra"
+    - `club.post.word` → "Word or phrase" / "Palabra o frase"
+    - `club.post.definition` → "Your note (optional)" / "Tu nota (opcional)"
+    - `club.post.chapterTag` → "Chapter / Section (optional)" / "Capítulo / Sección (opcional)"
+  - Pinned posts:
+    - `club.feed.pinned` → "Pinned" / "Fijado"
+    - `club.feed.pin` → "Pin post" / "Fijar publicación"
+    - `club.feed.unpin` → "Unpin" / "Desfijar"
+  - Pace status:
+    - `club.pace.ON_TRACK` → "Reading along" / "Leyendo al día"
+    - `club.pace.BEHIND` → "Taking my time" / "A mi ritmo"
+    - `club.pace.FINISHED` → "Finished!" / "¡Terminé!"
+    - `club.pace.label` → "Reading pace" / "Ritmo de lectura"
+  - Milestone prompts:
+    - `club.milestone.title` → "You've reached {milestone}%!" / "¡Llegaste al {milestone}%!"
+    - `club.milestone.shareHotTake` → "Share as Hot take" / "Compartir como opinión"
+    - `club.milestone.dismiss` → "Dismiss" / "Cerrar"
+  - Catch up:
+    - `club.catchup.button` → "Catch up" / "Ponerme al día"
+    - `club.catchup.title` → "Catch up summary" / "Resumen rápido"
+    - `club.catchup.fromChapter` → "From chapter" / "Desde el capítulo"
+    - `club.catchup.toChapter` → "To chapter" / "Hasta el capítulo"
+    - `club.catchup.generate` → "Generate summary" / "Generar resumen"
+    - `club.catchup.error` → "Summary unavailable. Try again later." / "Resumen no disponible. Intenta de nuevo."
+    - `club.catchup.disclaimer` → "This summary is private — only you can see it." / "Este resumen es privado, solo tú puedes verlo."
+
+---
+
 ## Phase 32: Discussions and AI-Generated Questions
 
 **Purpose**: Structured discussion threads (moderator-created topics, member replies)
@@ -487,8 +638,8 @@ on the Members tab in real time when a member changes their percentage.
 
 - [ ] T241 [P2] Add Firestore Security Rule for member progress update — documentation only
   - Member `update` allowed only when `request.auth.uid == uid` (the document ID)
-  - Only these fields may be updated by the member themselves: `progress`, `badges`,
-    `quotePostCount`, `discoveryPostCount`, `activeDays`
+  - Only these fields may be updated by the member themselves: `progress`, `paceStatus`,
+    `badges`, `quotePostCount`, `discoveryPostCount`, `activeDays`, `milestonesReached`
   - `role`, `joinedAt`, `uid`, `displayName`, `photoURL` are immutable after creation
 
 ---
@@ -585,9 +736,11 @@ Sign out and sign back in — capsule is still accessible.
 Phase 29 (Infrastructure)
   ├── Phase 30 (Creation + Joining UI)
   │     ├── Phase 31 (Feed + Reactions)
-  │     │     ├── Phase 32 (Discussions + AI)
-  │     │     └── Phase 33 (Badges + Progress)
-  │     │           └── Phase 34 (Closure + Capsule)
+  │     │     ├── Phase 31 Addendum (Enriched Read+Share)
+  │     │     │     ├── Phase 32 (Discussions + AI)
+  │     │     │     └── Phase 33 (Badges + Progress)
+  │     │     │           └── Phase 34 (Closure + Capsule)
+  │     │     └── (Phase 34 also depends on Phase 33)
   │     └── (Phase 34 also depends on Phase 33)
 ```
 
@@ -601,21 +754,24 @@ tasks are parallelizable.
 | 29 | T200–T209 (all) | None — all independent |
 | 30 | T211–T213, T215–T217 | T210 (nav) → T211 (page); T212 + T213 require T202 |
 | 31 | T218–T222, T223–T225 | T218 → T219; T219 → T221 |
+| 31 Addendum | T249–T250 (parallel) | T249 → T251, T252, T253; T250 → T254, T255; T256 → T257 |
 | 32 | T227–T228, T229–T230, T232–T233 | T228 → T231; T229 → T230 |
 | 33 | T237–T238, T240 | T235 → T236 → T238; T237 is independent |
 | 34 | T242, T244–T248 | T243 → T242 + T244; T247 needs T242 done |
 
-### Total Tasks: 49
+### Total Tasks: 59
 
 | Phase | Tasks | P1 Priority | P2 Priority |
 |---|---|---|---|
 | Phase 29 — Infrastructure | T200–T209 (10) | T200–T209 | — |
 | Phase 30 — Creation + Joining | T210–T217 (8) | T210–T217 | — |
 | Phase 31 — Feed + Reactions | T218–T226 (9) | T218–T226 | — |
+| Phase 31 Addendum — Enriched Read+Share | T249–T258 (10) | T249–T253, T258 | T254–T257 |
 | Phase 32 — Discussions + AI | T227–T234 (8) | — | T227–T234 |
 | Phase 33 — Badges + Progress | T235–T241 (7) | — | T235–T241 |
 | Phase 34 — Closure + Capsule | T242–T248 (7) | T242–T248 | — |
 
-P1 tasks (Phases 29, 30, 31, 34) constitute the MVP: a working club with a feed, a create/join
-flow, and a closure capsule. P2 tasks (Phases 32, 33) add discussions, AI questions, badges,
-and progress sharing in the subsequent iteration.
+P1 tasks (Phases 29, 30, 31, 31-Addendum P1, 34) constitute the MVP: a working club with
+a rich feed (5 post types, chapter tags, pinned posts), a create/join flow, and a closure
+capsule. P2 tasks (Phases 32, 33, and 31-Addendum P2) add discussions, AI questions, badges,
+progress sharing, pace status, milestone prompts, and catch-up summaries.

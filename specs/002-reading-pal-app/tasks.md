@@ -1285,3 +1285,115 @@ Every user-visible string in the app:
 Device locale = `es` → all UI labels in Spanish, genre chips show Spanish names, empty states in Spanish.
 Device locale = `en` (or any other) → English throughout.
 Switching device language and reloading → UI language updates.
+
+---
+
+## Phase 35: UX Improvements ⏳ PLANNED
+
+**Goal**: Address the eight UX pain points identified in the whole-app UX review
+(see `spec.md` FR-038–FR-045). All changes are modifications to existing components —
+no new pages or data model changes.
+
+**Prerequisite gate**: Phase 28 (i18n) complete — all new strings must use `useTranslation`.
+
+**Checkpoint**: Navigation has 5 real tabs. "Add Book" is in the Library header. Tapping
+"Log session" on a currently-reading card opens the session form directly. Progress input
+shows cumulative value with clear label. Delete is in the overflow menu. Stats use MUI icons.
+Settings has two labeled sections.
+
+- [ ] T260 [P1] Remove FAB tab from bottom navigation; add Clubs tab — `src/components/Layout/Layout.tsx`
+  - Replace the center FAB tab (`add` icon) with a real `Clubs` tab (`Groups` MUI icon)
+    navigating to `/clubs`
+  - Update tab index detection to handle 5 real tabs: `/` → 0, `/library` → 1, `/clubs` → 2,
+    `/stats` → 3, `/profile` → 4
+  - Remove the `BottomNavigationAction` that was the center FAB; it had no real route
+  - i18n key: `nav.clubs` → "Clubs" / "Clubes"
+
+- [ ] T261 [P1] Move "Add Book" button to Library page header — `src/pages/LibraryPage/LibraryPage.tsx`
+  - Remove the floating `Fab` component from LibraryPage (previously it overlapped with the
+    nav FAB)
+  - Add an `IconButton` with `Add` icon in the top-right of the page header; same behavior
+    (navigates to `/books/new`)
+  - The button is styled with the terracotta accent color to maintain visual prominence
+  - i18n key: `library.addBook` → "Add book" / "Agregar libro"
+
+- [ ] T262 [P1] Add "Log session" quick-action to currently-reading card — `src/pages/HomePage/HomePage.tsx`
+  - On the "Currently Reading" card, add a small secondary `Button` (`PlayArrow` icon +
+    "Log session" label) below the progress bar
+  - On tap: navigate to `/books/:id/sessions/new` pre-loaded with the book's id
+    (the existing log session route already accepts this)
+  - Only shown when at least one book has status `READING`
+  - i18n key: `home.logSession` → "Log session" / "Registrar sesión"
+
+- [ ] T263 [P1] Change Log Session form from delta to absolute progress input — `src/pages/AddEditSessionPage/AddEditSessionPage.tsx` (or wherever the log session form lives)
+  - Change the progress field label from "Progress (%)" to "Now at % (total so far)"
+  - Add helper text: "Enter your current progress total, e.g. if you were at 40% and read
+    to 55%, enter 55"
+  - The field is pre-filled with `book.currentProgress` so the user sees their current value
+  - On save: compute `delta = Math.max(0, formValue - book.currentProgress)` before passing
+    to `saveSession()`; the repository receives the same `progressDelta` type as before
+  - Validation: value must be 0–100; warn (but do not block) if value is lower than current
+    progress ("This would reduce your progress — are you sure?")
+  - i18n keys: `session.nowAt` → "Now at % (total so far)" / "Ahora en % (total acumulado)",
+    `session.nowAtHelper` → "Enter your current total, not how much you read today" /
+    "Ingresa tu total acumulado, no lo que leíste hoy"
+
+- [ ] T264 [P1] Move Delete action to overflow menu in Book Detail — `src/pages/BookDetailPage/BookDetailPage.tsx`
+  - Remove the `DeleteOutlined` icon from the header AppBar
+  - Add a `MoreVert` icon button to the header AppBar (right side, next to Edit)
+  - Opening the menu shows one item: "Delete book" (with `DeleteOutlined` icon, `error` color)
+  - Selecting it opens the existing delete confirmation dialog (no behavior change)
+  - i18n key: `book.deleteBook` → "Delete book" / "Eliminar libro"
+
+- [ ] T265 [P1] Replace emoji with MUI icons in reading pace stats — `src/pages/BookDetailPage/BookDetailPage.tsx`
+  - Replace the four emoji labels in the 2×2 reading pace grid:
+    - 📅 → `<CalendarToday />` (started reading)
+    - ⏱ → `<AccessTime />` (days reading)
+    - 🔥 → `<Speed />` (avg pace)
+    - 🎯 → `<Flag />` (to finish)
+  - Apply the same `color: 'text.secondary'` style as other MUI icons in the app
+  - No behavior change — labels and values remain the same
+
+- [ ] T266 [P2] Simplify genre section in Stats page — `src/pages/StatsPage/StatsPage.tsx`
+  - Replace the genre donut/pie chart with a ranked chip list:
+    - Sort genres by book count descending
+    - Render the top 3 as MUI `Chip` components: `<Chip label="Fantasy  12" />`
+    - If more than 3 genres exist, add a muted caption "and N more genres"
+    - If fewer than 2 genres exist, render a single `Typography` line instead of chips
+  - Remove the Recharts `PieChart` import from this component (it may still be used elsewhere;
+    do not remove the dependency, just this usage)
+  - i18n keys: `stats.topGenres` → "Top genres" / "Géneros más leídos",
+    `stats.andMore` → "and {count} more" / "y {count} más"
+
+- [ ] T267 [P2] Enhance empty states with active CTAs — `src/pages/LibraryPage/LibraryPage.tsx`, `src/pages/BookDetailPage/BookDetailPage.tsx`
+  - **Library empty state**: add a `Button` "Add your first book" that navigates to `/books/new`
+  - **Sessions tab empty state**: add a `Button` "Log a session" that navigates to
+    `/books/:id/sessions/new`
+  - **Quotes tab empty state**: add a `Button` "Save a quote" that opens the add-quote dialog
+  - **Ranking empty state**: add a `Button` "Rate a book" that navigates to the Library
+    filtered to `FINISHED` books
+  - All CTA buttons use `variant="outlined"` with terracotta color; keep the existing
+    icon + caption above the button
+  - i18n keys: `library.addFirst` → "Add your first book" / "Agrega tu primer libro",
+    `session.logFirst` → "Log a session" / "Registrar sesión",
+    `quote.addFirst` → "Save a quote" / "Guardar una cita",
+    `ranking.rateFirst` → "Rate a book" / "Califica un libro"
+
+- [ ] T268 [P2] Reorganize Settings page into two sections — `src/pages/SettingsPage/SettingsPage.tsx` (or `ProfilePage`)
+  - Group settings into two labeled `Box` sections separated by a `Divider`:
+    1. **"Backup & Export"** (`CloudUpload` icon as section header):
+       - "Export Snapshot" button (download JSON)
+       - "Restore from Cloud" button (Firestore restore); add a red `Alert` banner with
+         `severity="warning"` reading "This will replace all your current data"
+    2. **"Import Data"** (`Download` icon as section header):
+       - "Import Snapshot" button (manual file import)
+       - "Import from Goodreads" button (CSV import)
+  - Section header style: `Typography variant="overline"` with muted color, matching
+    the existing spec visual language
+  - i18n keys: `settings.backupExport` → "Backup & Export" / "Copia de seguridad y exportar",
+    `settings.importData` → "Import Data" / "Importar datos",
+    `settings.restoreWarning` → "This will replace all your current data" / "Esto reemplazará todos tus datos actuales"
+
+- [ ] T269 [P1] Add i18n keys for all Phase 35 UX changes — `src/locales/en.json` + `src/locales/es.json`
+  - All keys listed in T260–T268 above
+  - Ensure no hardcoded English strings remain in modified components
