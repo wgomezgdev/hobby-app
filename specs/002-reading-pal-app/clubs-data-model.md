@@ -11,7 +11,7 @@
 
 export type ClubStatus = 'ACTIVE' | 'CLOSED';
 
-export type PostType = 'QUOTE' | 'DISCOVERY' | 'DISCUSSION_REPLY';
+export type PostType = 'QUOTE' | 'DISCOVERY' | 'HOT_TAKE' | 'QUESTION' | 'VOCABULARY' | 'DISCUSSION_REPLY';
 
 export type BadgeId =
   | 'FIRST_TO_FINISH'   // First member in the club to reach 100%
@@ -32,6 +32,24 @@ export const REACTION_DISPLAY: Record<ReactionEmoji, string> = {
   mindblown: '🤯',
 };
 
+// ─── Post type display metadata ────────────────────────────────────────────
+export const POST_TYPE_DISPLAY: Record<Exclude<PostType, 'DISCUSSION_REPLY'>, { label: string; emoji: string }> = {
+  QUOTE:      { label: 'Quote',      emoji: '💬' },
+  DISCOVERY:  { label: 'Discovery',  emoji: '💡' },
+  HOT_TAKE:   { label: 'Hot take',   emoji: '🌶️' },
+  QUESTION:   { label: 'Question',   emoji: '❓' },
+  VOCABULARY: { label: 'Word',       emoji: '📚' },
+};
+
+// ─── Reading pace status ───────────────────────────────────────────────────
+export type PaceStatus = 'ON_TRACK' | 'BEHIND' | 'FINISHED';
+
+export const PACE_STATUS_DISPLAY: Record<PaceStatus, { label: string; emoji: string }> = {
+  ON_TRACK: { label: 'Reading along', emoji: '📖' },
+  BEHIND:   { label: 'Taking my time', emoji: '🐢' },
+  FINISHED: { label: 'Finished!',     emoji: '✅' },
+};
+
 // ─── ClubMember ────────────────────────────────────────────────────────────
 
 export interface ClubMember {
@@ -46,6 +64,8 @@ export interface ClubMember {
   quotePostCount: number;       // incremented on each QUOTE post
   discoveryPostCount: number;   // incremented on each DISCOVERY post
   activeDays: number[];         // sorted list of day-number values (Date.getTime() floored to UTC midnight)
+  paceStatus: PaceStatus | null; // self-reported reading pace; null until member sets it
+  milestonesReached: number[];  // milestone values (25, 50, 75) already triggered; prevents re-fire
 }
 
 // ─── ClubPost ──────────────────────────────────────────────────────────────
@@ -56,9 +76,12 @@ export interface ClubPost {
   authorUid: string;            // Firebase Auth uid of the poster
   authorName: string;           // denormalized display name at post time
   authorPhotoURL: string | null;
-  type: PostType;               // 'QUOTE' | 'DISCOVERY' | 'DISCUSSION_REPLY'
-  text: string;                 // required; max 500 chars for QUOTE, 300 for DISCOVERY
+  type: PostType;               // 'QUOTE' | 'DISCOVERY' | 'HOT_TAKE' | 'QUESTION' | 'VOCABULARY' | 'DISCUSSION_REPLY'
+  text: string;                 // required; QUOTE ≤ 500 | DISCOVERY ≤ 300 | HOT_TAKE/QUESTION ≤ 200 | VOCABULARY word ≤ 50
   pageNumber?: number;          // optional page reference (QUOTE type only)
+  chapterTag?: string;          // optional chapter/section label (max 30 chars); any post type
+  isPinned: boolean;            // moderator-pinned; pinned posts float above the feed (max 2 per club)
+  vocabularyDefinition?: string; // VOCABULARY type only; optional definition of the word (max 200 chars)
   topicId?: string;             // only set when type is 'DISCUSSION_REPLY'
   createdAt: number;            // Unix timestamp (ms) — used for ordering
   reactionCounts: Record<ReactionEmoji, number>; // aggregate counts; updated on each reaction write
@@ -202,6 +225,8 @@ Document ID is the member's Firebase Auth `uid` — guarantees at-most-one membe
 | `quotePostCount` | `number` | Denormalized; used for badge evaluation |
 | `discoveryPostCount` | `number` | Denormalized; used for badge evaluation |
 | `activeDays` | `number[]` | UTC midnight timestamps of posting days |
+| `paceStatus` | `'ON_TRACK' \| 'BEHIND' \| 'FINISHED' \| null` | Self-reported reading pace |
+| `milestonesReached` | `number[]` | Milestone values (25, 50, 75) already triggered for this member |
 
 ---
 
@@ -214,9 +239,12 @@ Document ID is the member's Firebase Auth `uid` — guarantees at-most-one membe
 | `authorUid` | `string` | Firebase uid |
 | `authorName` | `string` | Denormalized at post time |
 | `authorPhotoURL` | `string \| null` | Denormalized at post time |
-| `type` | `'QUOTE' \| 'DISCOVERY'` | Post type |
-| `text` | `string` | Max 500 chars (QUOTE), 300 chars (DISCOVERY) |
+| `type` | `'QUOTE' \| 'DISCOVERY' \| 'HOT_TAKE' \| 'QUESTION' \| 'VOCABULARY'` | Post type |
+| `text` | `string` | QUOTE ≤ 500 \| DISCOVERY ≤ 300 \| HOT_TAKE/QUESTION ≤ 200 \| VOCABULARY word ≤ 50 |
 | `pageNumber` | `number?` | QUOTE type only |
+| `chapterTag` | `string?` | Optional chapter/section label; max 30 chars; any type |
+| `isPinned` | `boolean` | Moderator-pinned; max 2 pinned posts per club |
+| `vocabularyDefinition` | `string?` | VOCABULARY type only; optional definition; max 200 chars |
 | `topicId` | `string?` | Only for DISCUSSION_REPLY type |
 | `createdAt` | `number` | Unix timestamp (ms) — primary sort key |
 | `reactionCounts` | `{ fire: number; laugh: number; cry: number; mindblown: number }` | Aggregate counts |
@@ -325,7 +353,7 @@ repository layer.
 | **read** | Any member of the club | Member doc must exist |
 | **create** | Any member of the club | `authorUid == request.auth.uid`; club must be `ACTIVE` |
 | **delete** | Post author only | `request.auth.uid == resource.data.authorUid` |
-| **update** | reactionCounts only | Only the `reactionCounts` field may be updated; validated via `request.resource.data.keys().hasOnly(['reactionCounts'])` |
+| **update** | reactionCounts or isPinned | Only `reactionCounts` (any member) or `isPinned` (moderator only) may be updated after creation |
 
 ### `clubs/{clubId}/posts/{postId}/reactions/{uid}` — Reactions
 
@@ -392,11 +420,11 @@ Club (1)
   │
   ├──< members/ (many)          uid as document ID
   │      │
-  │      └── ClubMember { uid, progress, badges, quotePostCount, discoveryPostCount, activeDays }
+  │      └── ClubMember { uid, progress, paceStatus, badges, quotePostCount, discoveryPostCount, activeDays }
   │
   ├──< posts/ (many)
   │      │
-  │      ├── ClubPost { id, authorUid, type, text, pageNumber, createdAt, reactionCounts }
+  │      ├── ClubPost { id, authorUid, type, text, pageNumber, chapterTag, isPinned, vocabularyDefinition, createdAt, reactionCounts }
   │      │
   │      └──< reactions/ (many)  uid as document ID
   │             └── PostReaction { uid, emoji, reactedAt }
@@ -448,6 +476,39 @@ const existing = await getDocs(
 
 If the query returns any documents, a new code is generated and re-checked (retry loop,
 max 5 attempts). Collision probability at 1,000 clubs is ~0.00093% — effectively zero.
+
+---
+
+## Gemini Prompts: Enriched Feed Features
+
+### Milestone Check-In Prompt
+
+Sent when a member crosses the 25%, 50%, or 75% progress threshold.
+
+```
+A member of a reading club is reading «{bookTitle}» by {bookAuthor}.
+They have just reached {milestone}% of the book.
+Generate exactly 1 short, curious reflection question for them to share with their club.
+Max 15 words. Casual, warm tone. No preamble — just the question itself.
+```
+
+Response: a single sentence question. The member may post it directly as a `HOT_TAKE`.
+
+### Catch-Up Summary Prompt
+
+Sent privately when a member requests a catch-up summary. Result is never stored in Firestore.
+
+```
+Summarize the main events of chapters {startChapter} through {endChapter} of «{bookTitle}» by {bookAuthor}.
+Keep the summary under 150 words. Focus on key plot points and character developments.
+Do not add warnings, disclaimers, or commentary. Write in plain prose.
+```
+
+Response: a short prose paragraph. Displayed locally in the member's dialog only.
+
+---
+
+## Invite Code Generation Strategy
 
 ### Storage
 
@@ -552,8 +613,12 @@ progress. It is stored in `clubs/{clubId}/members/{uid}.progress` as an integer 
 | `Club.bookAuthor` | Required; non-empty string; max 100 chars |
 | `Club.inviteCode` | 6 chars; `[A-Z2-9]` character set; unique |
 | `ClubMember.progress` | Integer 0–100 |
-| `ClubPost.text` | Required; 1–500 chars (QUOTE), 1–300 chars (DISCOVERY) |
+| `ClubMember.paceStatus` | Optional; one of `ON_TRACK`, `BEHIND`, `FINISHED`; null if not set |
+| `ClubPost.text` | Required; QUOTE 1–500 \| DISCOVERY 1–300 \| HOT_TAKE/QUESTION 1–200 \| VOCABULARY 1–50 |
 | `ClubPost.pageNumber` | Optional; integer ≥ 1 |
+| `ClubPost.chapterTag` | Optional; 1–30 chars; any post type |
+| `ClubPost.isPinned` | Boolean; max 2 posts may be pinned simultaneously per club (enforced client-side) |
+| `ClubPost.vocabularyDefinition` | Optional; VOCABULARY type only; 1–200 chars |
 | `ClubReply.text` | Required; 1–1000 chars |
 | `ClubDiscussionTopic.title` | Required; 1–200 chars |
 | `PostReaction.emoji` | One of: `fire`, `laugh`, `cry`, `mindblown` |

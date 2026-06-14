@@ -29,7 +29,9 @@ This specification covers the following capabilities:
 - **Member tools**: join via invite code, post quotes and discoveries to the shared feed,
   react to others' posts, reply to discussion threads, and track personal reading progress.
 - **Real-time feed**: all club activity is reflected immediately across all members' devices
-  via Firestore `onSnapshot` listeners.
+  via Firestore `onSnapshot` listeners. Five post types are supported: Quote, Discovery,
+  Hot take, Question, and Vocabulary (Word). Posts support optional chapter tagging.
+  Moderators can pin up to 2 posts.
 - **Gamification**: four badges per club awarded automatically based on reading behavior.
 - **Memory capsule**: when the moderator closes a club, Gemini generates a summary of the
   group's shared experience, stored forever as a consultable artefact.
@@ -140,24 +142,42 @@ tap the 🔥 reaction → confirm the count increments in real time on both devi
 **Acceptance Scenarios**:
 
 1. **Given** a member is on the club home or feed tab, **When** they tap the compose button,
-   **Then** they can choose a post type: Quote or Discovery.
+   **Then** they can choose one of five post types: Quote (💬), Discovery (💡), Hot take (🌶️),
+   Question (❓), or Word (📚).
 2. **Given** the member selects "Quote", **When** they compose the post, **Then** they can
-   enter: the quoted text (required, max 500 chars), optional page number, and submit.
+   enter: the quoted text (required, max 500 chars), optional page number, and an optional
+   chapter tag (max 30 chars, e.g. "Ch. 3").
 3. **Given** the member selects "Discovery", **When** they compose the post, **Then** they
-   can enter free text (required, max 300 chars) describing a connection or insight.
-4. **Given** a post is submitted, **When** it is written to Firestore, **Then** it appears
+   can enter free text (required, max 300 chars) describing a connection or insight, plus
+   an optional chapter tag.
+4. **Given** the member selects "Hot take", **When** they compose the post, **Then** they
+   can enter a bold opinion or prediction (required, max 200 chars) plus an optional chapter
+   tag. The post renders with a distinct 🌶️ chip to signal it is opinionated.
+5. **Given** the member selects "Question", **When** they compose the post, **Then** they
+   can enter a question directed at other members (required, max 200 chars). The post renders
+   with a ❓ chip, inviting replies in the feed via emoji reactions.
+6. **Given** the member selects "Word", **When** they compose the post, **Then** they can
+   enter a word or phrase from the book (required, max 50 chars) and an optional definition
+   or note about why it stood out (max 200 chars). Displayed as a vocabulary card.
+7. **Given** a post is submitted, **When** it is written to Firestore, **Then** it appears
    at the top of every club member's feed immediately via `onSnapshot` — no manual refresh.
-5. **Given** a post is in the feed, **When** any member taps an emoji reaction (🔥 😂 😢 🤯),
+8. **Given** a post is in the feed, **When** any member taps an emoji reaction (🔥 😂 😢 🤯),
    **Then** the reaction count for that emoji increments and the change is reflected in
    real time across all connected members.
-6. **Given** a member has already reacted with a specific emoji on a post, **When** they tap
+9. **Given** a member has already reacted with a specific emoji on a post, **When** they tap
    the same emoji again, **Then** their reaction is removed (toggle behavior).
-7. **Given** there are many posts in the feed, **When** the user scrolls to the bottom,
-   **Then** older posts are loaded (pagination via Firestore cursor).
-8. **Given** no posts have been made yet, **When** a member views the feed, **Then** an empty
-   state with a prompt "Be the first to post a quote or discovery" is shown.
-9. **Given** the member is the author of a post, **When** they long-press it, **Then** a
-   delete option appears; confirming removes the post from Firestore.
+10. **Given** there are many posts in the feed, **When** the user scrolls to the bottom,
+    **Then** older posts are loaded (pagination via Firestore cursor).
+11. **Given** no posts have been made yet, **When** a member views the feed, **Then** an
+    empty state with a prompt "Be the first to post a quote or discovery" is shown.
+12. **Given** the member is the author of a post, **When** they long-press it, **Then** a
+    delete option appears; confirming removes the post from Firestore.
+13. **Given** the moderator long-presses any post in an ACTIVE club, **When** they choose
+    "Pin post", **Then** the post is marked `isPinned: true` and floats to a "Pinned" section
+    at the top of the feed. A maximum of 2 posts may be pinned simultaneously; pinning a
+    third unpins the oldest pinned post automatically.
+14. **Given** a post has a `chapterTag` set, **When** it renders in the feed, **Then** the
+    chapter tag appears as a small muted chip (e.g. "Ch. 3") below the post header.
 
 ---
 
@@ -262,10 +282,18 @@ without refreshing on Member B's device, confirm the percentage updates in real 
    a subtle moderator badge (crown icon) distinguishes them from regular members.
 6. **Given** the club is closed, **When** any member views the club home, **Then** the
    final progress snapshot is still visible — it is preserved in the closure document.
+7. **Given** a member updates their reading progress, **When** the update screen is shown,
+   **Then** they can also set their pace status: 📖 "Reading along" (`ON_TRACK`), 🐢 "Taking
+   my time" (`BEHIND`), or ✅ "Finished!" (`FINISHED`). The pace status is optional — it
+   defaults to null and can remain unset.
+8. **Given** a member has set a pace status, **When** their card is displayed in the members
+   list, **Then** the pace status emoji and label appear below their progress percentage,
+   giving a warm at-a-glance sense of where everyone is without creating competitive pressure.
 
 **Progress update mechanism**: Members update their progress via an inline slider or a
-numeric input on the club home screen. This is separate from personal Dexie-tracked progress
-and stored in `clubs/{clubId}/members/{uid}` in Firestore.
+numeric input on the club home screen, with an optional pace status selector. These are
+separate from personal Dexie-tracked progress and stored in `clubs/{clubId}/members/{uid}`
+in Firestore.
 
 ---
 
@@ -374,6 +402,97 @@ celebratory, literary. Language: {language}.
 
 ---
 
+### User Story 22 — Milestone Check-In Prompts (Priority: P2)
+
+When a member crosses a reading milestone (25%, 50%, or 75%), the app offers a Gemini-generated
+reflection question they can optionally share with the club as a Hot take post.
+
+**Why this priority**: Real-world book clubs often use structured check-ins ("halfway through —
+any surprises?") to keep members engaged between meetings. This feature automates that nudge
+without requiring the moderator to do it manually. It builds on the existing progress update
+flow (US19) and hot take post type (US16).
+
+**Independent Test**: Set progress to 25% on a club with a book assigned → confirm a prompt
+dialog appears with a Gemini-generated reflection question → tap "Share as Hot take" → confirm
+a HOT_TAKE post appears in the feed with the question pre-filled → set progress directly to
+76% (skipping 50%) → confirm a second milestone prompt fires for 50% and another for 75%
+(each milestone fires once per member per club).
+
+**Acceptance Scenarios**:
+
+1. **Given** a member updates their progress and the new value crosses the 25%, 50%, or 75%
+   threshold for the first time in this club, **When** the progress write succeeds, **Then**
+   a bottom sheet or dialog appears with a Gemini-generated reflection question (e.g. "You're
+   halfway through — what's your biggest surprise so far?").
+2. **Given** the milestone dialog is shown, **When** the member taps "Share as Hot take",
+   **Then** the question is pre-filled into the ComposePostDialog with type `HOT_TAKE`; the
+   member may edit or submit as-is.
+3. **Given** the milestone dialog is shown, **When** the member taps "Dismiss", **Then** no
+   post is created and the dialog does not reappear for the same milestone.
+4. **Given** a milestone has already been triggered for a specific threshold (e.g. 50%),
+   **When** the member later sets progress below and then above that threshold again, **Then**
+   the milestone dialog does NOT re-fire — each milestone fires at most once per member per club.
+5. **Given** Gemini is unavailable when a milestone is crossed, **When** the dialog would
+   normally appear, **Then** it appears with a generic fallback question ("What are you
+   thinking at this point in the book?") — the milestone is still acknowledged.
+
+**Gemini Prompt** (sent at each milestone crossing):
+```
+A member of a reading club is reading «{bookTitle}» by {bookAuthor}.
+They have just reached {milestone}% of the book.
+Generate exactly 1 short, curious reflection question for them to share with their club.
+Max 15 words. Casual, warm tone. No preamble — just the question itself.
+```
+
+**Milestone trigger tracking**: A `milestonesReached: number[]` field (list of milestone
+values already triggered, e.g. `[25, 50]`) is added to the `ClubMember` document so the
+client knows which milestones have already fired. This field is updated in the same write
+as the progress update.
+
+---
+
+### User Story 23 — Private "Catch Up" AI Summary (Priority: P2)
+
+A member who has fallen behind wants a private AI-generated summary of the chapters they
+missed, so they can participate in the discussion without feeling ashamed of not having read.
+
+**Why this priority**: Research shows that shame around not keeping up is the primary reason
+members disengage from book clubs. A private, on-demand summary lowers the barrier to
+participation. It requires no new Firestore collections — the result is ephemeral and local.
+
+**Independent Test**: Open a club where your progress is under 80% → tap "Catch up" in the
+feed tab → enter chapter range "1" to "5" → confirm Gemini returns a brief summary → confirm
+the summary is shown only to you and is not stored in the feed or Firestore → close the
+dialog → confirm no trace of the request appears in the club feed.
+
+**Acceptance Scenarios**:
+
+1. **Given** a member's progress is less than 80%, **When** they view the Feed tab, **Then**
+   a "Catch up" button (📖 icon, subtle secondary style) is visible near the top of the feed.
+2. **Given** the member taps "Catch up", **When** the dialog opens, **Then** they can enter
+   a chapter range: "From chapter" and "To chapter" (free text or numbers; max 10 chars each).
+3. **Given** the chapter range is entered, **When** the member submits, **Then** a Gemini
+   request is sent; a loading indicator is shown while the response is being generated.
+4. **Given** Gemini returns the summary, **When** it is displayed, **Then** it appears as a
+   plain prose paragraph inside the dialog. The summary is never written to Firestore —
+   it exists only in local component state for the duration of the dialog session.
+5. **Given** the summary is displayed, **When** the member closes the dialog, **Then** the
+   summary is discarded; it cannot be retrieved again without making a new request.
+6. **Given** Gemini is unavailable, **When** the member submits the chapter range, **Then**
+   an error message is shown: "Summary unavailable. Try again later." — no fallback content
+   is fabricated.
+7. **Given** the club status is `CLOSED`, **When** any member views the club, **Then** the
+   "Catch up" button is hidden — the club is no longer active.
+
+**Gemini Prompt** (sent on demand; result not persisted):
+```
+Summarize the main events of chapters {startChapter} through {endChapter} of
+«{bookTitle}» by {bookAuthor}. Keep the summary under 150 words. Focus on key plot
+points and character developments. Write in plain prose with no disclaimers.
+```
+
+---
+
 ## Requirements
 
 ### Functional Requirements (Clubs)
@@ -385,7 +504,9 @@ celebratory, literary. Language: {language}.
 - **FR-C03**: A signed-in user MUST be able to join a club by entering a valid invite code.
 - **FR-C04**: Club membership MUST be recorded in Firestore in real time; the moderator
   MUST see new members appear without refreshing.
-- **FR-C05**: Members MUST be able to post to the club feed with type Quote or Discovery.
+- **FR-C05**: Members MUST be able to post to the club feed with one of five types: Quote,
+  Discovery, Hot take, Question, or Word (Vocabulary). All post types support an optional
+  chapter tag (max 30 chars).
 - **FR-C06**: All club feed posts MUST propagate to all connected members in real time via
   Firestore `onSnapshot`.
 - **FR-C07**: Members MUST be able to react to any post with exactly four emoji: 🔥 😂 😢 🤯.
@@ -398,6 +519,8 @@ celebratory, literary. Language: {language}.
   Gemini Flash, based on the club's book.
 - **FR-C11**: Each member's reading progress (0–100%) MUST be stored in Firestore and
   visible to all other club members in real time.
+- **FR-C11b**: Each member MAY set a pace status (`ON_TRACK`, `BEHIND`, or `FINISHED`),
+  stored in their member document and visible to all club members. This field is optional.
 - **FR-C12**: Badge awards MUST be evaluated and written to Firestore automatically when
   the triggering conditions are met (see badge award logic in clubs-data-model.md).
 - **FR-C13**: Moderators MUST be able to close a club, triggering a Gemini-powered capsule
@@ -406,6 +529,18 @@ celebratory, literary. Language: {language}.
   all members after closure.
 - **FR-C15**: A closed club MUST still be accessible and readable — posts, discussions, and
   the capsule are never deleted.
+- **FR-C16**: The moderator of an ACTIVE club MUST be able to pin up to 2 posts; pinned
+  posts MUST appear above the regular feed in a distinct "Pinned" section.
+- **FR-C17**: When a member's reading progress crosses the 25%, 50%, or 75% threshold for
+  the first time in a given club, the app MUST show a Gemini-generated reflection question
+  which the member may optionally share as a Hot take post.
+- **FR-C18**: Each milestone (25%, 50%, 75%) MUST fire at most once per member per club;
+  the triggered milestones are recorded in `ClubMember.milestonesReached`.
+- **FR-C19**: Members with progress < 80% MUST have access to a private "Catch up" AI
+  summary feature that sends a chapter range to Gemini and displays the response locally
+  without storing it in Firestore.
+- **FR-C20**: The `geminiClubs.ts` module MUST expose a `getMilestonePrompt` function and
+  a `getCatchUpSummary` function using the prompts defined in `clubs-data-model.md`.
 
 ### Non-Functional Requirements
 
@@ -450,3 +585,7 @@ celebratory, literary. Language: {language}.
   confirming closure.
 - **SC-C05**: A closed club's capsule remains accessible after signing out and signing back in.
 - **SC-C06**: All four badges are awarded correctly based on the conditions defined in US20.
+- **SC-C07**: A milestone check-in prompt appears exactly once when a member's progress
+  crosses 25%, 50%, or 75% for the first time, and not again on subsequent progress updates.
+- **SC-C08**: A "Catch up" summary request completes and displays within 5 seconds on a
+  standard 4G connection; the result is never visible to other club members.
