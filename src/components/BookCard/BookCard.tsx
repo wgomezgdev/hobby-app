@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardActionArea, CardContent, CardMedia, Chip, Box, Typography } from '@mui/material';
 import { MenuBook } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -18,11 +19,12 @@ interface BookCardProps {
 export function BookCard({ book }: BookCardProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [imgError, setImgError] = useState(false);
 
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardActionArea onClick={() => navigate(`/books/${book.id}`)} sx={{ flexGrow: 1 }}>
-        {book.cover ? (
+        {book.cover && !imgError ? (
           <CardMedia
             component="img"
             height={160}
@@ -30,6 +32,7 @@ export function BookCard({ book }: BookCardProps) {
             alt={book.title}
             sx={{ objectFit: 'cover' }}
             loading="lazy"
+            onError={() => setImgError(true)}
           />
         ) : (
           <Box

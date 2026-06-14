@@ -36,6 +36,7 @@ export function BookDetailPage() {
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletedTitle, setDeletedTitle] = useState<string | null>(null);
+  const [coverImgError, setCoverImgError] = useState(false);
 
   const handleDeleteConfirm = async () => {
     const title = book?.title ?? 'Book';
@@ -87,12 +88,13 @@ export function BookDetailPage() {
         </Box>
       ) : (
         <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-          {book.cover ? (
+          {book.cover && !coverImgError ? (
             <Box
               component="img"
               src={book.cover}
               alt={book.title}
               sx={{ width: 80, height: 110, objectFit: 'cover', borderRadius: 1, flexShrink: 0 }}
+              onError={() => setCoverImgError(true)}
             />
           ) : (
             <Box
