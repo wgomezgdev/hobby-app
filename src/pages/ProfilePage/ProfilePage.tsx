@@ -4,11 +4,13 @@ import {
   DialogContent, DialogContentText, DialogTitle, Divider, Snackbar,
   Typography,
 } from '@mui/material';
-import { CloudDownload, CloudUpload, Logout, Settings } from '@mui/icons-material';
+import { CloudDownload, CloudUpload, ImageSearch, Logout, Settings } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
 import { pushToFirestore, pullFromFirestore, getLastSyncedAt } from '../../lib/firestoreSync';
+import { getAllBooks, updateBook } from '../../repositories/bookRepository';
+import { fetchBookCover } from '../../utils/coverSearch';
 
 function useFormatRelative() {
   const { t } = useTranslation();
@@ -28,6 +30,7 @@ export function ProfilePage() {
   const { user, loading, isConfigured, signIn, signOut } = useAuth();
   const [syncing, setSyncing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{ msg: string; severity: 'success' | 'error' } | null>(null);
   const [lastSynced, setLastSynced] = useState<Date | null>(getLastSyncedAt);
@@ -44,6 +47,27 @@ export function ProfilePage() {
       setSnackbar({ msg: t('profile.syncError'), severity: 'error' });
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleFindCovers = async () => {
+    setScanning(true);
+    try {
+      const allBooks = await getAllBooks();
+      const missing = allBooks.filter(b => !b.cover);
+      let found = 0;
+      for (const book of missing) {
+        const cover = await fetchBookCover(book.title, book.author);
+        if (cover) {
+          await updateBook(book.id!, { cover });
+          found++;
+        }
+      }
+      setSnackbar({ msg: t('profile.scanCoversResult', { found, total: missing.length }), severity: 'success' });
+    } catch {
+      setSnackbar({ msg: t('profile.scanCoversError'), severity: 'error' });
+    } finally {
+      setScanning(false);
     }
   };
 
@@ -138,6 +162,22 @@ export function ProfilePage() {
           sx={{ py: 1.2 }}
         >
           {restoring ? t('profile.restoring') : t('profile.restoreButton')}
+        </Button>
+      </Box>
+
+      <Divider sx={{ mb: 3 }} />
+
+      <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>{t('profile.libraryTools')}</Typography>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 4 }}>
+        <Button
+          variant="outlined"
+          startIcon={scanning ? <CircularProgress size={16} /> : <ImageSearch />}
+          onClick={handleFindCovers}
+          disabled={scanning}
+          fullWidth
+          sx={{ py: 1.2 }}
+        >
+          {scanning ? t('profile.scanningCovers') : t('profile.findMissingCovers')}
         </Button>
       </Box>
 

@@ -220,7 +220,12 @@
     "timeNever": "Nunca",
     "timeJustNow": "Justo ahora",
     "timeMinutesAgo": "hace {{minutes}} min",
-    "timeHoursAgo": "hace {{hours}} h"
+    "timeHoursAgo": "hace {{hours}} h",
+    "libraryTools": "Herramientas de biblioteca",
+    "findMissingCovers": "Buscar portadas faltantes",
+    "scanningCovers": "Buscando portadas…",
+    "scanCoversResult": "Se encontraron portadas para {{found}} de {{total}} libros",
+    "scanCoversError": "Error al buscar. Verifica tu conexión."
   },
   "settings": {
     "title": "Configuración",
