@@ -259,23 +259,28 @@ Import the snapshot. Verify all books, sessions, and quotes are restored exactly
 
 ### Navigation Structure
 
-Five-tab bottom navigation bar, always visible:
+Five-tab bottom navigation bar, always visible. The "Add Book" action is accessed from
+the Library page header (not a FAB tab), keeping all five slots as real destinations:
 
 | Tab | Icon | Label |
 |-----|------|-------|
 | 1 | `home` | Home |
 | 2 | `menu_book` | Library |
-| 3 | `add` (FAB) | — |
+| 3 | `groups` | Clubs |
 | 4 | `bar_chart` | Stats |
 | 5 | `person` | Profile |
 
-The center tab is a raised FAB (terracotta circle with white `add` icon) that opens the Add Book screen. App version is displayed in a small caption above the nav bar.
+**"Add Book" placement**: A single terracotta `IconButton` (`add` icon) sits in the top-right
+area of the Library page header. This replaces the previous center FAB tab and removes the
+dual-FAB problem (Library page floating button + nav bar button appearing simultaneously).
+
+App version is displayed in a small caption above the nav bar.
 
 ### Screen 1 — Home
 
 - **Header**: Personalized time-of-day greeting ("Good morning/afternoon/evening 👋") derived from local time.
-- **Stats row**: Three mini-cards side by side — Read (finished count), In Progress (reading count), Pending (want-to-read count).
-- **"Currently Reading" section**: Full-width card for the active book showing cover thumbnail, `● ACTIVE` badge, title, author, "Page X of Y", and a terracotta progress bar with percentage. When no active book, a "Start reading →" CTA links to the Library.
+- **Stats row**: Three mini-cards side by side — Read (finished count), In Progress (reading count), Pending (want-to-read count). Each card is tappable and navigates to the Library pre-filtered to that status.
+- **"Currently Reading" section**: Full-width card for the active book showing cover thumbnail, `● ACTIVE` badge, title, author, "Page X of Y", and a terracotta progress bar with percentage. The card includes a **"Log session"** secondary button (`PlayArrow` icon, text "Log session") that opens the session log form directly for that book — eliminating the need to navigate to the book detail first. When no active book, a "Start reading →" CTA links to the Library.
 - **"Completed" section**: Horizontal scrollable row of finished book cover cards with title and star rating below each. "See all →" link navigates to the Library filtered to Finished books. Section is hidden when no books are finished.
 
 ### Screen 2 — Add / Edit Book
@@ -302,16 +307,43 @@ The center tab is a raised FAB (terracotta circle with white `add` icon) that op
 
 ### Screen 4 — Book Detail
 
-- **Header**: Back arrow + delete icon (top-right) + edit icon.
+- **Header**: Back arrow (left) + `Edit` button + `MoreVert` overflow menu (right). The
+  overflow menu contains the **Delete** action. This removes the previous layout where
+  Delete and Edit competed for space in the header, and puts the destructive action one
+  additional tap away from accidental presses.
 - **Cover hero**: Book cover image, full-width.
 - **Metadata**: Genre badge chip, title (large bold), "Author · Year" subtitle, star display with numeric value.
 - **Progress section**: Terracotta LinearProgress bar + "Page X of Y" text.
 - **Reading pace stats 2×2 grid** (shown when sessions exist):
-  - 📅 Started reading — date of first session
-  - ⏱ Days reading — count of unique reading days
-  - 🔥 Avg pace — pages per day
-  - 🎯 To finish — estimated days remaining
+  - `CalendarToday` Started reading — date of first session
+  - `AccessTime` Days reading — count of unique reading days
+  - `Speed` Avg pace — pages per day
+  - `Flag` To finish — estimated days remaining
+  - **Note**: MUI icons replace emoji (📅 ⏱ 🔥 🎯) for visual consistency with the rest of the app.
 - **Tabs**: Progress · Sessions · Quotes · Rating
+
+### Screen 3 — Stats (Genre section)
+
+The genre breakdown replaces the donut chart with a ranked chip list. Each chip shows the
+genre name and book count (e.g. `Fantasy  12`). The top 3 genres are shown; an "and N more"
+caption follows if additional genres exist. This fits more naturally on mobile and avoids
+a truncated legend.
+
+### Log Session Form
+
+The progress input is relabeled from the ambiguous "Progress (%)" (which was a delta) to
+**"Now at % (current total)"** with helper text "Enter your current total progress — e.g. if
+you were at 40% and read to 55%, enter 55." The form derives the delta internally
+(`newValue − book.currentProgress`) before saving to the repository. This prevents the
+common mistake of entering a cumulative value as a delta and inflating progress.
+
+### Settings Page
+
+Settings are organized into two named sections:
+- **"Backup & Export"**: Export snapshot (download JSON), Firestore restore (with destructive-action warning banner in red).
+- **"Import Data"**: Import from file (snapshot), Import from Goodreads (CSV).
+
+This replaces the flat unsorted list where export, import, and restore appeared without hierarchy.
 
 ### Design Decisions
 
@@ -395,6 +427,35 @@ The center tab is a raised FAB (terracotta circle with white `add` icon) that op
   MUST be skipped; no existing data is overwritten.
 - **FR-037**: For books imported from the "read" shelf that carry a Goodreads star rating (1–5),
   the system MUST also create a corresponding Rating record.
+
+---
+
+### UX Improvement Requirements (Phase 35)
+
+- **FR-038**: The bottom navigation MUST have five real-destination tabs (Home, Library, Clubs,
+  Stats, Profile). The center FAB tab MUST be removed. The "Add Book" action MUST be
+  accessible via an icon button in the Library page header only.
+- **FR-039**: The "Currently Reading" card on the Home screen MUST include a "Log session"
+  secondary button that opens the session log form pre-loaded with the current book, without
+  requiring navigation to the book detail page first.
+- **FR-040**: The Log Session form MUST collect the user's current total progress (0–100%)
+  as an absolute value, not a delta. The delta MUST be computed internally as
+  `Math.max(0, newAbsolute - book.currentProgress)` before calling `saveSession`. The form
+  label MUST read "Now at %" with helper text clarifying it is a cumulative value.
+- **FR-041**: The Book Detail page's Delete action MUST be placed inside a `MoreVert`
+  overflow menu, not directly in the header. The Edit button remains as a direct header action.
+- **FR-042**: The reading pace stats on the Book Detail page (start date, days reading, avg pace,
+  days to finish) MUST use MUI icons (`CalendarToday`, `AccessTime`, `Speed`, `Flag`)
+  instead of emoji characters.
+- **FR-043**: The Stats page genre section MUST render as a ranked chip list (top 3 genres
+  with book counts) instead of a donut/pie chart. An "and N more" text follows when additional
+  genres exist beyond the top 3.
+- **FR-044**: Empty states throughout the app (Library, Sessions tab, Quotes tab, Ratings,
+  Ranking) MUST include an actionable CTA button or link, not just a passive message. Examples:
+  "Add your first book" (Library), "Log a session" (Sessions tab), "Save a quote" (Quotes tab).
+- **FR-045**: The Settings page MUST be organized into two visually distinct sections:
+  "Backup & Export" (export JSON, Firestore restore with a destructive-action warning) and
+  "Import Data" (snapshot import, Goodreads CSV import).
 
 ### Key Entities
 
