@@ -9,7 +9,7 @@ A personal reading tracker PWA built with React, TypeScript, and MUI. Track your
 ## Features
 
 ### Library management
-- Add books manually or by scanning a cover photo (AI-powered via Gemini Flash)
+- Add books manually or by scanning a cover photo
 - Search and set covers online from Google Books or Open Library
 - Bulk "Find missing covers" scan — auto-fetches covers for all books without one
 - Filter by status (Reading, Want to Read, Finished) and sort by recent, title, or author
@@ -62,7 +62,6 @@ A personal reading tracker PWA built with React, TypeScript, and MUI. Track your
 | Routing | React Router v6 |
 | Charts | Recharts |
 | i18n | i18next + react-i18next |
-| AI | Gemini Flash (cover scan) |
 | Cover search | Google Books API + Open Library |
 | Build | Vite + vite-plugin-pwa |
 | Tests | Vitest + Testing Library |
@@ -91,9 +90,6 @@ VITE_FIREBASE_APP_ID=
 
 # Google Books API (optional — increases cover search quota)
 VITE_GOOGLE_BOOKS_API_KEY=
-
-# Gemini Flash (optional — enables AI cover scan)
-VITE_GEMINI_API_KEY=
 ```
 
 All Firebase variables are optional: the app runs fully offline without them; only cloud sync and Google Sign-In are disabled.
