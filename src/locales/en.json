@@ -220,7 +220,12 @@
     "timeNever": "Never",
     "timeJustNow": "Just now",
     "timeMinutesAgo": "{{minutes}}m ago",
-    "timeHoursAgo": "{{hours}}h ago"
+    "timeHoursAgo": "{{hours}}h ago",
+    "libraryTools": "Library Tools",
+    "findMissingCovers": "Find missing covers",
+    "scanningCovers": "Scanning covers…",
+    "scanCoversResult": "Found covers for {{found}} of {{total}} books",
+    "scanCoversError": "Scan failed. Check your connection."
   },
   "settings": {
     "title": "Settings",
