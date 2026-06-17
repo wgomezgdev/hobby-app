@@ -1,5 +1,5 @@
 import { Avatar, BottomNavigation, BottomNavigationAction, Box, Fab, Paper, Typography } from '@mui/material';
-import { Add, BarChart, Home, MenuBook } from '@mui/icons-material';
+import { Add, BarChart, Groups, Home, MenuBook } from '@mui/icons-material';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../hooks/useAuth';
@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 function getActiveTab(pathname: string): string {
   if (pathname === '/') return '/';
   if (pathname.startsWith('/library') || pathname.startsWith('/books') || pathname === '/ranking') return '/library';
+  if (pathname.startsWith('/clubs')) return '/clubs';
   if (pathname === '/stats') return '/stats';
   if (pathname === '/profile' || pathname === '/settings') return '/profile';
   return '/';
@@ -59,6 +60,7 @@ export function Layout() {
             <BottomNavigationAction label={t('nav.home')} value="/" icon={<Home />} />
             <BottomNavigationAction label={t('nav.library')} value="/library" icon={<MenuBook />} />
             <BottomNavigationAction sx={{ visibility: 'hidden', pointerEvents: 'none' }} value="" />
+            <BottomNavigationAction label={t('nav.clubs')} value="/clubs" icon={<Groups />} />
             <BottomNavigationAction label={t('nav.stats')} value="/stats" icon={<BarChart />} />
             <BottomNavigationAction
               label={t('nav.profile')}
