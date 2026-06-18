@@ -11,6 +11,10 @@ import { RankingPage } from './pages/RankingPage/RankingPage';
 import { SettingsPage } from './pages/SettingsPage/SettingsPage';
 import { StatsPage } from './pages/StatsPage/StatsPage';
 import { ProfilePage } from './pages/ProfilePage/ProfilePage';
+import { ClubsPage } from './pages/ClubsPage/ClubsPage';
+import { ClubDetailPage } from './pages/ClubDetailPage/ClubDetailPage';
+import { TopicDetailPage } from './pages/TopicDetailPage/TopicDetailPage';
+import { CapsulePage } from './pages/CapsulePage/CapsulePage';
 
 function NotFound() {
   return (
@@ -38,6 +42,10 @@ export default function App() {
             <Route path="/stats" element={<StatsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/clubs" element={<ClubsPage />} />
+            <Route path="/clubs/:clubId" element={<ClubDetailPage />} />
+            <Route path="/clubs/:clubId/topics/:topicId" element={<TopicDetailPage />} />
+            <Route path="/clubs/:clubId/capsule" element={<CapsulePage />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

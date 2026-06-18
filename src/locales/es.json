@@ -4,7 +4,8 @@
     "library": "Biblioteca",
     "stats": "Estadísticas",
     "profile": "Perfil",
-    "addBook": "Agregar libro"
+    "addBook": "Agregar libro",
+    "clubs": "Clubes"
   },
   "home": {
     "greeting": {
@@ -305,5 +306,174 @@
     "label": "Etiquetas",
     "placeholder": "Agregar etiquetas...",
     "helper": "Presiona Enter o coma para agregar una etiqueta"
+  },
+  "badge": {
+    "FIRST_TO_FINISH": "Primero en terminar",
+    "QUOTE_MASTER": "Quote master",
+    "LOYAL_READER": "Lector fiel",
+    "THE_ANALYST": "El analítico"
+  },
+  "club": {
+    "list": {
+      "title": "Clubes de lectura",
+      "create": "Crear",
+      "join": "Unirse",
+      "empty": "Aún no te has unido a ningún club",
+      "emptyHint": "Crea uno o ingresa un código de invitación para unirte",
+      "memberCount": "{{count}} miembro",
+      "memberCount_other": "{{count}} miembros",
+      "notConfigured": "Los clubes requieren Firebase. Agrega las variables de entorno de Firebase para habilitarlos.",
+      "signInPrompt": "Inicia sesión para crear o unirte a clubes de lectura",
+      "signIn": "Iniciar sesión"
+    },
+    "status": {
+      "active": "Activo",
+      "closed": "Cerrado"
+    },
+    "create": {
+      "title": "Crear un club",
+      "clubName": "Nombre del club",
+      "nameRequired": "El nombre del club es obligatorio",
+      "nameTooLong": "Máximo 80 caracteres",
+      "bookTitle": "Título del libro",
+      "bookTitleRequired": "El título es obligatorio",
+      "bookAuthor": "Autor",
+      "bookAuthorRequired": "El autor es obligatorio",
+      "description": "Descripción (opcional)",
+      "cancel": "Cancelar",
+      "submit": "Crear club",
+      "error": "Error al crear el club. Inténtalo de nuevo."
+    },
+    "join": {
+      "title": "Unirse a un club",
+      "codeLabel": "Código de invitación",
+      "invalidCode": "Ingresa un código de 6 caracteres",
+      "notFound": "No se encontró ningún club con ese código",
+      "alreadyMember": "Ya eres miembro de este club",
+      "closed": "Este club ya no acepta nuevos miembros",
+      "cancel": "Cancelar",
+      "submit": "Unirse",
+      "error": "Error al unirse al club. Inténtalo de nuevo."
+    },
+    "detail": {
+      "back": "Volver",
+      "notFound": "Club no encontrado",
+      "notMember": "No eres miembro de este club",
+      "inviteCode": "Código de invitación",
+      "copy": "Copiar código",
+      "copied": "¡Copiado!",
+      "tabs": {
+        "feed": "Feed",
+        "discussions": "Discusiones",
+        "members": "Miembros ({{count}})"
+      }
+    },
+    "feed": {
+      "empty": "Sé el primero en publicar una cita o descubrimiento",
+      "compose": "Publicar",
+      "loadMore": "Ver más",
+      "pinned": "Fijado",
+      "pin": "Fijar publicación",
+      "unpin": "Desfijar"
+    },
+    "post": {
+      "quote": "Cita",
+      "discovery": "Descubrimiento",
+      "hottake": "Opinión",
+      "question": "Pregunta",
+      "vocabulary": "Palabra",
+      "word": "Palabra o frase",
+      "definition": "Tu nota (opcional)",
+      "chapterTag": "Capítulo / Sección (opcional)",
+      "delete": "Eliminar publicación",
+      "deleteConfirm": "¿Eliminar esta publicación?",
+      "deleteConfirmAction": "Eliminar"
+    },
+    "compose": {
+      "title": "Nueva publicación",
+      "textLabel": "¿Qué tienes en mente?",
+      "textRequired": "El texto es obligatorio",
+      "textTooLong": "El texto supera los {{max}} caracteres",
+      "pageNumber": "Número de página (opcional)",
+      "cancel": "Cancelar",
+      "submit": "Publicar",
+      "error": "Error al publicar. Inténtalo de nuevo."
+    },
+    "discussions": {
+      "empty": "Aún no hay discusiones",
+      "newTopic": "Nuevo tema",
+      "suggestAI": "Sugerir preguntas con IA",
+      "aiLabel": "IA",
+      "topicTitle": "Título del tema",
+      "topicDesc": "Descripción (opcional)",
+      "titleRequired": "El título es obligatorio",
+      "cancel": "Cancelar",
+      "createTopic": "Crear tema",
+      "replyCount": "{{count}} respuesta",
+      "replyCount_other": "{{count}} respuestas",
+      "label": "Discusiones",
+      "thread": "Hilo",
+      "error": "Error al crear el tema. Inténtalo de nuevo."
+    },
+    "replies": {
+      "empty": "Aún no hay respuestas — sé el primero en compartir tus pensamientos",
+      "compose": "Escribe una respuesta…",
+      "submit": "Responder",
+      "delete": "Eliminar respuesta"
+    },
+    "ai": {
+      "error": "Sugerencias de IA no disponibles — ingresa un tema manualmente"
+    },
+    "members": {
+      "progress": "Progreso de lectura",
+      "updateProgress": "Actualizar mi progreso",
+      "badgesEarned": "Insignias obtenidas",
+      "newBadge": "¡Nueva insignia obtenida!",
+      "progressUpdated": "Progreso actualizado",
+      "save": "Guardar",
+      "cancel": "Cancelar"
+    },
+    "pace": {
+      "label": "Ritmo de lectura",
+      "ON_TRACK": "Leyendo al día",
+      "BEHIND": "A mi ritmo",
+      "FINISHED": "¡Terminé!"
+    },
+    "milestone": {
+      "title": "¡Llegaste al {{milestone}}%!",
+      "shareHotTake": "Compartir como opinión",
+      "dismiss": "Cerrar"
+    },
+    "catchup": {
+      "button": "Ponerme al día",
+      "title": "Resumen rápido",
+      "fromChapter": "Desde el capítulo",
+      "toChapter": "Hasta el capítulo",
+      "generate": "Generar resumen",
+      "error": "Resumen no disponible. Intenta de nuevo.",
+      "disclaimer": "Este resumen es privado, solo tú puedes verlo.",
+      "close": "Cerrar"
+    },
+    "close": {
+      "title": "Cerrar club",
+      "warning": "Cerrar este club no se puede deshacer. El feed y las discusiones quedarán bloqueados, y se generará una cápsula de recuerdos.",
+      "cancel": "Cancelar",
+      "confirm": "Cerrar club"
+    },
+    "capsule": {
+      "title": "Cápsula de recuerdos",
+      "generated": "Generado por IA",
+      "preserved": "Esta cápsula de recuerdos se conserva para siempre",
+      "view": "Ver cápsula de recuerdos",
+      "membersCount": "{{count}} miembros",
+      "postsCount": "{{count}} publicaciones",
+      "reactionsCount": "{{count}} reacciones",
+      "summaryFallback": "No se pudo generar el resumen. Los recuerdos del club están preservados arriba.",
+      "generating": "Generando cápsula de recuerdos…",
+      "notFound": "Cápsula no encontrada",
+      "closedOn": "Cerrado el {{date}}",
+      "members": "Miembros del club",
+      "read": "leído"
+    }
   }
 }

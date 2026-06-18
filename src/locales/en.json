@@ -4,7 +4,8 @@
     "library": "Library",
     "stats": "Stats",
     "profile": "Profile",
-    "addBook": "Add book"
+    "addBook": "Add book",
+    "clubs": "Clubs"
   },
   "home": {
     "greeting": {
@@ -305,5 +306,174 @@
     "label": "Tags",
     "placeholder": "Add tags...",
     "helper": "Press Enter or comma to add a tag"
+  },
+  "badge": {
+    "FIRST_TO_FINISH": "First to finish",
+    "QUOTE_MASTER": "Quote master",
+    "LOYAL_READER": "Loyal reader",
+    "THE_ANALYST": "The analyst"
+  },
+  "club": {
+    "list": {
+      "title": "Book Clubs",
+      "create": "Create",
+      "join": "Join",
+      "empty": "You haven't joined any clubs yet",
+      "emptyHint": "Create one or enter an invite code to join",
+      "memberCount": "{{count}} member",
+      "memberCount_other": "{{count}} members",
+      "notConfigured": "Book Clubs require Firebase. Add Firebase environment variables to enable.",
+      "signInPrompt": "Sign in to create or join book clubs",
+      "signIn": "Sign in"
+    },
+    "status": {
+      "active": "Active",
+      "closed": "Closed"
+    },
+    "create": {
+      "title": "Create a Club",
+      "clubName": "Club name",
+      "nameRequired": "Club name is required",
+      "nameTooLong": "Max 80 characters",
+      "bookTitle": "Book title",
+      "bookTitleRequired": "Book title is required",
+      "bookAuthor": "Author",
+      "bookAuthorRequired": "Author is required",
+      "description": "Description (optional)",
+      "cancel": "Cancel",
+      "submit": "Create Club",
+      "error": "Failed to create club. Try again."
+    },
+    "join": {
+      "title": "Join a Club",
+      "codeLabel": "Invite code",
+      "invalidCode": "Please enter a 6-character code",
+      "notFound": "No club found with that code",
+      "alreadyMember": "You're already in this club",
+      "closed": "This club is no longer accepting members",
+      "cancel": "Cancel",
+      "submit": "Join",
+      "error": "Failed to join club. Try again."
+    },
+    "detail": {
+      "back": "Back",
+      "notFound": "Club not found",
+      "notMember": "You are not a member of this club",
+      "inviteCode": "Invite code",
+      "copy": "Copy code",
+      "copied": "Copied!",
+      "tabs": {
+        "feed": "Feed",
+        "discussions": "Discussions",
+        "members": "Members ({{count}})"
+      }
+    },
+    "feed": {
+      "empty": "Be the first to post a quote or discovery",
+      "compose": "Compose",
+      "loadMore": "Load more",
+      "pinned": "Pinned",
+      "pin": "Pin post",
+      "unpin": "Unpin"
+    },
+    "post": {
+      "quote": "Quote",
+      "discovery": "Discovery",
+      "hottake": "Hot take",
+      "question": "Question",
+      "vocabulary": "Word",
+      "word": "Word or phrase",
+      "definition": "Your note (optional)",
+      "chapterTag": "Chapter / Section (optional)",
+      "delete": "Delete post",
+      "deleteConfirm": "Delete this post?",
+      "deleteConfirmAction": "Delete"
+    },
+    "compose": {
+      "title": "New post",
+      "textLabel": "What's on your mind?",
+      "textRequired": "Post text is required",
+      "textTooLong": "Text exceeds {{max}} characters",
+      "pageNumber": "Page number (optional)",
+      "cancel": "Cancel",
+      "submit": "Post",
+      "error": "Failed to post. Try again."
+    },
+    "discussions": {
+      "empty": "No discussions yet",
+      "newTopic": "New Topic",
+      "suggestAI": "Suggest with AI",
+      "aiLabel": "AI",
+      "topicTitle": "Topic title",
+      "topicDesc": "Description (optional)",
+      "titleRequired": "Title is required",
+      "cancel": "Cancel",
+      "createTopic": "Create Topic",
+      "replyCount": "{{count}} reply",
+      "replyCount_other": "{{count}} replies",
+      "label": "Discussions",
+      "thread": "Thread",
+      "error": "Failed to create topic. Try again."
+    },
+    "replies": {
+      "empty": "No replies yet — be the first to share your thoughts",
+      "compose": "Write a reply…",
+      "submit": "Reply",
+      "delete": "Delete reply"
+    },
+    "ai": {
+      "error": "AI suggestions unavailable — enter a topic manually"
+    },
+    "members": {
+      "progress": "Reading progress",
+      "updateProgress": "Update my progress",
+      "badgesEarned": "Badges earned",
+      "newBadge": "New badge earned!",
+      "progressUpdated": "Progress updated",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "pace": {
+      "label": "Reading pace",
+      "ON_TRACK": "Reading along",
+      "BEHIND": "Taking my time",
+      "FINISHED": "Finished!"
+    },
+    "milestone": {
+      "title": "You've reached {{milestone}}%!",
+      "shareHotTake": "Share as Hot take",
+      "dismiss": "Dismiss"
+    },
+    "catchup": {
+      "button": "Catch up",
+      "title": "Catch up summary",
+      "fromChapter": "From chapter",
+      "toChapter": "To chapter",
+      "generate": "Generate summary",
+      "error": "Summary unavailable. Try again later.",
+      "disclaimer": "This summary is private — only you can see it.",
+      "close": "Close"
+    },
+    "close": {
+      "title": "Close Club",
+      "warning": "Closing this club cannot be undone. The club feed and discussions will be locked, and a memory capsule will be generated.",
+      "cancel": "Cancel",
+      "confirm": "Close Club"
+    },
+    "capsule": {
+      "title": "Memory Capsule",
+      "generated": "Generated by AI",
+      "preserved": "This memory capsule is preserved forever",
+      "view": "View Memory Capsule",
+      "membersCount": "{{count}} members",
+      "postsCount": "{{count}} posts",
+      "reactionsCount": "{{count}} reactions",
+      "summaryFallback": "Summary could not be generated. The club memories are preserved above.",
+      "generating": "Generating memory capsule…",
+      "notFound": "Capsule not found",
+      "closedOn": "Closed on {{date}}",
+      "members": "Club members",
+      "read": "read"
+    }
   }
 }
