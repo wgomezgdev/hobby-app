@@ -611,12 +611,13 @@ T031 TagInput         ──┘                   T035 StarRating     ──┘
 | Phase 21 — Home Screen | T135–T137 | 3 of 3 | ✅ done |
 | Phase 22 — Pace Stats | T138–T139 | 2 of 2 | ✅ done |
 | Phase 23 — Stats Screen | T140–T146 | 7 of 7 | ✅ done |
-| Phase 14 — AI Cover Scan (Gemini) | T097–T106 | 7 of 10 | ✅ done |
-| Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ future |
+| Phase 14 — AI Cover Scan (Gemini) | T097–T106 | 7 of 10 | ⏪ removed in v0.17.1 → Phase 36 |
+| Phase 15 — AI Reading Summary (Gemini) | T107–T111 | 3 of 5 | ⏳ future (must reuse Phase 36 proxy) |
 | Phase 16 — Supabase Cloud Sync | T112–T120 | 5 of 9 | ⏳ deferred (replaced by Phase 26) |
 | Phase 24 — Goodreads Library Import | T147–T151 | 4 of 5 | ✅ done |
 | Phase 25 — Stats: Session Activity + Genre Year Fix | T152–T155 | 4 of 4 | ✅ done |
 | Phase 26 — Firebase Auth + Firestore Sync | T156–T162 | 7 of 7 | ✅ done |
+| Phase 36 — Secure AI Support (Gemini, server-side) | T270–T289 | — (11 P1 / 9 P2) | ⏳ PLANNED (pending) |
 
 ---
 
@@ -755,7 +756,12 @@ re-running import skips all existing books.
 
 ---
 
-## Phase 14: User Story 10 — AI Book Cover Scan ✅ DONE
+## Phase 14: User Story 10 — AI Book Cover Scan ⏪ REMOVED in v0.17.1 (re-implementation: Phase 36)
+
+> **Removed in v0.17.1.** The implementation below called Gemini from the browser with
+> `VITE_GEMINI_API_KEY` (exposed in the public bundle). Setup tasks T097–T099 (key as a
+> `VITE_` variable) are **superseded** by Phase 36 (server-only key). T100–T103 describe the
+> behavior to restore, but through the secure proxy (`T278`/`T279`), not a direct call.
 
 **Goal**: User takes a photo of a book's front cover; Gemini Flash extracts the title and
 author and fills the form fields automatically.
@@ -826,12 +832,15 @@ show clear messages.
 
 ---
 
-## Phase 15: User Story 11 — AI Reading Summary ⏳ FUTURE (deferred)
+## Phase 15: User Story 11 — AI Reading Summary ⏳ FUTURE (deferred; blocked by Phase 36)
+
+> Must be built on the Phase 36 secure proxy (new `summarizeBook` operation). It MUST NOT
+> call Gemini from the client or reintroduce a `VITE_GEMINI_API_KEY`.
 
 **Goal**: On the book detail page, the user can generate a 2–3 sentence AI summary of
 the book using Gemini Flash, then save it as a note on the book.
 
-**Prerequisites**: Phase 14 setup complete (same API key).
+**Prerequisites**: Phase 36 complete (secure AI proxy; replaces the old "same API key" setup).
 
 **Data model change**: Add `notes?: string` field to the `Book` entity in
 `src/types/entities.ts`. Add a Dexie migration in `src/db/db.ts` (bump schema version).
@@ -1397,3 +1406,145 @@ Settings has two labeled sections.
 - [ ] T269 [P1] Add i18n keys for all Phase 35 UX changes — `src/locales/en.json` + `src/locales/es.json`
   - All keys listed in T260–T268 above
   - Ensure no hardcoded English strings remain in modified components
+
+---
+
+## Phase 36: Secure AI Support with Gemini (server-side) ⏳ PLANNED — pending
+
+**Goal**: Bring back the AI features removed in v0.17.1 — cover scan (US10), discussion-question
+suggestions (US18), "Catch up" summary (US23), AI milestone prompts (US22) and the AI capsule
+summary (US21) — **without exposing the Gemini key** and with abuse, privacy and prompt-injection
+protections. Requirements: `spec.md` → **FR-046–FR-058**.
+
+**Why a proxy**: any `VITE_*` variable is inlined into the public JS bundle, so a client-side key
+is readable by anyone who opens DevTools and can be used to drain the quota or the bill. The
+browser must never hold the key; it only holds the user's Firebase ID token.
+
+**Architecture**
+
+```
+Browser (signed-in user)                 Vercel function  api/ai.ts                     Gemini API
+ aiClient.callAi(op, params) ──Bearer ID token──▶  1. CORS allowlist + body-size cap
+                                                   2. verify Firebase ID token        (FR-047)
+                                                   3. validate op + params (allowlist) (FR-050/051)
+                                                   4. authorize via Firestore Admin    (FR-048)
+                                                   5. rate limit / quota / kill switch (FR-049)
+                                                   6. build prompt from server template (FR-050/052)
+                                                   7. call Gemini  (x-goog-api-key header) ───────▶
+                                                   8. sanitize output, minimal logging (FR-053/055)
+ ◀──────────── { text | items } or typed error ───┘
+```
+
+**Operation policy** (server-enforced; the client only names the operation):
+
+| Operation | Who may call it | Extra conditions | Inputs the client sends |
+|---|---|---|---|
+| `scanCover` | any signed-in user | image `jpeg/png/webp`, ≤ 1 MB | image only |
+| `discussionQuestions` | club **moderator** | club ACTIVE | `clubId` (title/author read server-side) |
+| `milestonePrompt` | club **member** | milestone ∈ {25, 50, 75}, club ACTIVE | `clubId`, `milestone` |
+| `catchUp` | club **member** | club ACTIVE; chapters ≤ 10 chars each; result never stored | `clubId`, `from`, `to` |
+| `capsuleSummary` | club **moderator** | club CLOSED; once per club (idempotent) | `clubId` only — server reads stats and top posts itself |
+| `summarizeBook` (Phase 15) | any signed-in user | title/author length limits | `title`, `author` |
+
+**Environment variables (server-only — never `VITE_`-prefixed)**: `GEMINI_API_KEY`,
+`GEMINI_MODEL`, `AI_ENABLED`, `FIREBASE_SERVICE_ACCOUNT` (or equivalent), optional rate-limit
+tunables. Mark them *Sensitive* in Vercel and use separate keys for Production and Preview.
+
+### A. Key and infrastructure (do first)
+
+- [ ] T270 [P1] Create a **new** Gemini key and harden it (manual, Google Cloud / AI Studio) — no file change
+  - Restrict the key to the Generative Language API; set quota limits and a billing alert/budget
+  - Store as `GEMINI_API_KEY` in Vercel (Sensitive, **no `VITE_` prefix**), separate keys for
+    Production and Preview; document the rotation procedure
+  - Confirm the key used before v0.17.1 is revoked and `VITE_GEMINI_API_KEY` is deleted from Vercel
+- [ ] T271 [P1] Create the serverless endpoint skeleton — `api/ai.ts`
+  - POST only; JSON body `{ op, params }`; request-body size cap; timeout with `AbortController`
+  - CORS allowlist (production origin + project preview domains; no `*`)
+  - Gemini called with the key in the `x-goog-api-key` header (never in the URL); model taken
+    from `GEMINI_MODEL` — **verify the model is currently available before pinning it**
+    (Gemini model versions are retired over time)
+- [ ] T272 [P1] Authenticate requests — `api/_lib/auth.ts`
+  - Verify the Firebase ID token from `Authorization: Bearer …` (Firebase Admin `verifyIdToken`
+    or JWT verification against Google's public keys); return 401 on failure
+  - Service-account credentials come from env, never from the repo
+- [ ] T273 [P1] Authorize operations — `api/_lib/authz.ts`
+  - Helpers reading Firestore via Admin: `isClubMember`, `isClubModerator`, `getClub` (status,
+    title, author); implement the **Operation policy** table above as a single policy map
+  - Return 403 when the caller lacks the role, 409/400 when the club status doesn't allow it
+- [ ] T274 [P1] Rate limiting, quotas and kill switch — `api/_lib/limits.ts`
+  - Per-uid, per-operation daily counters (transactional, e.g. Firestore `aiUsage/{uid}_{yyyymmdd}`
+    via Admin SDK, or Vercel KV/Upstash) with tunable limits; global daily cap
+  - Respond 429 with `Retry-After`; `AI_ENABLED=false` returns a typed "AI disabled" error
+  - Idempotency for `capsuleSummary` (one generation per club)
+- [ ] T275 [P1] Input validation — `api/_lib/validate.ts`
+  - Allowlisted operations with strict schemas: field lengths, integer ranges, reject unknown
+    fields; image mime type, size and base64 well-formedness
+- [ ] T276 [P1] Prompt templates and output sanitizer — `api/_lib/prompts.ts`, `api/_lib/sanitize.ts`
+  - Move the prompts from `clubs-spec.md` / `clubs-data-model.md` here as fixed templates
+  - **Prompt-injection hardening**: club posts are passed as clearly delimited *data*; the model
+    is told to ignore instructions inside it; cap the number/size of posts included
+  - Sanitize output: trim, length cap, strip markdown/HTML/links, parse list outputs defensively
+- [ ] T277 [P1] Error model and logging policy — `api/_lib/errors.ts`
+  - Typed errors: `UNAUTHENTICATED`, `FORBIDDEN`, `INVALID_INPUT`, `RATE_LIMITED`, `AI_DISABLED`,
+    `UPSTREAM_ERROR`; never forward upstream bodies, keys or stack traces to the client
+  - Log only operation, hashed uid, status and latency — no prompts, images, tokens or keys
+
+### B. Client
+
+- [ ] T278 [P1] Create the AI client — `src/lib/aiClient.ts`
+  - `callAi(op, params)` attaches `Authorization: Bearer <Firebase ID token>`; typed errors;
+    request timeout; `isAiAvailable` (signed in, Firebase configured, not disabled)
+  - The only module allowed to talk to `/api/ai`; no Gemini URL or key anywhere in `src/`
+- [ ] T279 [P2] Restore AI cover scan (US10) — `src/hooks/useCoverScan.ts`, `AddEditBookPage.tsx`
+  - Reuse the behavior of T100–T103 via `callAi('scanCover')`; downscale the image client-side;
+    show a consent notice that the photo is sent to a third-party AI service (FR-056)
+- [ ] T280 [P2] Restore AI discussion-question suggestions (US18) — `DiscussionsTab.tsx`
+  - Moderator only; `callAi('discussionQuestions', { clubId })`; manual topic creation unaffected
+- [ ] T281 [P2] Restore "Catch up" (US23) — `FeedTab.tsx`, `CatchUpDialog.tsx`
+  - Member only, club ACTIVE; result kept in local component state only (FR-C19)
+- [ ] T282 [P2] Restore AI milestone prompts (US22) — `useMilestonePrompt.ts`
+  - Use `callAi('milestonePrompt')`; keep the fixed translated question from v0.17.1 as the fallback
+- [ ] T283 [P2] Restore the AI capsule summary (US21) — `capsuleRepository.ts`, `CapsulePage.tsx`
+  - Closure flow calls `callAi('capsuleSummary', { clubId })`; the server builds the prompt from
+    its own reads (FR-052); on any failure keep the v0.17.1 behavior (capsule without summary)
+- [ ] T284 [P2] i18n for restored UI and AI errors — `src/locales/en.json`, `src/locales/es.json`
+  - Keys for the restored controls, the cover-photo consent notice, and each typed error
+    (rate limited, disabled, unavailable); keep en/es in parity
+
+### C. Hardening and verification
+
+- [ ] T285 [P1] Client-secret guard — `scripts/check-no-client-secrets.mjs` (+ CI step)
+  - Fail the build if any `VITE_*GEMINI*` reference exists in `src/`/env examples or if `dist/`
+    contains a Google API-key pattern (`AIza…`) (FR-058); enable GitHub secret scanning and
+    push protection (manual)
+- [ ] T286 [P1] Automated tests — `tests/api/*.test.ts` (Vitest; Gemini mocked)
+  - 401 without/with invalid token; 403 for non-member and non-moderator; 429 over quota;
+    400/413 for oversize or wrong-type image; rejected unknown fields; `AI_ENABLED=false`
+  - Sanitizer and validators unit tests; a prompt-injection fixture for the capsule summary
+- [ ] T287 [P2] Lock down usage data and version the rules — `firestore.rules`, `firestore.indexes.json`
+  - `aiUsage/*` readable/writable by the Admin SDK only (deny all client access)
+  - Add the Firestore rules described in `clubs-data-model.md` to the repo (today they are
+    documented but no rules file is versioned)
+- [ ] T288 [P2] Documentation — `README.md`, `src/vite-env.d.ts`, `clubs-spec.md`
+  - Document the server-only variables; confirm `vite-env.d.ts` declares no Gemini variable;
+    flip the AI status notes in `spec.md`/`clubs-spec.md` from "removed" to "restored"
+- [ ] T289 [P2] Manual verification and release
+  - On a Vercel preview: confirm the key is absent from the bundle and network calls; try
+    cross-user and non-member requests; exceed a quota; disable with `AI_ENABLED`
+  - Bump `package.json` to `0.18.0` (new feature)
+
+### Dependencies and order
+
+```
+T270 (key + hardening) ──▶ T271 (endpoint) ──┬─▶ T272 auth ──▶ T273 authz ─┐
+                                              ├─▶ T275 validate ───────────┼─▶ T276 prompts ─▶ T277 errors
+                                              └─▶ T274 limits ─────────────┘
+T277 ──▶ T278 aiClient ──▶ T279 / T280 / T281 / T282 / T283 ──▶ T284 i18n
+T285 (secret guard) can start right after T271 and must be green before T289
+T286 (tests) grows with T272–T277; T287–T288 after the first operation works; T289 last
+```
+
+**Checkpoint (definition of done)**: all five AI features work again for signed-in users; the
+production bundle contains no Gemini key; an unauthenticated, non-member or over-quota request
+is rejected by the server; turning `AI_ENABLED` off hides AI controls and the rest of the app
+keeps working; T285 and T286 are green in CI.
