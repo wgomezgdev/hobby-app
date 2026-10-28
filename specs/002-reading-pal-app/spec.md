@@ -557,6 +557,53 @@ statuses → re-run import → confirm "X books already in library" and 0 new bo
 These features are planned for a future phase once the core app is stable and deployed.
 They extend the reading module with AI capabilities powered by Google Gemini Flash.
 
+> **Status (v0.17.1) — REMOVED, re-implementation PLANNED.** The first Gemini integration
+> called the API directly from the browser with `VITE_GEMINI_API_KEY`, which Vite copies into
+> the public JS bundle. That integration was removed in v0.17.1 (AI cover scan, AI discussion
+> questions, "Catch up" summary, AI capsule summary; milestone prompts fell back to a fixed
+> question). The same AI support WILL be implemented again, but only behind a server-side
+> endpoint that satisfies the **AI Security Requirements (FR-046–FR-058)** below.
+> Tracked in `tasks.md` → **Phase 36**. Until Phase 36 ships, no AI feature may call Gemini
+> from the client.
+
+### AI Security Requirements (FR-046–FR-058) — apply to every AI feature
+
+- **FR-046**: AI requests MUST go through a server-side endpoint (Vercel serverless function).
+  The Gemini key MUST be a server-only secret: it MUST NOT use the `VITE_` prefix and MUST NOT
+  appear in the client bundle, git history, logs, error messages, or URLs (send it in the
+  `x-goog-api-key` header, never as a `?key=` query parameter).
+- **FR-047**: Every AI request MUST carry a Firebase ID token that the server verifies;
+  unauthenticated requests are rejected (401).
+- **FR-048**: The server MUST authorize each operation against Firestore data, not against
+  client claims (e.g. club operations require membership; discussion suggestions and the
+  capsule summary require the club moderator).
+- **FR-049**: The server MUST enforce a per-user rate limit and daily quota, plus a global
+  spending cap, returning 429 with `Retry-After`. An `AI_ENABLED` kill switch MUST be able to
+  disable all AI features without a redeploy of client code.
+- **FR-050**: Clients MUST send only an allowlisted operation name and structured parameters.
+  Prompts live server-side as fixed templates; free-form prompt passthrough is forbidden.
+  Book title/author for club operations MUST be read by the server from the club document.
+- **FR-051**: The server MUST validate all input: per-field length limits, request body size
+  cap, and for images `image/jpeg|png|webp` and ≤ 1 MB; unknown fields are rejected.
+- **FR-052**: User-generated content (club posts, quotes) is untrusted input for prompts
+  (prompt injection). It MUST be delimited as data, the model instructed to ignore any
+  instructions inside it, and its size capped. The capsule summary MUST be built from data
+  the server reads itself, never from client-supplied text.
+- **FR-053**: Model output is untrusted. The server MUST validate its shape and length, strip
+  markup and links, and the client MUST render it as plain text only.
+- **FR-054**: CORS MUST be restricted to the production origin (and the project's Vercel
+  preview domains); no wildcard origin.
+- **FR-055**: Logs MUST NOT contain prompts, images, tokens, or keys; only operation name,
+  hashed uid, status, and latency.
+- **FR-056**: Before a cover photo is sent to the AI provider the user MUST be informed that
+  it goes to a third party. Catch-up summaries stay non-persistent (see FR-C19). The data-use
+  terms of the chosen Gemini API tier MUST be reviewed before launch.
+- **FR-057**: When AI is unavailable (disabled, quota reached, upstream error) the UI MUST
+  degrade gracefully: AI controls are hidden or disabled with a clear message and all
+  non-AI flows keep working (as in v0.17.1).
+- **FR-058**: The build/CI MUST fail if a Gemini key variable is referenced from client code
+  or a Google API-key pattern (`AIza…`) appears in the source or the built bundle.
+
 ---
 
 ### User Story 10 — AI Book Cover Scan (Priority: P2)
@@ -583,12 +630,14 @@ Author: <author>
 If you cannot find a value, write "Unknown" for that field.
 ```
 
-**Architecture — Simple (personal app)**:
+**Architecture — Simple (personal app)** — ⛔ REMOVED in v0.17.1; no longer acceptable
+(the key was exposed in the public bundle):
 - API key stored as `VITE_GEMINI_API_KEY` in Vercel environment variables
 - Call made directly from the browser (key is in the JS bundle but the app is personal)
 - Acceptable risk for a single-user personal PWA
 
-**Architecture — Safe (if app goes public)**:
+**Architecture — Safe (REQUIRED for the re-implementation, see FR-046–FR-058 and
+`tasks.md` Phase 36)**:
 - Add a Vercel serverless function at `/api/scan-cover`
 - Function receives base64 image, calls Gemini, returns title + author
 - API key never leaves the server — not visible in the browser bundle

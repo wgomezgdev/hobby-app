@@ -45,6 +45,23 @@ This specification covers the following capabilities:
 - Public or discoverable clubs (invite-code access only)
 - Club membership cap enforcement (soft limit: moderator controls invite sharing)
 
+### AI Features — Status (v0.17.1)
+
+All Gemini-powered club features were **removed in v0.17.1** because the first implementation
+called the API from the browser and exposed the key in the public bundle. They are planned to
+return behind a secure server-side endpoint — see `tasks.md` **Phase 36** and the AI Security
+Requirements **FR-046–FR-058** in `spec.md`.
+
+| Feature | Story | Status in v0.17.1 | Planned task |
+|---|---|---|---|
+| AI discussion questions | US18 | Removed (manual topics only) | T280 |
+| AI capsule summary | US21 | Removed (new capsules have no summary; existing ones still show theirs) | T283 |
+| AI milestone questions | US22 | Replaced by one fixed, translated question | T282 |
+| Private "Catch up" summary | US23 | Removed | T281 |
+
+The acceptance scenarios below describe the intended behavior once Phase 36 ships; the
+"Gemini unavailable" fallbacks in them are the behavior that applies in the meantime.
+
 ### Architecture Summary
 
 Club data is cloud-first and stored entirely in Firestore, separate from the personal
@@ -553,6 +570,15 @@ points and character developments. Write in plain prose with no disclaimers.
 - **NFR-C05**: The app MUST remain usable (read-only) when offline — cached club data
   from Firestore's offline persistence is displayed; write actions show an appropriate
   error rather than silently dropping data.
+- **NFR-C06**: Club AI operations (FR-C10, FR-C13 summary, FR-C17, FR-C19) MUST be executed
+  by the server-side AI endpoint, never from the client. The server MUST verify the caller's
+  Firebase ID token, check club membership/moderator role and club status in Firestore, and
+  apply per-user rate limits (see FR-046–FR-058 in `spec.md`).
+- **NFR-C07**: Club content used in AI prompts (posts, quotes) is untrusted. The capsule
+  summary MUST be built from data the server reads itself and MUST resist prompt injection
+  (FR-052); AI output MUST be rendered as plain text (FR-053).
+- **NFR-C08**: If AI is unavailable, club features MUST keep working without it (manual
+  topics, fixed milestone question, capsule without summary).
 
 ---
 

@@ -481,6 +481,12 @@ max 5 attempts). Collision probability at 1,000 clubs is ~0.00093% — effective
 
 ## Gemini Prompts: Enriched Feed Features
 
+> **Status (v0.17.1)**: not used by the app right now — the client-side Gemini calls were
+> removed. When AI returns (`tasks.md` Phase 36) these prompts become **server-side templates**
+> (`api/_lib/prompts.ts`): the client never sends prompt text, book title/author are read from
+> the club document by the server, and any club content is passed as delimited, untrusted data
+> (FR-050, FR-052).
+
 ### Milestone Check-In Prompt
 
 Sent when a member crosses the 25%, 50%, or 75% progress threshold.

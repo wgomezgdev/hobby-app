@@ -3,9 +3,24 @@
 **Input**: `specs/002-reading-pal-app/clubs-spec.md` + `clubs-data-model.md`
 
 **Prerequisites**: tasks.md Phases 1–26 complete ✅ | Firebase Auth + Firestore configured ✅
-| `src/lib/firebase.ts` exists ✅ | `VITE_GEMINI_API_KEY` configured ✅
+| `src/lib/firebase.ts` exists ✅ | ~~`VITE_GEMINI_API_KEY` configured~~ ⛔ removed in v0.17.1 (AI returns via the secure proxy, `tasks.md` Phase 36)
 
 **Tests**: Not requested — test tasks excluded.
+
+> **Status note (v0.17.1) — Gemini removed.** The client-side Gemini integration was removed
+> because `VITE_GEMINI_API_KEY` ended up in the public bundle. These tasks describe code that no
+> longer exists as written and are **superseded by `tasks.md` Phase 36** (server-side proxy):
+>
+> | Task here | What changed | Replaced by |
+> |---|---|---|
+> | T208 `src/utils/geminiClubs.ts` | File deleted | T271–T277 (server) + T278 (`aiClient`) |
+> | T231 AI suggestion chips (Discussions) | Removed | T280 |
+> | T243 step 7 (Gemini capsule summary) | Capsule saved without summary | T283 |
+> | T244 summary section in `CapsulePage` | Shown only when a summary exists | T283 |
+> | T255 AI milestone question | Fixed translated question | T282 |
+> | T256–T257 "Catch up" dialog + button | Removed | T281 |
+>
+> Everything else in this file is unchanged.
 
 **Organization**: Tasks are grouped by phase. Within each phase, [P] marks tasks that have
 no file conflicts and may run in parallel.
