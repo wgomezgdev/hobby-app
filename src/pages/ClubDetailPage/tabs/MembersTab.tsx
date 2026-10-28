@@ -18,22 +18,20 @@ import { PACE_STATUS_DISPLAY, type BadgeId, type ClubMember, type ClubStatus, ty
 interface Props {
   clubId: string;
   clubStatus: ClubStatus;
-  bookTitle: string;
-  bookAuthor: string;
   currentUid: string;
 }
 
-export function MembersTab({ clubId, clubStatus, bookTitle, bookAuthor, currentUid }: Props) {
+export function MembersTab({ clubId, clubStatus, currentUid }: Props) {
   const { t } = useTranslation();
   const members = useClubMembers(clubId);
-  const { checkMilestone } = useMilestonePrompt(bookTitle, bookAuthor);
+  const { checkMilestone } = useMilestonePrompt();
 
   const [editOpen, setEditOpen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [paceStatus, setPaceStatus] = useState<PaceStatus | null>(null);
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState<string | null>(null);
-  const [milestone, setMilestone] = useState<{ milestone: number; question: string } | null>(null);
+  const [milestone, setMilestone] = useState<{ milestone: number } | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeText, setComposeText] = useState('');
 
@@ -65,7 +63,7 @@ export function MembersTab({ clubId, clubStatus, bookTitle, bookAuthor, currentU
       const newBadges: BadgeId[] = await evaluateBadgesAfterProgress(clubId, currentUid, progress);
       if (newBadges.length > 0) setSnackbar(t('club.members.newBadge'));
 
-      const ms = await checkMilestone(oldProgress, progress, me.milestonesReached);
+      const ms = checkMilestone(oldProgress, progress, me.milestonesReached);
       if (ms) setMilestone(ms);
     } finally {
       setSaving(false);
@@ -82,7 +80,7 @@ export function MembersTab({ clubId, clubStatus, bookTitle, bookAuthor, currentU
 
   const handleMilestoneShare = () => {
     if (!milestone) return;
-    setComposeText(milestone.question);
+    setComposeText(t('club.milestone.question'));
     setComposeOpen(true);
     handleMilestoneDismiss();
   };
@@ -184,7 +182,7 @@ export function MembersTab({ clubId, clubStatus, bookTitle, bookAuthor, currentU
           <DialogTitle>🎉 {t('club.milestone.title', { milestone: milestone.milestone })}</DialogTitle>
           <DialogContent>
             <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
-              <Typography variant="body1" fontStyle="italic">{milestone.question}</Typography>
+              <Typography variant="body1" fontStyle="italic">{t('club.milestone.question')}</Typography>
             </Box>
           </DialogContent>
           <DialogActions>

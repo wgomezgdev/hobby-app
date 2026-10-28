@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import {
   Alert, Autocomplete, Box, Button, Chip, CircularProgress,
-  IconButton, Snackbar, Stack, TextField, Typography,
+  IconButton, Stack, TextField, Typography,
 } from '@mui/material';
-import { ArrowBack, CheckCircle, DocumentScanner } from '@mui/icons-material';
+import { ArrowBack, CheckCircle } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthorSuggestions } from '../../hooks/useAuthorSuggestions';
@@ -13,7 +13,6 @@ import { useBook } from '../../hooks/useBooks';
 import { addBook, updateBook } from '../../repositories/bookRepository';
 import { CoverUpload } from '../../components/CoverUpload/CoverUpload';
 import { CoverSearch } from '../../components/CoverSearch/CoverSearch';
-import { useCoverScan, type ScanResult } from '../../hooks/useCoverScan';
 import type { BookStatus } from '../../types/entities';
 import { GENRES } from '../../types/entities';
 
@@ -55,9 +54,6 @@ export function AddEditBookPage() {
 
   const [titleInput, setTitleInput] = useState('');
   const [authorInput, setAuthorInput] = useState('');
-  const [pendingScan, setPendingScan] = useState<ScanResult | null>(null);
-  const scanInputRef = useRef<HTMLInputElement>(null);
-  const { scan, loading: scanLoading, error: scanError, clearError: clearScanError } = useCoverScan();
   const { suggestions: titleSuggestions, loading: titleLoading, searchError: titleSearchError } = useTitleSuggestions(titleInput);
   const { suggestions: authorSuggestions, loading: authorLoading } = useAuthorSuggestions(authorInput);
 
@@ -77,40 +73,6 @@ export function AddEditBookPage() {
       setAuthorInput(book.author);
     }
   }, [book, isEditMode, reset]);
-
-  const handleScanFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (scanInputRef.current) scanInputRef.current.value = '';
-    if (!file) return;
-
-    const dataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
-    const result = await scan(dataUrl);
-    if (!result) return;
-
-    let hasConflict = false;
-    if (result.title) {
-      if (!getValues('title')) { setValue('title', result.title); setTitleInput(result.title); }
-      else hasConflict = true;
-    }
-    if (result.author) {
-      if (!getValues('author')) { setValue('author', result.author); setAuthorInput(result.author); }
-      else hasConflict = true;
-    }
-    if (hasConflict) setPendingScan(result);
-  };
-
-  const applyPendingScan = () => {
-    if (!pendingScan) return;
-    if (pendingScan.title) { setValue('title', pendingScan.title); setTitleInput(pendingScan.title); }
-    if (pendingScan.author) { setValue('author', pendingScan.author); setAuthorInput(pendingScan.author); }
-    setPendingScan(null);
-  };
 
   const onSubmit = async (data: BookFormData) => {
     const totalPages = data.totalPages ? parseInt(data.totalPages, 10) : undefined;
@@ -154,33 +116,16 @@ export function AddEditBookPage() {
           name="cover"
           control={control}
           render={({ field }) => (
-            <Box sx={{ mb: scanError ? 1 : 3 }}>
+            <Box sx={{ mb: 3 }}>
               <CoverUpload
                 value={field.value}
                 onChange={field.onChange}
                 extra={
                   <Stack direction="row" spacing={1} flexWrap="wrap">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={scanLoading ? <CircularProgress size={14} /> : <DocumentScanner />}
-                      onClick={() => scanInputRef.current?.click()}
-                      disabled={scanLoading}
-                    >
-                      {scanLoading ? t('book.form.scanning') : t('book.form.scan')}
-                    </Button>
                     <CoverSearch
                       title={getValues('title') ?? ''}
                       author={getValues('author') ?? ''}
                       onSelect={field.onChange}
-                    />
-                    <input
-                      ref={scanInputRef}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      hidden
-                      onChange={handleScanFile}
                     />
                   </Stack>
                 }
@@ -188,12 +133,6 @@ export function AddEditBookPage() {
             </Box>
           )}
         />
-
-        {scanError && (
-          <Alert severity="error" onClose={clearScanError} sx={{ mb: 3 }}>
-            {scanError}
-          </Alert>
-        )}
 
         <Stack spacing={2.5}>
           <Box>
@@ -411,22 +350,6 @@ export function AddEditBookPage() {
           </Button>
         </Stack>
       </Box>
-
-      <Snackbar
-        open={!!pendingScan}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        message={
-          pendingScan
-            ? t('book.form.scanConflict', { values: [pendingScan.title, pendingScan.author].filter(Boolean).join(' · ') })
-            : ''
-        }
-        action={
-          <>
-            <Button color="inherit" size="small" onClick={applyPendingScan}>{t('book.form.scanApply')}</Button>
-            <Button color="inherit" size="small" onClick={() => setPendingScan(null)}>{t('book.form.scanKeep')}</Button>
-          </>
-        }
-      />
     </Box>
   );
 }

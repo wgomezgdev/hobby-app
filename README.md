@@ -2,7 +2,7 @@
 
 A personal reading tracker PWA built with React, TypeScript, and MUI. Track your books, log reading sessions, save quotes, rate what you've read, and keep your library in sync across devices.
 
-**Current version: v0.16.3**
+**Current version: v0.17.1**
 
 ---
 
@@ -109,6 +109,11 @@ npm run typecheck  # TypeScript check only
 ---
 
 ## Changelog
+
+### v0.17.1
+- Removed the Gemini integration: AI cover scan, AI discussion questions, "Catch up" summaries and AI capsule summaries
+- Milestone prompts (25/50/75%) now use a fixed reflection question
+- New club capsules no longer include an AI summary (existing ones still display it)
 
 ### v0.16.3
 - Profile page: "Library Tools" section with "Find missing covers" bulk scan

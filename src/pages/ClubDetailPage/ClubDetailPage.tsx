@@ -133,8 +133,6 @@ export function ClubDetailPage() {
         <FeedTab
           clubId={clubId!}
           clubStatus={club.status}
-          bookTitle={club.bookTitle}
-          bookAuthor={club.bookAuthor}
           currentMember={currentMember}
           isModerator={isModerator}
         />
@@ -143,8 +141,6 @@ export function ClubDetailPage() {
         <DiscussionsTab
           clubId={clubId!}
           clubStatus={club.status}
-          bookTitle={club.bookTitle}
-          bookAuthor={club.bookAuthor}
           currentUid={user.uid}
           currentName={user.displayName ?? 'Unknown'}
           isModerator={isModerator}
@@ -154,8 +150,6 @@ export function ClubDetailPage() {
         <MembersTab
           clubId={clubId!}
           clubStatus={club.status}
-          bookTitle={club.bookTitle}
-          bookAuthor={club.bookAuthor}
           currentUid={user.uid}
         />
       )}

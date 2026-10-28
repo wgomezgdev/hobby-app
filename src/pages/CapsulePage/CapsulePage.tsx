@@ -83,15 +83,17 @@ export function CapsulePage() {
         <Chip label={t('club.capsule.reactionsCount', { count: capsule.totalReactions })} />
       </Box>
 
-      <Box sx={{ mb: 4, p: 3, bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
-        <Typography variant="body1" fontStyle="italic" sx={{ mb: 1 }}>
-          {capsule.generatedSummary}
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <AutoAwesome sx={{ fontSize: 12, color: 'text.disabled' }} />
-          <Typography variant="caption" color="text.disabled">{t('club.capsule.generated')}</Typography>
+      {capsule.generatedSummary && (
+        <Box sx={{ mb: 4, p: 3, bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+          <Typography variant="body1" fontStyle="italic" sx={{ mb: 1 }}>
+            {capsule.generatedSummary}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <AutoAwesome sx={{ fontSize: 12, color: 'text.disabled' }} />
+            <Typography variant="caption" color="text.disabled">{t('club.capsule.generated')}</Typography>
+          </Box>
         </Box>
-      </Box>
+      )}
 
       <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>
         {t('club.capsule.members')}

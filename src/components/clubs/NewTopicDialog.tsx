@@ -12,20 +12,18 @@ interface Props {
   clubId: string;
   authorUid: string;
   authorName: string;
-  initialTitle?: string;
-  isAiGenerated?: boolean;
 }
 
-export function NewTopicDialog({ open, onClose, clubId, authorUid, authorName, initialTitle = '', isAiGenerated = false }: Props) {
+export function NewTopicDialog({ open, onClose, clubId, authorUid, authorName }: Props) {
   const { t } = useTranslation();
-  const [title, setTitle] = useState(initialTitle);
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (open) { setTitle(initialTitle); setDescription(''); setError(null); }
-  }, [open, initialTitle]);
+    if (open) { setTitle(''); setDescription(''); setError(null); }
+  }, [open]);
 
   const handleSubmit = async () => {
     if (!title.trim()) { setError(t('club.discussions.titleRequired')); return; }
@@ -38,7 +36,7 @@ export function NewTopicDialog({ open, onClose, clubId, authorUid, authorName, i
         authorName,
         title: title.trim(),
         description: description.trim() || undefined,
-        isAiGenerated,
+        isAiGenerated: false,
       });
       onClose();
     } catch (e) {
