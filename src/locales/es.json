@@ -63,12 +63,7 @@
         "pages": "{{count}} páginas"
       },
       "save": "Guardar libro",
-      "saveChanges": "Guardar cambios",
-      "scan": "Escanear portada",
-      "scanning": "Escaneando…",
-      "scanConflict": "Escaneo encontró \"{{values}}\". ¿Reemplazar los valores existentes?",
-      "scanApply": "Aplicar",
-      "scanKeep": "Mantener"
+      "saveChanges": "Guardar cambios"
     },
     "detail": {
       "title": "Detalle del libro",
@@ -271,14 +266,6 @@
     "unavailable": "La búsqueda de libros no está disponible en este momento. Intenta más tarde.",
     "networkError": "Sin conexión. Verifica tu internet e intenta de nuevo."
   },
-  "scan": {
-    "notConfigured": "Escaneo de IA no configurado. Agrega VITE_GEMINI_API_KEY para habilitarlo.",
-    "limitReached": "Límite diario de escaneos alcanzado. Intenta mañana.",
-    "invalidKey": "Clave API inválida. Verifica tu VITE_GEMINI_API_KEY.",
-    "serviceError": "El servicio de IA no está disponible en este momento. Intenta de nuevo.",
-    "notRecognized": "Portada no reconocida. Intenta con una foto más clara o llena los campos manualmente.",
-    "networkError": "Sin conexión. Verifica tu internet e intenta de nuevo."
-  },
   "goodreads": {
     "title": "Importar de Goodreads",
     "instructions": "Primero, exporta tu biblioteca de Goodreads:",
@@ -402,7 +389,6 @@
     "discussions": {
       "empty": "Aún no hay discusiones",
       "newTopic": "Nuevo tema",
-      "suggestAI": "Sugerir preguntas con IA",
       "aiLabel": "IA",
       "topicTitle": "Título del tema",
       "topicDesc": "Descripción (opcional)",
@@ -420,9 +406,6 @@
       "compose": "Escribe una respuesta…",
       "submit": "Responder",
       "delete": "Eliminar respuesta"
-    },
-    "ai": {
-      "error": "Sugerencias de IA no disponibles — ingresa un tema manualmente"
     },
     "members": {
       "progress": "Progreso de lectura",
@@ -442,17 +425,8 @@
     "milestone": {
       "title": "¡Llegaste al {{milestone}}%!",
       "shareHotTake": "Compartir como opinión",
-      "dismiss": "Cerrar"
-    },
-    "catchup": {
-      "button": "Ponerme al día",
-      "title": "Resumen rápido",
-      "fromChapter": "Desde el capítulo",
-      "toChapter": "Hasta el capítulo",
-      "generate": "Generar resumen",
-      "error": "Resumen no disponible. Intenta de nuevo.",
-      "disclaimer": "Este resumen es privado, solo tú puedes verlo.",
-      "close": "Cerrar"
+      "dismiss": "Cerrar",
+      "question": "¿Qué estás pensando en este punto del libro?"
     },
     "close": {
       "title": "Cerrar club",

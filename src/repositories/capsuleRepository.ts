@@ -2,8 +2,7 @@ import { collection, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/fi
 import { firestoreDb } from '../lib/firebase';
 import type { Club, ClubCapsule, CapsuleMemberSnapshot } from '../types/clubs';
 import { closeClub } from './clubRepository';
-import { getTotalPostCount, getTotalReactionCount, getTopPostsSample } from '../utils/clubAggregations';
-import { generateCapsuleSummary } from '../utils/geminiClubs';
+import { getTotalPostCount, getTotalReactionCount } from '../utils/clubAggregations';
 
 function db() {
   if (!firestoreDb) throw new Error('Firestore not configured.');
@@ -41,27 +40,13 @@ export async function closeClubAndGenerateCapsule(
     };
   });
 
-  const [totalPosts, totalReactions, topPostsSample] = await Promise.all([
+  const [totalPosts, totalReactions] = await Promise.all([
     getTotalPostCount(clubId),
     getTotalReactionCount(clubId),
-    getTopPostsSample(clubId, 5),
   ]);
 
-  let generatedSummary = 'Summary could not be generated. The club memories are preserved above.';
-  try {
-    generatedSummary = await generateCapsuleSummary({
-      clubName: club.name,
-      bookTitle: club.bookTitle,
-      bookAuthor: club.bookAuthor,
-      memberCount: club.memberCount,
-      totalPosts,
-      totalReactions,
-      topPostsSample,
-      language: 'English',
-    });
-  } catch (e) {
-    console.error('Capsule summary generation failed:', e);
-  }
+  // No AI summary: the capsule keeps the stats and member snapshots only.
+  const generatedSummary = '';
 
   const capsule: ClubCapsule = {
     id: clubId,

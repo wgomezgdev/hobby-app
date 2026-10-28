@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { useClubPosts } from '../../../hooks/useClub';
 import { ClubPostCard } from '../../../components/clubs/ClubPostCard';
 import { ComposePostDialog } from '../../../components/clubs/ComposePostDialog';
-import { CatchUpDialog } from '../../../components/clubs/CatchUpDialog';
 import { SkeletonCard } from '../../../components/SkeletonCard/SkeletonCard';
 import { deletePost, getUserReaction } from '../../../repositories/postRepository';
 import type { ClubMember, ClubStatus, ReactionEmoji } from '../../../types/clubs';
@@ -13,16 +12,13 @@ import type { ClubMember, ClubStatus, ReactionEmoji } from '../../../types/clubs
 interface Props {
   clubId: string;
   clubStatus: ClubStatus;
-  bookTitle: string;
-  bookAuthor: string;
   currentMember: ClubMember | null;
   isModerator: boolean;
 }
 
-export function FeedTab({ clubId, clubStatus, bookTitle, bookAuthor, currentMember, isModerator }: Props) {
+export function FeedTab({ clubId, clubStatus, currentMember, isModerator }: Props) {
   const { t } = useTranslation();
   const [composeOpen, setComposeOpen] = useState(false);
-  const [catchUpOpen, setCatchUpOpen] = useState(false);
   const [deleteSnackbar, setDeleteSnackbar] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [userReactions, setUserReactions] = useState<Record<string, ReactionEmoji | null>>({});
@@ -67,17 +63,6 @@ export function FeedTab({ clubId, clubStatus, bookTitle, bookAuthor, currentMemb
 
   return (
     <Box sx={{ pb: 8 }}>
-      {currentMember && (currentMember.progress < 80) && clubStatus === 'ACTIVE' && (
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={() => setCatchUpOpen(true)}
-          sx={{ mb: 2 }}
-        >
-          📖 {t('club.catchup.button')}
-        </Button>
-      )}
-
       {pinnedPosts.length > 0 && (
         <>
           <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ mb: 1 }}>
@@ -144,13 +129,6 @@ export function FeedTab({ clubId, clubStatus, bookTitle, bookAuthor, currentMemb
           }}
         />
       )}
-
-      <CatchUpDialog
-        open={catchUpOpen}
-        onClose={() => setCatchUpOpen(false)}
-        bookTitle={bookTitle}
-        bookAuthor={bookAuthor}
-      />
 
       <Snackbar
         open={!!deleteSnackbar}

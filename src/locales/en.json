@@ -63,12 +63,7 @@
         "pages": "{{count}} pages"
       },
       "save": "Save Book",
-      "saveChanges": "Save Changes",
-      "scan": "Scan cover",
-      "scanning": "Scanning…",
-      "scanConflict": "Scan found \"{{values}}\". Replace existing values?",
-      "scanApply": "Apply",
-      "scanKeep": "Keep"
+      "saveChanges": "Save Changes"
     },
     "detail": {
       "title": "Book Detail",
@@ -271,14 +266,6 @@
     "unavailable": "Book search is temporarily unavailable. Try again later.",
     "networkError": "No connection. Check your internet and try again."
   },
-  "scan": {
-    "notConfigured": "AI scan not configured. Add VITE_GEMINI_API_KEY to enable.",
-    "limitReached": "Daily scan limit reached. Try again tomorrow.",
-    "invalidKey": "Invalid API key. Check your VITE_GEMINI_API_KEY.",
-    "serviceError": "AI service is temporarily unavailable. Try again in a moment.",
-    "notRecognized": "Cover not recognized. Try a clearer photo or fill in the fields manually.",
-    "networkError": "No connection. Check your internet and try again."
-  },
   "goodreads": {
     "title": "Import from Goodreads",
     "instructions": "First, export your library from Goodreads:",
@@ -402,7 +389,6 @@
     "discussions": {
       "empty": "No discussions yet",
       "newTopic": "New Topic",
-      "suggestAI": "Suggest with AI",
       "aiLabel": "AI",
       "topicTitle": "Topic title",
       "topicDesc": "Description (optional)",
@@ -420,9 +406,6 @@
       "compose": "Write a reply…",
       "submit": "Reply",
       "delete": "Delete reply"
-    },
-    "ai": {
-      "error": "AI suggestions unavailable — enter a topic manually"
     },
     "members": {
       "progress": "Reading progress",
@@ -442,17 +425,8 @@
     "milestone": {
       "title": "You've reached {{milestone}}%!",
       "shareHotTake": "Share as Hot take",
-      "dismiss": "Dismiss"
-    },
-    "catchup": {
-      "button": "Catch up",
-      "title": "Catch up summary",
-      "fromChapter": "From chapter",
-      "toChapter": "To chapter",
-      "generate": "Generate summary",
-      "error": "Summary unavailable. Try again later.",
-      "disclaimer": "This summary is private — only you can see it.",
-      "close": "Close"
+      "dismiss": "Dismiss",
+      "question": "What are you thinking at this point in the book?"
     },
     "close": {
       "title": "Close Club",
